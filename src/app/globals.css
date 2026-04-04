@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-surface-0 text-gray-100 font-body antialiased;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-1;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-4 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-cyber-600;
+  }
+}
+
+@layer components {
+  .cyber-card {
+    @apply bg-surface-1 border border-surface-3 rounded-xl p-6 
+           transition-all duration-300
+           hover:border-cyber-700/50 hover:shadow-lg hover:shadow-cyber-950/20;
+  }
+
+  .cyber-card-glow {
+    @apply cyber-card relative overflow-hidden;
+  }
+
+  .cyber-card-glow::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+    background: radial-gradient(
+      600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(20, 184, 154, 0.06),
+      transparent 40%
+    );
+  }
+
+  .cyber-card-glow:hover::before {
+    @apply opacity-100;
+  }
+
+  .cyber-btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 
+           rounded-lg font-medium text-sm transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-cyber-500/50 focus:ring-offset-2 focus:ring-offset-surface-0;
+  }
+
+  .cyber-btn-primary {
+    @apply cyber-btn bg-cyber-600 text-white hover:bg-cyber-500 
+           shadow-lg shadow-cyber-900/30 active:scale-[0.98];
+  }
+
+  .cyber-btn-secondary {
+    @apply cyber-btn bg-surface-3 text-gray-200 hover:bg-surface-4
+           border border-surface-4 active:scale-[0.98];
+  }
+
+  .cyber-btn-danger {
+    @apply cyber-btn bg-red-600/20 text-red-400 border border-red-600/30
+           hover:bg-red-600/30 active:scale-[0.98];
+  }
+
+  .cyber-input {
+    @apply w-full px-4 py-2.5 bg-surface-2 border border-surface-4 rounded-lg
+           text-gray-100 placeholder-gray-500 
+           focus:outline-none focus:border-cyber-600 focus:ring-1 focus:ring-cyber-600/30
+           transition-all duration-200;
+  }
+
+  .cyber-label {
+    @apply block text-sm font-medium text-gray-400 mb-1.5;
+  }
+
+  .cyber-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .cyber-badge-critical {
+    @apply cyber-badge bg-red-500/20 text-red-400 border border-red-500/30;
+  }
+
+  .cyber-badge-high {
+    @apply cyber-badge bg-orange-500/20 text-orange-400 border border-orange-500/30;
+  }
+
+  .cyber-badge-medium {
+    @apply cyber-badge bg-yellow-500/20 text-yellow-400 border border-yellow-500/30;
+  }
+
+  .cyber-badge-low {
+    @apply cyber-badge bg-green-500/20 text-green-400 border border-green-500/30;
+  }
+
+  .cyber-badge-info {
+    @apply cyber-badge bg-blue-500/20 text-blue-400 border border-blue-500/30;
+  }
+
+  /* Threat severity indicators */
+  .severity-critical { @apply text-threat-critical; }
+  .severity-high { @apply text-threat-high; }
+  .severity-medium { @apply text-threat-medium; }
+  .severity-low { @apply text-threat-low; }
+  .severity-info { @apply text-threat-info; }
+
+  /* Terminal / code block styling */
+  .cyber-terminal {
+    @apply bg-surface-0 border border-surface-3 rounded-lg p-4 font-mono text-sm 
+           text-green-400 overflow-x-auto;
+  }
+
+  /* Grid background pattern */
+  .cyber-grid-bg {
+    background-image: 
+      linear-gradient(rgba(20, 184, 154, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20, 184, 154, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Scanline effect */
+  .cyber-scanline::after {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+  }
+
+  /* Pulse ring animation */
+  .pulse-ring {
+    @apply relative;
+  }
+  .pulse-ring::before {
+    content: '';
+    @apply absolute inset-0 rounded-full border-2 border-cyber-500 animate-ping opacity-20;
+  }
+}
+
+/* Stagger animation delays */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }

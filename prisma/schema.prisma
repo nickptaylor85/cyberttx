@@ -1,0 +1,328 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// MULTI-TENANCY & AUTH
+// ============================================
+
+enum Plan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum UserRole {
+  SUPER_ADMIN   // Platform owner (you)
+  CLIENT_ADMIN  // Client org admin
+  MEMBER        // Regular user
+}
+
+model Organization {
+  id                   String   @id @default(cuid())
+  name                 String
+  slug                 String   @unique // subdomain: acme.cyberttx.com
+  logo                 String?
+  plan                 Plan     @default(FREE)
+  isDemo               Boolean  @default(false)
+  maxUsers             Int      @default(5)
+  maxTtxPerMonth       Int      @default(3)
+  ttxUsedThisMonth     Int      @default(0)
+  billingCycleStart    DateTime @default(now())
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  users         User[]
+  ttxSessions   TtxSession[]
+  securityTools OrgSecurityTool[]
+  profile       OrgProfile?
+  characters    TtxCharacter[]
+  scenarioFeedback ScenarioFeedback[]
+
+  @@index([slug])
+}
+
+// ============================================
+// COMPANY PROFILE (fed into TTX generation)
+// ============================================
+
+model OrgProfile {
+  id                   String   @id @default(cuid())
+  orgId                String   @unique
+  organization         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  // Company basics
+  industry             String?   // "Financial Services", "Healthcare", etc.
+  companySize          String?   // "500-1000 employees"
+  headquarters         String?   // "Glasgow, UK"
+  operatingRegions     String[]  // ["UK", "EU", "US"]
+  
+  // IT Environment
+  primaryCloudProvider String?   // "Azure", "AWS", "GCP", "Hybrid"
+  hasOnPremInfra       Boolean  @default(true)
+  endpointCount        String?   // "2500 managed endpoints"
+  serverCount          String?   // "150 servers"
+  hasOtEnvironment     Boolean  @default(false)
+  otDescription        String?   // "SCADA systems for manufacturing"
+  
+  // Security posture
+  securityTeamSize     String?   // "8 analysts, 2 leads, 1 CISO"
+  socModel             String?   // "In-house SOC", "Hybrid MDR", "Outsourced"
+  complianceFrameworks String[]  // ["ISO 27001", "SOC 2", "PCI DSS", "HIPAA"]
+  incidentFrequency    String?   // "2-3 incidents per month"
+  
+  // Network
+  networkDescription   String?   // "Hub-spoke with SASE overlay"
+  remoteWorkPercentage String?   // "60% hybrid workforce"
+  branchOffices        String?   // "12 branch offices across UK"
+  
+  // Business context
+  criticalAssets       String?   // "Customer PII, financial trading data"
+  regulatoryBodies     String[]  // ["FCA", "ICO", "GDPR"]
+  recentIncidents      String?   // Brief description of recent incidents
+  biggestConcerns      String?   // "Ransomware, insider threat"
+  
+  // Custom notes
+  additionalContext    String?   // Free-text for anything else
+  
+  updatedAt            DateTime @updatedAt
+}
+
+// ============================================
+// TTX CHARACTERS / PERSONAS
+// ============================================
+
+model TtxCharacter {
+  id          String   @id @default(cuid())
+  orgId       String
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  
+  name        String          // "Sarah Mitchell"
+  role        String          // "CISO"
+  department  String?         // "Information Security"
+  description String?         // Personality, experience level, quirks
+  expertise   String[]        // ["incident response", "risk management"]
+  isRecurring Boolean @default(true) // Reuse across scenarios
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([orgId])
+}
+
+// ============================================
+// AI LEARNING / SCENARIO FEEDBACK
+// ============================================
+
+model ScenarioFeedback {
+  id          String     @id @default(cuid())
+  orgId       String
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  sessionId   String
+  session     TtxSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Aggregate performance data
+  avgScorePercent    Float?      // Average score as percentage
+  hardestQuestions   Json?       // Questions most people got wrong
+  easiestQuestions   Json?       // Questions everyone got right
+  avgTimePerQuestion Float?      // Average seconds per question
+  
+  // Qualitative feedback
+  difficultyRating   Int?        // 1-5 from participants
+  realismRating      Int?        // 1-5 from participants
+  relevanceRating    Int?        // 1-5 from participants
+  comments           String?     // Free-text feedback
+  
+  // AI meta
+  themesUsed         String[]
+  mitreUsed          String[]
+  difficultyUsed     String?
+  
+  createdAt          DateTime @default(now())
+  
+  @@index([orgId])
+}
+
+model User {
+  id            String   @id @default(cuid())
+  clerkId       String   @unique
+  email         String
+  firstName     String?
+  lastName      String?
+  avatarUrl     String?
+  role          UserRole @default(MEMBER)
+  orgId         String?
+  organization  Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  participations TtxParticipant[]
+  createdSessions TtxSession[]     @relation("SessionCreator")
+
+  @@index([clerkId])
+  @@index([orgId])
+}
+
+// ============================================
+// SECURITY TOOLING
+// ============================================
+
+enum ToolCategory {
+  EDR
+  VULNERABILITY_MANAGEMENT
+  SIEM
+  XDR
+  SOAR
+  IDENTITY
+  EMAIL_SECURITY
+  NETWORK_SECURITY
+  CLOUD_SECURITY
+  DLP
+  WAF
+  THREAT_INTELLIGENCE
+  PAM
+}
+
+model SecurityTool {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  vendor      String
+  category    ToolCategory
+  icon        String?      // URL or emoji
+  description String?
+  isActive    Boolean      @default(true)
+
+  orgTools OrgSecurityTool[]
+}
+
+model OrgSecurityTool {
+  id     String       @id @default(cuid())
+  orgId  String
+  toolId String
+  org    Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  tool   SecurityTool @relation(fields: [toolId], references: [id])
+
+  @@unique([orgId, toolId])
+  @@index([orgId])
+}
+
+// ============================================
+// TTX SESSIONS & GAMEPLAY
+// ============================================
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum SessionMode {
+  INDIVIDUAL
+  GROUP
+}
+
+enum SessionStatus {
+  DRAFT
+  LOBBY
+  GENERATING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model TtxSession {
+  id             String        @id @default(cuid())
+  orgId          String
+  organization   Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  title          String
+  difficulty     Difficulty
+  theme          String?       // "Ransomware", "Insider Threat", "Supply Chain"
+  mitreAttackIds String[]      // ["T1566", "T1059"] - MITRE ATT&CK technique IDs
+  mode           SessionMode
+  status         SessionStatus @default(DRAFT)
+  
+  // AI-generated scenario stored as JSON
+  scenario       Json?         // Full TtxScenario structure
+  
+  // Session config
+  questionCount  Int           @default(12)
+  timeLimitSecs  Int?          // Optional per-question time limit
+  
+  // Progress tracking
+  currentStage   Int           @default(0)
+  
+  // Metadata
+  createdById    String
+  createdBy      User          @relation("SessionCreator", fields: [createdById], references: [id])
+  createdAt      DateTime      @default(now())
+  startedAt      DateTime?
+  completedAt    DateTime?
+  
+  // Pusher channel for real-time
+  channelName    String?       @unique
+  
+  participants   TtxParticipant[]
+  feedback       ScenarioFeedback[]
+
+  @@index([orgId])
+  @@index([status])
+  @@index([orgId, status])
+}
+
+model TtxParticipant {
+  id        String     @id @default(cuid())
+  sessionId String
+  userId    String
+  session   TtxSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id])
+  
+  totalScore Int       @default(0)
+  rank       Int?
+  joinedAt   DateTime  @default(now())
+  
+  answers TtxAnswer[]
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+  @@index([userId])
+}
+
+model TtxAnswer {
+  id             String         @id @default(cuid())
+  participantId  String
+  participant    TtxParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  
+  stageIndex     Int            // Which narrative stage (0-based)
+  questionIndex  Int            // Which question within the stage
+  selectedOption Int            // Index of the option chosen
+  isCorrect      Boolean
+  points         Int            @default(0)
+  timeToAnswer   Int?           // Milliseconds taken
+  answeredAt     DateTime       @default(now())
+
+  @@unique([participantId, stageIndex, questionIndex])
+  @@index([participantId])
+}
+
+// ============================================
+// STRIPE / BILLING
+// ============================================
+
+model StripeEvent {
+  id               String   @id @default(cuid())
+  stripeEventId    String   @unique
+  type             String
+  processed        Boolean  @default(false)
+  processedAt      DateTime?
+  createdAt        DateTime @default(now())
+}
