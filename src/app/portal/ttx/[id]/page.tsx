@@ -37,6 +37,8 @@ export default function TtxPlayPage() {
   const [stageNarrative, setStageNarrative] = useState(true);
   const [sessionComplete, setSessionComplete] = useState(false);
   const [leaderboard, setLeaderboard] = useState<ScoreUpdateEvent["leaderboard"]>([]);
+  const [generatingPlaybook, setGeneratingPlaybook] = useState(false);
+  const [playbookId, setPlaybookId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/ttx/session/${sessionId}`)
@@ -182,8 +184,30 @@ export default function TtxPlayPage() {
           </div>
         </div>
 
-        <div className="flex gap-4 justify-center">
-          <a href="/portal/leaderboard" className="cyber-btn-secondary">🏆 View Leaderboard</a>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={async () => {
+              setGeneratingPlaybook(true);
+              try {
+                const res = await fetch(`/api/portal/playbook/${sessionId}`, { method: "POST" });
+                if (res.ok) {
+                  const pb = await res.json();
+                  setPlaybookId(pb.id);
+                }
+              } catch {}
+              setGeneratingPlaybook(false);
+            }}
+            disabled={generatingPlaybook || !!playbookId}
+            className="cyber-btn-primary disabled:opacity-50"
+          >
+            {generatingPlaybook ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                Generating Playbook...
+              </span>
+            ) : playbookId ? "✅ Playbook Generated" : "📋 Generate Playbook"}
+          </button>
+          <a href="/portal/leaderboard" className="cyber-btn-secondary">🏆 Leaderboard</a>
           <a href="/portal/ttx/new" className="cyber-btn-primary">🎯 New Exercise</a>
         </div>
       </div>

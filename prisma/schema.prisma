@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  
 }
 
 datasource db {
@@ -273,6 +273,7 @@ model TtxSession {
   
   participants   TtxParticipant[]
   feedback       ScenarioFeedback[]
+  playbook       Playbook?
 
   @@index([orgId])
   @@index([status])
@@ -325,4 +326,27 @@ model StripeEvent {
   processed        Boolean  @default(false)
   processedAt      DateTime?
   createdAt        DateTime @default(now())
+}
+
+// ============================================
+// PLAYBOOKS (auto-generated from TTX results)
+// ============================================
+
+model Playbook {
+  id          String     @id @default(cuid())
+  sessionId   String     @unique
+  session     TtxSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  orgId       String
+  
+  title       String
+  content     Json       // Full playbook structure as JSON
+  
+  // Metadata
+  framework   String?    // "NIST", "SANS", "ISO 27035"
+  threatType  String?    // From the TTX theme
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  @@index([orgId])
 }

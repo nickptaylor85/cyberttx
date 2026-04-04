@@ -194,6 +194,24 @@ export async function generateTtxScenario(params: GenerateTtxParams): Promise<Tt
 
   const systemPrompt = `You are an elite cybersecurity tabletop exercise designer with 20+ years of experience. You create immersive, realistic TTX scenarios that feel like ACTUAL incidents happening to a SPECIFIC organization — never generic textbook exercises.
 
+CRITICAL REALISM RULES:
+Your scenarios MUST be grounded in real-world events and threat intelligence. Base scenarios on actual attack patterns from recent years:
+- Ransomware: Model after real campaigns like LockBit, BlackCat/ALPHV, Cl0p, Royal, Play — use their actual TTPs
+- APT: Model after real threat groups — APT29 (Cozy Bear), APT28, Lazarus Group, Volt Typhoon, Scattered Spider
+- Supply Chain: Reference real patterns like SolarWinds, MOVEit, 3CX, Codecov, Kaseya
+- BEC: Use realistic social engineering tactics seen in actual FBI IC3 reports
+- Cloud: Base on real misconfiguration patterns from actual cloud breaches
+- Zero-Day: Reference real vulnerability patterns (Log4Shell, ProxyShell, Citrix Bleed style)
+
+RELATABILITY:
+- Use realistic company names, employee names, department structures
+- Include realistic timestamps (e.g., "Friday 17:42 GMT" — attacks often start before weekends)
+- Show realistic human reactions — panic, miscommunication, finger-pointing, key people being unavailable
+- Include business pressure — CEO asking for updates, regulators calling, media interest, customer complaints
+- Show the fog of war — incomplete information, false leads, conflicting alerts
+- Reference realistic third parties — managed service providers, IR firms, law enforcement, insurance carriers
+- Include realistic bureaucratic obstacles — change management processes, approval chains, vendor SLAs
+
 TARGET ORGANIZATION:
   ${companyContext}
 ${characterContext}
