@@ -22,7 +22,6 @@ export async function POST(req: NextRequest) {
     include: {
       securityTools: { include: { tool: true } },
       profile: true,
-      characters: { where: { isRecurring: true } },
     },
   });
 
@@ -39,23 +38,21 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { theme, difficulty, mode, questionCount, mitreAttackIds, timeLimitSecs, additionalCharacters } = body;
+  const { theme, difficulty, mode, questionCount, mitreAttackIds, timeLimitSecs, selectedCharacters } = body;
 
   if (!theme || !difficulty) {
     return NextResponse.json({ error: "Theme and difficulty required" }, { status: 400 });
   }
 
-  // Merge recurring characters with any session-specific ones
-  const allCharacters = [
-    ...org.characters.map((c) => ({
-      name: c.name,
-      role: c.role,
-      department: c.department || undefined,
-      description: c.description || undefined,
-      expertise: c.expertise || [],
-    })),
-    ...(additionalCharacters || []),
-  ];
+  // Use characters explicitly selected in the wizard
+  // Each character has: name, role, department?, description?, expertise?
+  const characters = (selectedCharacters || []).map((c: any) => ({
+    name: c.name,
+    role: c.role,
+    department: c.department || undefined,
+    description: c.description || undefined,
+    expertise: c.expertise || [],
+  }));
 
   // Analyze past performance for adaptive difficulty
   const pastPerformance = await analyzePastPerformance(org.id, db);
@@ -90,7 +87,7 @@ export async function POST(req: NextRequest) {
       })),
       questionCount: questionCount || 12,
       orgProfile: org.profile,
-      characters: allCharacters,
+      characters,
       pastPerformance,
     });
 

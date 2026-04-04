@@ -13,6 +13,27 @@ interface Tool {
   icon: string;
 }
 
+interface Character {
+  id: string;
+  name: string;
+  role: string;
+  department: string;
+  description: string;
+  expertise: string[];
+  isRecurring: boolean;
+}
+
+// One-off character (not saved to roster)
+interface AdHocCharacter {
+  tempId: string;
+  name: string;
+  role: string;
+  department: string;
+  description: string;
+}
+
+const WIZARD_STEPS = ["Theme", "Configuration", "Characters", "MITRE ATT&CK", "Launch"];
+
 export default function NewTtxPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -21,6 +42,15 @@ export default function NewTtxPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+
+  // Characters from roster
+  const [rosterCharacters, setRosterCharacters] = useState<Character[]>([]);
+  const [selectedCharacterIds, setSelectedCharacterIds] = useState<Set<string>>(new Set());
+
+  // One-off characters for this session only
+  const [adHocCharacters, setAdHocCharacters] = useState<AdHocCharacter[]>([]);
+  const [showAdHocForm, setShowAdHocForm] = useState(false);
+  const [adHocForm, setAdHocForm] = useState({ name: "", role: "", department: "", description: "" });
 
   const [config, setConfig] = useState({
     theme: "",
@@ -32,19 +62,62 @@ export default function NewTtxPage() {
   });
 
   useEffect(() => {
-    // Fetch org's security tools
-    fetch("/api/portal/tools")
-      .then((r) => r.json())
-      .then((data) => {
-        setTools(data.allTools || []);
-        setOrgTools(data.selectedIds || []);
-        setLoading(false);
-      });
+    Promise.all([
+      fetch("/api/portal/tools").then((r) => r.json()),
+      fetch("/api/portal/characters").then((r) => r.json()),
+    ]).then(([toolsData, charsData]) => {
+      setTools(toolsData.allTools || []);
+      setOrgTools(toolsData.selectedIds || []);
+      setRosterCharacters(charsData || []);
+      // Pre-select recurring characters
+      const recurring = (charsData || []).filter((c: Character) => c.isRecurring).map((c: Character) => c.id);
+      setSelectedCharacterIds(new Set(recurring));
+      setLoading(false);
+    });
   }, []);
+
+  function toggleCharacter(id: string) {
+    const next = new Set(selectedCharacterIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedCharacterIds(next);
+  }
+
+  function addAdHocCharacter(e: React.FormEvent) {
+    e.preventDefault();
+    if (!adHocForm.name || !adHocForm.role) return;
+    setAdHocCharacters([...adHocCharacters, { ...adHocForm, tempId: `adhoc-${Date.now()}` }]);
+    setAdHocForm({ name: "", role: "", department: "", description: "" });
+    setShowAdHocForm(false);
+  }
+
+  function removeAdHoc(tempId: string) {
+    setAdHocCharacters(adHocCharacters.filter((c) => c.tempId !== tempId));
+  }
 
   async function handleGenerate() {
     setGenerating(true);
     setError("");
+
+    // Build selected characters payload
+    const selectedRoster = rosterCharacters
+      .filter((c) => selectedCharacterIds.has(c.id))
+      .map((c) => ({
+        name: c.name,
+        role: c.role,
+        department: c.department || "",
+        description: c.description || "",
+        expertise: c.expertise || [],
+      }));
+
+    const adHocPayload = adHocCharacters.map((c) => ({
+      name: c.name,
+      role: c.role,
+      department: c.department || "",
+      description: c.description || "",
+      expertise: [],
+    }));
+
     try {
       const res = await fetch("/api/ttx/generate", {
         method: "POST",
@@ -52,6 +125,7 @@ export default function NewTtxPage() {
         body: JSON.stringify({
           ...config,
           toolIds: orgTools,
+          selectedCharacters: [...selectedRoster, ...adHocPayload],
         }),
       });
       if (!res.ok) {
@@ -72,6 +146,8 @@ export default function NewTtxPage() {
     techniques: COMMON_MITRE_TECHNIQUES.filter((t) => t.tactic === tactic),
   })).filter((g) => g.techniques.length > 0);
 
+  const totalCharacters = selectedCharacterIds.size + adHocCharacters.length;
+
   if (loading) {
     return <div className="text-center py-20 text-gray-500">Loading configuration...</div>;
   }
@@ -83,7 +159,7 @@ export default function NewTtxPage() {
 
       {/* Progress Steps */}
       <div className="flex items-center gap-2 mb-10">
-        {["Theme", "Configuration", "MITRE ATT&CK", "Launch"].map((label, i) => (
+        {WIZARD_STEPS.map((label, i) => (
           <div key={i} className="flex items-center gap-2 flex-1">
             <div className={cn(
               "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
@@ -94,12 +170,14 @@ export default function NewTtxPage() {
               {step > i + 1 ? "✓" : i + 1}
             </div>
             <span className={cn("text-sm hidden sm:block", step === i + 1 ? "text-white" : "text-gray-500")}>{label}</span>
-            {i < 3 && <div className={cn("flex-1 h-px", step > i + 1 ? "bg-cyber-600" : "bg-surface-3")} />}
+            {i < WIZARD_STEPS.length - 1 && <div className={cn("flex-1 h-px", step > i + 1 ? "bg-cyber-600" : "bg-surface-3")} />}
           </div>
         ))}
       </div>
 
-      {/* Step 1: Theme */}
+      {/* =============================== */}
+      {/* STEP 1: Theme                    */}
+      {/* =============================== */}
       {step === 1 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-4">Choose a Scenario Theme</h2>
@@ -122,18 +200,16 @@ export default function NewTtxPage() {
             ))}
           </div>
           <div className="flex justify-end mt-8">
-            <button
-              onClick={() => setStep(2)}
-              disabled={!config.theme}
-              className="cyber-btn-primary disabled:opacity-50"
-            >
+            <button onClick={() => setStep(2)} disabled={!config.theme} className="cyber-btn-primary disabled:opacity-50">
               Next: Configuration →
             </button>
           </div>
         </div>
       )}
 
-      {/* Step 2: Configuration */}
+      {/* =============================== */}
+      {/* STEP 2: Configuration            */}
+      {/* =============================== */}
       {step === 2 && (
         <div className="space-y-6">
           <h2 className="font-display text-lg font-semibold text-white mb-4">Exercise Configuration</h2>
@@ -143,10 +219,10 @@ export default function NewTtxPage() {
             <label className="cyber-label">Difficulty Level</label>
             <div className="grid grid-cols-4 gap-3">
               {[
-                { value: "BEGINNER", label: "Beginner", desc: "0-2 yrs", color: "green" },
-                { value: "INTERMEDIATE", label: "Intermediate", desc: "2-5 yrs", color: "yellow" },
-                { value: "ADVANCED", label: "Advanced", desc: "5-10 yrs", color: "orange" },
-                { value: "EXPERT", label: "Expert", desc: "10+ yrs", color: "red" },
+                { value: "BEGINNER", label: "Beginner", desc: "0-2 yrs" },
+                { value: "INTERMEDIATE", label: "Intermediate", desc: "2-5 yrs" },
+                { value: "ADVANCED", label: "Advanced", desc: "5-10 yrs" },
+                { value: "EXPERT", label: "Expert", desc: "10+ yrs" },
               ].map((d) => (
                 <button
                   key={d.value}
@@ -197,28 +273,191 @@ export default function NewTtxPage() {
           <div>
             <label className="cyber-label">Number of Questions: {config.questionCount}</label>
             <input
-              type="range"
-              min={8}
-              max={20}
-              value={config.questionCount}
+              type="range" min={8} max={20} value={config.questionCount}
               onChange={(e) => setConfig({ ...config, questionCount: parseInt(e.target.value) })}
               className="w-full accent-cyber-500"
             />
             <div className="flex justify-between text-xs text-gray-500">
-              <span>8 (Quick)</span>
-              <span>20 (Deep Dive)</span>
+              <span>8 (Quick)</span><span>20 (Deep Dive)</span>
             </div>
           </div>
 
           <div className="flex justify-between mt-8">
             <button onClick={() => setStep(1)} className="cyber-btn-secondary">← Back</button>
-            <button onClick={() => setStep(3)} className="cyber-btn-primary">Next: MITRE ATT&CK →</button>
+            <button onClick={() => setStep(3)} className="cyber-btn-primary">Next: Characters →</button>
           </div>
         </div>
       )}
 
-      {/* Step 3: MITRE ATT&CK */}
+      {/* =============================== */}
+      {/* STEP 3: Characters               */}
+      {/* =============================== */}
       {step === 3 && (
+        <div>
+          <h2 className="font-display text-lg font-semibold text-white mb-1">Cast Your Scenario</h2>
+          <p className="text-gray-500 text-sm mb-6">
+            Pick characters from your roster to appear in this exercise, or add one-off characters just for this session.
+            The AI will weave them into the narrative by name.
+          </p>
+
+          {/* Roster characters */}
+          {rosterCharacters.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Your Roster</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedCharacterIds(new Set(rosterCharacters.map((c) => c.id)))}
+                    className="text-cyber-400 text-xs hover:text-cyber-300"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-gray-600 text-xs">·</span>
+                  <button
+                    onClick={() => setSelectedCharacterIds(new Set())}
+                    className="text-gray-400 text-xs hover:text-gray-300"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-2">
+                {rosterCharacters.map((char) => {
+                  const selected = selectedCharacterIds.has(char.id);
+                  return (
+                    <button
+                      key={char.id}
+                      onClick={() => toggleCharacter(char.id)}
+                      className={cn(
+                        "p-4 rounded-lg border text-left transition-all",
+                        selected
+                          ? "bg-cyber-600/10 border-cyber-600/50 ring-1 ring-cyber-500/20"
+                          : "bg-surface-2 border-surface-3 hover:border-surface-4"
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={cn(
+                          "w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all",
+                          selected ? "bg-cyber-600 border-cyber-600 text-white" : "border-surface-4"
+                        )}>
+                          {selected && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className={cn("font-medium text-sm", selected ? "text-white" : "text-gray-300")}>{char.name}</p>
+                          <p className="text-cyber-400 text-xs">{char.role}</p>
+                          {char.department && <p className="text-gray-500 text-xs">{char.department}</p>}
+                          {char.description && (
+                            <p className="text-gray-500 text-xs mt-1 line-clamp-1">{char.description}</p>
+                          )}
+                          {char.expertise?.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {char.expertise.slice(0, 3).map((exp, i) => (
+                                <span key={i} className="px-1.5 py-0.5 bg-surface-3 rounded text-[10px] text-gray-400">{exp}</span>
+                              ))}
+                              {char.expertise.length > 3 && (
+                                <span className="text-[10px] text-gray-500">+{char.expertise.length - 3}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {rosterCharacters.length === 0 && (
+            <div className="mb-6 p-6 bg-surface-2 border border-surface-3 rounded-xl text-center">
+              <p className="text-gray-400 text-sm mb-1">No characters in your roster yet</p>
+              <p className="text-gray-500 text-xs">
+                <a href="/portal/characters" className="text-cyber-400 hover:text-cyber-300">Create recurring characters →</a> or add one-off characters below.
+              </p>
+            </div>
+          )}
+
+          {/* Ad-hoc characters for this session */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Session-Only Characters</h3>
+              <button onClick={() => setShowAdHocForm(true)} className="text-cyber-400 text-xs hover:text-cyber-300">
+                + Add Character
+              </button>
+            </div>
+
+            {adHocCharacters.length > 0 && (
+              <div className="space-y-2 mb-3">
+                {adHocCharacters.map((char) => (
+                  <div key={char.tempId} className="flex items-center justify-between p-3 bg-surface-2 border border-surface-3 rounded-lg">
+                    <div>
+                      <p className="text-white text-sm font-medium">{char.name}</p>
+                      <p className="text-cyber-400 text-xs">{char.role}{char.department ? ` · ${char.department}` : ""}</p>
+                      {char.description && <p className="text-gray-500 text-xs mt-0.5 line-clamp-1">{char.description}</p>}
+                    </div>
+                    <button onClick={() => removeAdHoc(char.tempId)} className="text-gray-500 hover:text-red-400 p-1">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Ad-hoc form */}
+            {showAdHocForm && (
+              <form onSubmit={addAdHocCharacter} className="p-4 bg-surface-2 border border-surface-3 rounded-xl space-y-3">
+                <p className="text-white text-sm font-medium mb-2">Add a character for this session only</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="cyber-label">Name</label>
+                    <input className="cyber-input" placeholder="e.g. James Thornton" value={adHocForm.name}
+                      onChange={(e) => setAdHocForm({ ...adHocForm, name: e.target.value })} required />
+                  </div>
+                  <div>
+                    <label className="cyber-label">Role</label>
+                    <input className="cyber-input" placeholder="e.g. External IR Consultant" value={adHocForm.role}
+                      onChange={(e) => setAdHocForm({ ...adHocForm, role: e.target.value })} required />
+                  </div>
+                </div>
+                <div>
+                  <label className="cyber-label">Department (optional)</label>
+                  <input className="cyber-input" placeholder="e.g. Third-party IR firm" value={adHocForm.department}
+                    onChange={(e) => setAdHocForm({ ...adHocForm, department: e.target.value })} />
+                </div>
+                <div>
+                  <label className="cyber-label">Description (optional)</label>
+                  <textarea className="cyber-input min-h-[60px]" placeholder="Brief personality/background..."
+                    value={adHocForm.description} onChange={(e) => setAdHocForm({ ...adHocForm, description: e.target.value })} />
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setShowAdHocForm(false)} className="cyber-btn-secondary text-xs flex-1">Cancel</button>
+                  <button type="submit" className="cyber-btn-primary text-xs flex-1">Add to Scenario</button>
+                </div>
+              </form>
+            )}
+          </div>
+
+          {/* Summary */}
+          <div className="p-3 bg-surface-2 border border-surface-3 rounded-lg flex items-center justify-between">
+            <p className="text-gray-400 text-sm">
+              <span className="text-white font-semibold">{totalCharacters}</span> character{totalCharacters !== 1 ? "s" : ""} will appear in this scenario
+            </p>
+            {totalCharacters === 0 && (
+              <span className="text-yellow-400 text-xs">AI will use generic roles</span>
+            )}
+          </div>
+
+          <div className="flex justify-between mt-8">
+            <button onClick={() => setStep(2)} className="cyber-btn-secondary">← Back</button>
+            <button onClick={() => setStep(4)} className="cyber-btn-primary">Next: MITRE ATT&CK →</button>
+          </div>
+        </div>
+      )}
+
+      {/* =============================== */}
+      {/* STEP 4: MITRE ATT&CK             */}
+      {/* =============================== */}
+      {step === 4 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-1">MITRE ATT&CK Techniques</h2>
           <p className="text-gray-500 text-sm mb-6">
@@ -266,14 +505,16 @@ export default function NewTtxPage() {
           )}
 
           <div className="flex justify-between mt-8">
-            <button onClick={() => setStep(2)} className="cyber-btn-secondary">← Back</button>
-            <button onClick={() => setStep(4)} className="cyber-btn-primary">Next: Review & Launch →</button>
+            <button onClick={() => setStep(3)} className="cyber-btn-secondary">← Back</button>
+            <button onClick={() => setStep(5)} className="cyber-btn-primary">Next: Review & Launch →</button>
           </div>
         </div>
       )}
 
-      {/* Step 4: Review & Launch */}
-      {step === 4 && (
+      {/* =============================== */}
+      {/* STEP 5: Review & Launch           */}
+      {/* =============================== */}
+      {step === 5 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-6">Review & Launch</h2>
 
@@ -296,6 +537,36 @@ export default function NewTtxPage() {
                 <p className="text-white mt-1">{config.questionCount} questions</p>
               </div>
             </div>
+
+            {/* Characters summary */}
+            <div>
+              <p className="text-gray-500 text-xs uppercase mb-2">Characters ({totalCharacters})</p>
+              {totalCharacters === 0 ? (
+                <p className="text-gray-400 text-sm">None selected — AI will use generic roles</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {rosterCharacters
+                    .filter((c) => selectedCharacterIds.has(c.id))
+                    .map((c) => (
+                      <span key={c.id} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-3 rounded-lg text-xs">
+                        <span className="text-white font-medium">{c.name}</span>
+                        <span className="text-gray-500">·</span>
+                        <span className="text-cyber-400">{c.role}</span>
+                      </span>
+                    ))}
+                  {adHocCharacters.map((c) => (
+                    <span key={c.tempId} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-xs">
+                      <span className="text-white font-medium">{c.name}</span>
+                      <span className="text-gray-500">·</span>
+                      <span className="text-yellow-400">{c.role}</span>
+                      <span className="text-yellow-500/60 text-[10px]">(one-off)</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* MITRE */}
             {config.mitreAttackIds.length > 0 && (
               <div>
                 <p className="text-gray-500 text-xs uppercase mb-2">MITRE ATT&CK Techniques</p>
@@ -306,11 +577,12 @@ export default function NewTtxPage() {
                 </div>
               </div>
             )}
+
             <div>
               <p className="text-gray-500 text-xs uppercase mb-2">Security Stack ({orgTools.length} tools)</p>
               <p className="text-gray-400 text-sm">
                 {orgTools.length === 0
-                  ? "⚠️ No tools configured — scenarios will be generic. Configure your stack in Security Stack settings."
+                  ? "⚠️ No tools configured — scenarios will be generic."
                   : "Scenarios will reference your configured security tools."}
               </p>
             </div>
@@ -321,12 +593,8 @@ export default function NewTtxPage() {
           )}
 
           <div className="flex justify-between">
-            <button onClick={() => setStep(3)} className="cyber-btn-secondary">← Back</button>
-            <button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="cyber-btn-primary px-8"
-            >
+            <button onClick={() => setStep(4)} className="cyber-btn-secondary">← Back</button>
+            <button onClick={handleGenerate} disabled={generating} className="cyber-btn-primary px-8">
               {generating ? (
                 <span className="flex items-center gap-2">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -345,14 +613,15 @@ export default function NewTtxPage() {
             <div className="mt-6 cyber-card bg-surface-0 border-cyber-600/30">
               <div className="flex items-center gap-3 mb-3">
                 <div className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-cyber-500"></span>
+                  <span className="animate-ping absolute h-full w-full rounded-full bg-cyber-400 opacity-75"></span>
+                  <span className="relative rounded-full h-3 w-3 bg-cyber-500"></span>
                 </div>
                 <p className="text-cyber-400 font-medium text-sm">AI is generating your scenario...</p>
               </div>
               <p className="text-gray-500 text-sm">
-                Creating a realistic {selectedTheme?.name?.toLowerCase()} incident narrative with {config.questionCount} questions
-                tailored to your security stack. This usually takes 15-30 seconds.
+                Creating a realistic {selectedTheme?.name?.toLowerCase()} incident with {config.questionCount} questions
+                {totalCharacters > 0 ? `, featuring ${totalCharacters} named character${totalCharacters > 1 ? "s" : ""}` : ""}
+                . This usually takes 15-30 seconds.
               </p>
             </div>
           )}
