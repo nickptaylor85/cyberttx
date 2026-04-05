@@ -14,15 +14,34 @@ export async function POST(req: NextRequest) {
   }
 
   const emailLower = email.toLowerCase();
-  const existing = await db.user.findFirst({ where: { email: emailLower, clerkId: { startsWith: "hash:" } } });
+  const hash = await bcrypt.hash(password, 12);
+
+  // Check if user already exists
+  const existing = await db.user.findFirst({ where: { email: emailLower } });
+
   if (existing) {
-    return NextResponse.json({ error: "Email already registered" }, { status: 409 });
+    // If they already have a password (hash:), they're already registered
+    if (existing.clerkId.startsWith("hash:")) {
+      return NextResponse.json({ error: "Email already registered. Please sign in." }, { status: 409 });
+    }
+
+    // Existing Clerk user or pending invitation — migrate them to password auth
+    await db.user.update({
+      where: { id: existing.id },
+      data: {
+        clerkId: `hash:${hash}`,
+        firstName: firstName || existing.firstName,
+        lastName: lastName || existing.lastName,
+      },
+    });
+
+    return NextResponse.json({ success: true, userId: existing.id, migrated: true }, { status: 201 });
   }
 
-  // Find matching org by email domain or invitation
+  // Brand new user
   let orgId = await findOrgForEmail(emailLower);
 
-  // Clean up pending invitation if matched
+  // Clean up pending invitation
   if (orgId) {
     const pending = await db.user.findFirst({
       where: { email: emailLower, clerkId: { startsWith: "pending_" } },
@@ -36,16 +55,14 @@ export async function POST(req: NextRequest) {
     if (demo) orgId = demo.id;
   }
 
-  // Check if SUPER_ADMIN (first user or env var match)
+  // Check if should be SUPER_ADMIN
   const superAdminEmails = (process.env.SUPER_ADMIN_EMAILS || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
   const existingSuperAdmins = await db.user.count({ where: { role: "SUPER_ADMIN" } });
   const isSuperAdmin = superAdminEmails.includes(emailLower) || existingSuperAdmins === 0;
 
-  const hash = await bcrypt.hash(password, 12);
-
   const user = await db.user.create({
     data: {
-      clerkId: `hash:${hash}`, // Store password hash in clerkId field
+      clerkId: `hash:${hash}`,
       email: emailLower,
       firstName: firstName || null,
       lastName: lastName || null,

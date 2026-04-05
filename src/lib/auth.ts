@@ -16,13 +16,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const email = (credentials.email as string).toLowerCase();
         const password = credentials.password as string;
 
-        const user = await db.user.findFirst({ where: { email } });
+        // Find user by email with a password hash
+        const user = await db.user.findFirst({
+          where: { email, clerkId: { startsWith: "hash:" } },
+        });
         if (!user) return null;
 
-        // Password stored in clerkId field (repurposed) — format: "hash:bcrypt_hash"
-        const storedHash = user.clerkId.startsWith("hash:") ? user.clerkId.slice(5) : null;
-        if (!storedHash) return null;
-
+        const storedHash = user.clerkId.slice(5); // Remove "hash:" prefix
         const valid = await bcrypt.compare(password, storedHash);
         if (!valid) return null;
 
@@ -36,23 +36,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   session: { strategy: "jwt" },
-  pages: {
-    signIn: "/sign-in",
-    newUser: "/sign-up",
-  },
+  pages: { signIn: "/sign-in" },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.userId = user.id;
-      }
+      if (user) token.userId = user.id;
       return token;
     },
     async session({ session, token }) {
-      if (token.userId) {
-        (session as any).userId = token.userId;
-      }
+      if (token.userId) (session as any).userId = token.userId;
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "threatcast-secret-change-in-production",
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "threatcast-dev-secret",
 });
