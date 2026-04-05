@@ -10,30 +10,30 @@ import { usePathname } from "next/navigation";
 import UserMenu from "@/components/UserMenu";
 import { cn } from "@/lib/utils";
 
-interface NavItem { href: string; label: string; icon: string; exact?: boolean; }
-interface NavSection { label: string; icon: string; items: NavItem[]; defaultOpen?: boolean; }
+interface NavItem { href: string; label: string; icon: string; exact?: boolean; adminOnly?: boolean; }
+interface NavSection { label: string; icon: string; items: NavItem[]; defaultOpen?: boolean; adminOnly?: boolean; }
 
-const navSections: (NavItem | NavSection)[] = [
+const allNavSections: (NavItem | NavSection)[] = [
   { href: "/portal", label: "Dashboard", icon: "📊", exact: true },
 
   { label: "Exercises", icon: "🎯", defaultOpen: true, items: [
     { href: "/portal/ttx", label: "All Exercises", icon: "🎯" },
     { href: "/portal/ttx/custom", label: "Custom Scenario", icon: "✏️" },
-    { href: "/portal/templates", label: "Templates", icon: "📝" },
-    { href: "/portal/schedule", label: "Schedule", icon: "📅" },
+    { href: "/portal/templates", label: "Templates", icon: "📝", adminOnly: true },
+    { href: "/portal/schedule", label: "Schedule", icon: "📅", adminOnly: true },
   ]},
 
   { label: "Insights", icon: "📈", defaultOpen: true, items: [
     { href: "/portal/my-performance", label: "My Performance", icon: "👤" },
     { href: "/portal/leaderboard", label: "Leaderboard", icon: "🏆" },
-    { href: "/portal/performance", label: "Team Performance", icon: "📈" },
+    { href: "/portal/performance", label: "Team Performance", icon: "📈", adminOnly: true },
     { href: "/portal/coverage", label: "MITRE Coverage", icon: "🛡️" },
-    { href: "/portal/compliance", label: "Compliance", icon: "📋" },
+    { href: "/portal/compliance", label: "Compliance", icon: "📋", adminOnly: true },
     { href: "/portal/achievements", label: "Achievements", icon: "🏅" },
     { href: "/portal/playbooks", label: "Playbooks", icon: "📖" },
   ]},
 
-  { label: "Organisation", icon: "🏢", items: [
+  { label: "Organisation", icon: "🏢", adminOnly: true, items: [
     { href: "/portal/profile", label: "Company Profile", icon: "🏢" },
     { href: "/portal/tools", label: "Security Stack", icon: "🔧" },
     { href: "/portal/characters", label: "Characters", icon: "🎭" },
@@ -41,10 +41,10 @@ const navSections: (NavItem | NavSection)[] = [
   ]},
 
   { label: "Configure", icon: "⚙️", items: [
-    { href: "/portal/integrations", label: "Integrations", icon: "🔌" },
-    { href: "/portal/branding", label: "Custom Branding", icon: "🎨" },
+    { href: "/portal/integrations", label: "Integrations", icon: "🔌", adminOnly: true },
+    { href: "/portal/branding", label: "Custom Branding", icon: "🎨", adminOnly: true },
     { href: "/portal/notifications", label: "Notifications", icon: "🔔" },
-    { href: "/portal/export", label: "Export Data", icon: "📥" },
+    { href: "/portal/export", label: "Export Data", icon: "📥", adminOnly: true },
     { href: "/portal/settings", label: "Settings", icon: "⚙️" },
     { href: "/portal/guide", label: "User Guide", icon: "📚" },
   ]},
@@ -112,8 +112,29 @@ function SectionGroup({ section, pathname, onNavigate }: { section: NavSection; 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string>("MEMBER");
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
+
+  // Fetch user role for RBAC
+  useEffect(() => {
+    fetch("/api/portal/me").then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.role) setUserRole(d.role);
+    }).catch(() => {});
+  }, []);
+
+  // Filter nav based on role
+  const isAdmin = userRole === "CLIENT_ADMIN" || userRole === "SUPER_ADMIN";
+  const navSections = allNavSections.map(item => {
+    if ("items" in item) {
+      if (item.adminOnly && !isAdmin) return null;
+      const filteredItems = item.items.filter(i => !i.adminOnly || isAdmin);
+      if (filteredItems.length === 0) return null;
+      return { ...item, items: filteredItems };
+    }
+    if ((item as any).adminOnly && !isAdmin) return null;
+    return item;
+  }).filter(Boolean) as (NavItem | NavSection)[];
 
   return (
     <LanguageProvider>

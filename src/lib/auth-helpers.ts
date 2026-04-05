@@ -60,7 +60,10 @@ export async function getAuthUser() {
       if (demo) matchedOrgId = demo.id;
     }
     if (matchedOrgId) {
-      user = await db.user.update({ where: { id: user.id }, data: { orgId: matchedOrgId } });
+      // Check if this org already has a CLIENT_ADMIN — if not, promote this user
+      const existingAdmins = await db.user.count({ where: { orgId: matchedOrgId, role: "CLIENT_ADMIN" } });
+      const newRole = existingAdmins === 0 ? "CLIENT_ADMIN" : user.role;
+      user = await db.user.update({ where: { id: user.id }, data: { orgId: matchedOrgId, role: newRole !== "SUPER_ADMIN" ? newRole : user.role } });
     }
   }
 

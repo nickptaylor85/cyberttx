@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       email: emailLower,
       firstName: firstName || null,
       lastName: lastName || null,
-      role: isSuperAdmin ? "SUPER_ADMIN" : orgId ? "CLIENT_ADMIN" : "MEMBER",
+      role: isSuperAdmin ? "SUPER_ADMIN" : "MEMBER", // Role upgraded to CLIENT_ADMIN on first portal access if no admin exists
       orgId,
     },
   });
