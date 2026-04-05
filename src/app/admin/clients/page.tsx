@@ -172,6 +172,12 @@ export default function ClientsPage() {
                 </div>
                 <div className="flex gap-2">
                   <a
+                    href={`/admin/clients/${org.id}`}
+                    className="cyber-btn-primary text-xs py-1.5 px-3"
+                  >
+                    Details
+                  </a>
+                  <a
                     href={`/portal?org=${org.slug}`}
                     target="_blank"
                     className="cyber-btn-secondary text-xs py-1.5 px-3"

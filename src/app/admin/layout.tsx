@@ -14,9 +14,16 @@ const navSections = [
   { type: "item" as const, href: "/admin/users", label: "All Users", icon: "👥" },
   { type: "divider" as const, label: "Intelligence" },
   { type: "item" as const, href: "/admin/analytics", label: "Analytics", icon: "📈" },
-  { type: "item" as const, href: "/admin/billing", label: "Billing", icon: "💰" },
-  { type: "item" as const, href: "/admin/audit", label: "Audit Log", icon: "📜" },
+  { type: "item" as const, href: "/admin/threat-intel", label: "Threat Intel", icon: "🔍" },
+  { type: "item" as const, href: "/admin/reviews", label: "Review Queue", icon: "⚖️" },
+  { type: "divider" as const, label: "Business" },
+  { type: "item" as const, href: "/admin/billing", label: "Billing & Revenue", icon: "💰" },
+  { type: "item" as const, href: "/admin/export", label: "Export Data", icon: "📥" },
+  { type: "item" as const, href: "/admin/emails", label: "Email Log", icon: "✉️" },
   { type: "divider" as const, label: "System" },
+  { type: "item" as const, href: "/admin/announcements", label: "Announcements", icon: "📢" },
+  { type: "item" as const, href: "/admin/api-keys", label: "API Keys", icon: "🔑" },
+  { type: "item" as const, href: "/admin/audit", label: "Audit Log", icon: "📜" },
   { type: "item" as const, href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];
 
