@@ -13,6 +13,8 @@ const isPublicPage = createRouteMatcher([
 // API routes that don't need auth
 const isPublicApi = createRouteMatcher([
   "/api/webhooks(.*)",
+  "/api/threat-intel(.*)",
+  "/api/portal(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
