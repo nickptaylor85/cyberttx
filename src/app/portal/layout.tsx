@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/portal", label: "Dashboard", icon: "📊", exact: true },
   { href: "/portal/ttx", label: "Exercises", icon: "🎯" },
+  { href: "/portal/ttx/custom", label: "Custom Scenario", icon: "✏️" },
   { href: "/portal/leaderboard", label: "Leaderboard", icon: "🏆" },
   { href: "/portal/coverage", label: "MITRE Coverage", icon: "🛡️" },
   { href: "/portal/performance", label: "Performance", icon: "📈" },
@@ -20,6 +21,7 @@ const navItems = [
   { href: "/portal/characters", label: "Characters", icon: "🎭" },
   { href: "/portal/profile", label: "Company Profile", icon: "🏢" },
   { href: "/portal/users", label: "Team", icon: "👥" },
+  { href: "/portal/integrations", label: "Integrations", icon: "🔌" },
   { href: "/portal/settings", label: "Settings", icon: "⚙️" },
   { href: "/portal/guide", label: "User Guide", icon: "📚" },
 ];

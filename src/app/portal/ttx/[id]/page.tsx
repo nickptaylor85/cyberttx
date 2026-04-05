@@ -1,3 +1,4 @@
+import ExerciseFeedback from "@/components/ExerciseFeedback";
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -261,8 +262,11 @@ export default function TtxPlayPage() {
           >
             {generatingPlaybook ? "Generating Playbook..." : playbookId ? "✅ Playbook Generated" : "📋 Generate Playbook"}
           </button>
+          <a href={`/api/portal/report?sessionId=${sessionId}`} target="_blank" className="cyber-btn-secondary text-center">📄 Report</a>
           <a href="/portal/leaderboard" className="cyber-btn-secondary text-center">🏆 Leaderboard</a>
           <a href="/portal/ttx/new" className="cyber-btn-primary text-center">🎯 New Exercise</a>
+        </div>
+        <div className="mt-6"><ExerciseFeedback sessionId={sessionId} /></div>
         </div>
       </div>
     );

@@ -177,7 +177,7 @@ function buildLearningContext(perf?: PastPerformance | null): string {
 export async function generateTtxScenario(params: GenerateTtxParams): Promise<TtxScenario> {
   const {
     theme, difficulty, mitreAttackIds, securityTools, questionCount,
-    orgProfile, characters, pastPerformance,
+    orgProfile, characters, pastPerformance, customIncident,
   } = params;
 
   const diffConfig = DIFFICULTY_CONFIG[difficulty];
@@ -217,6 +217,7 @@ TARGET ORGANIZATION:
 ${characterContext}
 ${learningContext}
 
+${customIncident ? `\nCUSTOM INCIDENT TO BASE SCENARIO ON:\n${customIncident}\n\nUse this real incident as the foundation. Adapt it to the target organization, add realistic details, and create decision-point questions based on the actual events described.` : ""}
 CRITICAL RULES:
 1. Exactly 4 options per question (A-D), exactly ONE correct
 2. Wrong options must be plausible — never obviously absurd
