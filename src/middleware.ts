@@ -14,7 +14,7 @@ const isPublicPage = createRouteMatcher([
 const isPublicApi = createRouteMatcher([
   "/api/webhooks(.*)",
   "/api/threat-intel(.*)",
-  "/api/portal(.*)",
+  "/api/signup-status(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
