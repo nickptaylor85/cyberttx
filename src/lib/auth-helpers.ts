@@ -8,7 +8,17 @@ import { db } from "@/lib/db";
  */
 export async function getAuthUserId(): Promise<string | null> {
   const headersList = await headers();
-  return headersList.get("x-clerk-user-id") || null;
+  const fromMiddleware = headersList.get("x-clerk-user-id");
+  if (fromMiddleware) return fromMiddleware;
+  
+  // Fallback: try Clerk auth() directly (for cases where middleware didn't inject)
+  try {
+    const { auth } = await import("@clerk/nextjs/server");
+    const { userId } = await auth();
+    return userId;
+  } catch {
+    return null;
+  }
 }
 
 /**
