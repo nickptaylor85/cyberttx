@@ -9,15 +9,25 @@ export async function getOrganizations() {
   });
 }
 
-export async function createOrganization(data: { name: string; slug: string; plan?: string; maxUsers?: number; maxTtxPerMonth?: number }) {
+export async function createOrganization(data: {
+  name: string; slug: string; plan?: string; isDemo?: boolean;
+  maxUsers?: number; maxTtxPerMonth?: number;
+}) {
   if (!data.name || !data.slug) throw new Error("Name and slug required");
-  const existing = await db.organization.findUnique({ where: { slug: data.slug } });
+  const slug = data.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+  const existing = await db.organization.findUnique({ where: { slug } });
   if (existing) throw new Error("Subdomain already taken");
+
+  // Use STARTER as safe default — GROWTH might not exist in DB enum yet
+  const safePlan = ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"].includes(data.plan || "")
+    ? data.plan! : "STARTER";
+
   return db.organization.create({
     data: {
       name: data.name,
-      slug: data.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-      plan: (data.plan as any) || "GROWTH",
+      slug,
+      plan: safePlan as any,
+      isDemo: data.isDemo || false,
       maxUsers: data.maxUsers || 25,
       maxTtxPerMonth: data.maxTtxPerMonth || 15,
     },
@@ -38,6 +48,17 @@ export async function deleteOrganization(id: string) {
   return { success: true };
 }
 
+export async function getAllSessions() {
+  return db.ttxSession.findMany({
+    orderBy: { createdAt: "desc" }, take: 100,
+    include: {
+      organization: { select: { name: true } },
+      createdBy: { select: { firstName: true, email: true } },
+      _count: { select: { participants: true } },
+    },
+  });
+}
+
 export async function deleteSession(id: string) {
   await db.ttxAnswer.deleteMany({ where: { participant: { sessionId: id } } });
   await db.ttxParticipant.deleteMany({ where: { sessionId: id } });
@@ -55,16 +76,4 @@ export async function bulkDeleteSessions(status: string) {
   }
   const result = await db.ttxSession.deleteMany({ where: { status: status as any } });
   return { deleted: result.count };
-}
-
-export async function getAllSessions() {
-  return db.ttxSession.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    include: {
-      organization: { select: { name: true } },
-      createdBy: { select: { firstName: true, email: true } },
-      _count: { select: { participants: true } },
-    },
-  });
 }
