@@ -48,7 +48,16 @@ function SignInForm() {
     // Step 3: Sign in with NextAuth
     const result = await signIn("credentials", { email: email.toLowerCase(), password, redirect: false });
     if (result?.error) { setError("Invalid email or password"); setLoading(false); }
-    else { router.push(callbackUrl); router.refresh(); }
+    else {
+      // Check user role to determine redirect
+      const me = await fetch("/api/portal/me").then(r => r.ok ? r.json() : null).catch(() => null);
+      if (me?.role === "SUPER_ADMIN" && callbackUrl === "/portal") {
+        router.push("/admin");
+      } else {
+        router.push(callbackUrl);
+      }
+      router.refresh();
+    }
   }
 
   return (
