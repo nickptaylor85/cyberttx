@@ -15,6 +15,7 @@ datasource db {
 enum Plan {
   FREE
   STARTER
+  GROWTH
   PROFESSIONAL
   ENTERPRISE
 }

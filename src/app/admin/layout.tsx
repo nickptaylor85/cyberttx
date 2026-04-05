@@ -9,6 +9,11 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
   { href: "/admin/clients", label: "Client Portals", icon: "🏢" },
+  { href: "/admin/sessions", label: "Sessions", icon: "🎯" },
+  { href: "/admin/users", label: "All Users", icon: "👥" },
+  { href: "/admin/analytics", label: "Analytics", icon: "📈" },
+  { href: "/admin/billing", label: "Billing", icon: "💰" },
+  { href: "/admin/audit", label: "Audit Log", icon: "📜" },
   { href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];
 

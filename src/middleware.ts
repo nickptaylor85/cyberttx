@@ -25,6 +25,9 @@ export default clerkMiddleware(async (auth, req) => {
   let subdomain: string | null = null;
   if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
     subdomain = url.searchParams.get("org") || null;
+  } else if (url.searchParams.get("org")) {
+    // Support ?org=slug for admin cross-org portal access in production
+    subdomain = url.searchParams.get("org");
   } else if (!hostname.includes("vercel.app")) {
     const parts = hostname.split(".");
     const domainParts = appDomain.split(".");

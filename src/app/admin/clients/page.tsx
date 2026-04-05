@@ -172,7 +172,7 @@ export default function ClientsPage() {
                 </div>
                 <div className="flex gap-2">
                   <a
-                    href={`https://${org.slug}.threatcast.io`}
+                    href={`/portal?org=${org.slug}`}
                     target="_blank"
                     className="cyber-btn-secondary text-xs py-1.5 px-3"
                   >

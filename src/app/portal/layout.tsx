@@ -10,10 +10,18 @@ const navItems = [
   { href: "/portal", label: "Dashboard", icon: "📊", exact: true },
   { href: "/portal/ttx", label: "Exercises", icon: "🎯" },
   { href: "/portal/leaderboard", label: "Leaderboard", icon: "🏆" },
-  { href: "/portal/tools", label: "Security Stack", icon: "🛡️" },
+  { href: "/portal/coverage", label: "MITRE Coverage", icon: "🛡️" },
+  { href: "/portal/performance", label: "Performance", icon: "📈" },
+  { href: "/portal/compliance", label: "Compliance", icon: "📋" },
+  { href: "/portal/templates", label: "Templates", icon: "📝" },
+  { href: "/portal/playbooks", label: "Playbooks", icon: "📖" },
+  { href: "/portal/schedule", label: "Schedule", icon: "📅" },
+  { href: "/portal/tools", label: "Security Stack", icon: "🔧" },
   { href: "/portal/characters", label: "Characters", icon: "🎭" },
   { href: "/portal/profile", label: "Company Profile", icon: "🏢" },
   { href: "/portal/users", label: "Team", icon: "👥" },
+  { href: "/portal/settings", label: "Settings", icon: "⚙️" },
+  { href: "/portal/guide", label: "User Guide", icon: "📚" },
 ];
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {

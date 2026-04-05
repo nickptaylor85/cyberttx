@@ -131,6 +131,16 @@ export const TTX_THEMES = [
   { id: "iot-attack", name: "IoT / OT Attack", icon: "🏭", description: "Operational technology compromise" },
   { id: "credential-stuffing", name: "Credential Stuffing", icon: "🔑", description: "Automated credential abuse" },
   { id: "watering-hole", name: "Watering Hole Attack", icon: "💧", description: "Strategic website compromise" },
+  // ── Real-World Incident Reconstructions ──
+  { id: "solarwinds", name: "SolarWinds-Style Supply Chain", icon: "🔥", description: "Software supply chain compromise affecting thousands of orgs" },
+  { id: "log4shell", name: "Log4Shell Exploitation", icon: "🔥", description: "Critical RCE via logging library (CVE-2021-44228)" },
+  { id: "moveit", name: "MOVEit Zero-Day Campaign", icon: "🔥", description: "Mass exploitation of file transfer vulnerability by Cl0p" },
+  { id: "healthcare-ransomware", name: "Healthcare Ransomware", icon: "🔥", description: "NHS-style attack disrupting patient care and clinical systems" },
+  { id: "retail-attack", name: "UK Retail Ransomware", icon: "🔥", description: "M&S/Co-op-style coordinated retail sector campaign" },
+  { id: "jlr-supply-chain", name: "Automotive Supply Chain", icon: "🔥", description: "JLR-style attack halting manufacturing via supplier compromise" },
+  { id: "crowdstrike-outage", name: "Security Tool Outage", icon: "🔥", description: "CrowdStrike-style faulty update causing global IT outage" },
+  { id: "okta-breach", name: "Identity Provider Breach", icon: "🔥", description: "IdP compromise enabling downstream customer access" },
+  { id: "deepfake-bec", name: "AI Deepfake BEC", icon: "🔥", description: "AI-generated voice/video impersonation of executives" },
 ] as const;
 
 // ============================================
