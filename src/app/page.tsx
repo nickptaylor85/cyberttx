@@ -23,7 +23,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4 sm:gap-8 text-sm text-gray-400">
             <Link href="/sign-in" className="hover:text-white transition-colors">Client Portal</Link><Link href="/admin" className="hover:text-gray-300 transition-colors text-gray-500">Admin</Link>
-            <Link href="/sign-up" className="cyber-btn-primary text-xs sm:text-sm">Start Free Trial</Link>
+            <Link href="/sign-up" className="cyber-btn-primary text-xs sm:text-sm">Get Started</Link>
           </div>
         </div>
       </nav>
@@ -54,7 +54,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/sign-up" className="cyber-btn-primary text-base px-8 py-3">
-              Start 14-Day Free Trial
+              Request a Demo
             </Link>
             <Link href="#demo" className="cyber-btn-secondary text-base px-8 py-3">
               Watch Demo
@@ -143,12 +143,12 @@ export default function LandingPage() {
           Simple, transparent pricing
         </h2>
         <p className="text-gray-400 text-center mb-16 max-w-xl mx-auto">
-          Replace £30k consultancy exercises. 14-day free trial on Growth & Professional.
+          Replace £30k consultancy exercises with unlimited AI-powered drills.
         </p>
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            { name: "Growth", price: "£599", period: "/month", users: "25 users", ttx: "15 exercises/month", features: ["Group & individual modes", "All themes incl. real-world incidents", "After-action PDF reports", "MITRE ATT&CK coverage tracking", "Compliance evidence (ISO, NIST, SOC 2)"], cta: "Start 14-Day Trial", highlight: false },
-            { name: "Professional", price: "£1,499", period: "/month", users: "75 users", ttx: "50 exercises/month", features: ["Everything in Growth", "Executive board-level exercises", "IR playbook generation (5 frameworks)", "Team performance analytics", "Priority support & onboarding"], cta: "Start 14-Day Trial", highlight: true },
+            { name: "Growth", price: "£599", period: "/month", users: "25 users", ttx: "15 exercises/month", features: ["Group & individual modes", "All themes incl. real-world incidents", "After-action PDF reports", "MITRE ATT&CK coverage tracking", "Compliance evidence (ISO, NIST, SOC 2)"], cta: "Get Started", highlight: false },
+            { name: "Professional", price: "£1,499", period: "/month", users: "75 users", ttx: "50 exercises/month", features: ["Everything in Growth", "Executive board-level exercises", "IR playbook generation (5 frameworks)", "Team performance analytics", "Priority support & onboarding"], cta: "Get Started", highlight: true },
             { name: "Enterprise", price: "£3,499", period: "/month", users: "Unlimited users", ttx: "Unlimited exercises", features: ["Everything in Professional", "SSO/SAML integration", "REST API access", "Dedicated customer success manager", "Custom scenario development", "On-premise deployment option"], cta: "Contact Sales", highlight: false },
           ].map((plan, i) => (
             <div key={i} className={`cyber-card relative ${plan.highlight ? "border-cyber-600 shadow-lg shadow-cyber-900/20 ring-1 ring-cyber-600/20" : ""}`}>

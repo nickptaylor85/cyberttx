@@ -75,17 +75,9 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
-  // Page routes: redirect to sign-in if not authenticated
-  if (!isPublicPage(req)) {
-    if (!userId) {
-      return NextResponse.redirect(new URL("/sign-in", req.url));
-    }
-    const headers = new Headers(req.headers);
-    headers.set("x-clerk-user-id", userId);
-    return NextResponse.next({ headers });
-  }
-
-  // Public pages: still inject userId if available
+  // Page routes: inject userId header if available, but DON'T redirect
+  // Clerk's client-side ClerkProvider handles auth UI (sign-in prompts)
+  // This fixes Clerk dev mode issues where auth() returns null inconsistently
   if (userId) {
     const headers = new Headers(req.headers);
     headers.set("x-clerk-user-id", userId);
