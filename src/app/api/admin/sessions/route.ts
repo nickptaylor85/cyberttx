@@ -1,17 +1,13 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthUserId } from "@/lib/auth-helpers";
+import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
-function isSuperAdmin(clerkId: string): boolean {
-  const adminIds = (process.env.SUPER_ADMIN_CLERK_IDS || "").split(",").map(s => s.trim());
-  return adminIds.includes(clerkId);
-}
 
 // DELETE /api/admin/sessions?id=xxx or ?status=CANCELLED (bulk)
 export async function DELETE(req: NextRequest) {
-  const clerkId = await getAuthUserId();
-  if (!clerkId || !isSuperAdmin(clerkId)) {
+  const user = await getAuthUser();
+  if (!user || user.role !== "SUPER_ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

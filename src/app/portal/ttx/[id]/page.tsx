@@ -262,6 +262,8 @@ export default function TtxPlayPage() {
           >
             {generatingPlaybook ? "Generating Playbook..." : playbookId ? "✅ Playbook Generated" : "📋 Generate Playbook"}
           </button>
+          <a href={`/portal/ttx/${sessionId}/replay`} className="cyber-btn-secondary text-center">🔄 Replay</a>
+          <a href={`/api/portal/certificate?sessionId=${sessionId}`} target="_blank" className="cyber-btn-secondary text-center">🏆 Certificate</a>
           <a href={`/api/portal/report?sessionId=${sessionId}`} target="_blank" className="cyber-btn-secondary text-center">📄 Report</a>
           <a href="/portal/leaderboard" className="cyber-btn-secondary text-center">🏆 Leaderboard</a>
           <a href="/portal/ttx/new" className="cyber-btn-primary text-center">🎯 New Exercise</a>

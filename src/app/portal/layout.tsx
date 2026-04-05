@@ -1,6 +1,7 @@
 "use client";
 
 import { LanguageProvider, useLanguage } from "@/lib/i18n/LanguageContext";
+import SupportWidget from "@/components/SupportWidget";
 import { t as translate, LangCode } from "@/lib/i18n/translations";
 
 import { useState, useEffect } from "react";
@@ -23,10 +24,12 @@ const navSections: (NavItem | NavSection)[] = [
   ]},
 
   { label: "Insights", icon: "📈", defaultOpen: true, items: [
+    { href: "/portal/my-performance", label: "My Performance", icon: "👤" },
     { href: "/portal/leaderboard", label: "Leaderboard", icon: "🏆" },
+    { href: "/portal/performance", label: "Team Performance", icon: "📈" },
     { href: "/portal/coverage", label: "MITRE Coverage", icon: "🛡️" },
-    { href: "/portal/performance", label: "Performance", icon: "📈" },
     { href: "/portal/compliance", label: "Compliance", icon: "📋" },
+    { href: "/portal/achievements", label: "Achievements", icon: "🏅" },
     { href: "/portal/playbooks", label: "Playbooks", icon: "📖" },
   ]},
 
@@ -39,6 +42,9 @@ const navSections: (NavItem | NavSection)[] = [
 
   { label: "Configure", icon: "⚙️", items: [
     { href: "/portal/integrations", label: "Integrations", icon: "🔌" },
+    { href: "/portal/branding", label: "Custom Branding", icon: "🎨" },
+    { href: "/portal/notifications", label: "Notifications", icon: "🔔" },
+    { href: "/portal/export", label: "Export Data", icon: "📥" },
     { href: "/portal/settings", label: "Settings", icon: "⚙️" },
     { href: "/portal/guide", label: "User Guide", icon: "📚" },
   ]},
@@ -186,6 +192,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         <div className="p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
     </div>
-    </LanguageProvider>
+    <SupportWidget /></LanguageProvider>
   );
 }
