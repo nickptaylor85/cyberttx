@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
+import { findOrgForEmail } from "@/lib/org-matching";
 
 /**
  * Get the authenticated user's Clerk ID from the middleware-injected header.
@@ -44,13 +45,29 @@ export async function getAuthUser() {
         user = await db.user.update({ where: { id: user.id }, data: { role: "SUPER_ADMIN" } });
       }
     }
-    // If user has no org, link to demo
+    // If user has no org, try to match by email domain, then subdomain, then demo
     if (!user.orgId) {
-      const headersList = await headers();
-      const slug = headersList.get("x-org-slug") || "demo";
-      const org = await db.organization.findUnique({ where: { slug } });
-      if (org) {
-        user = await db.user.update({ where: { id: user.id }, data: { orgId: org.id } });
+      let matchedOrgId: string | null = null;
+      // Try email domain matching first
+      if (user.email) {
+        matchedOrgId = await findOrgForEmail(user.email);
+      }
+      // Then try subdomain from header
+      if (!matchedOrgId) {
+        const headersList = await headers();
+        const slug = headersList.get("x-org-slug");
+        if (slug && slug !== "demo") {
+          const org = await db.organization.findUnique({ where: { slug } });
+          if (org) matchedOrgId = org.id;
+        }
+      }
+      // Fall back to demo
+      if (!matchedOrgId) {
+        const demo = await db.organization.findUnique({ where: { slug: "demo" } });
+        if (demo) matchedOrgId = demo.id;
+      }
+      if (matchedOrgId) {
+        user = await db.user.update({ where: { id: user.id }, data: { orgId: matchedOrgId } });
       }
     }
     return user;

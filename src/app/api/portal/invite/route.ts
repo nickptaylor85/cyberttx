@@ -24,6 +24,19 @@ export async function POST(req: NextRequest) {
     const existing = await db.user.findFirst({ where: { email: trimmed, orgId: org.id } });
     if (existing) { results.push({ email: trimmed, status: "already_member" }); continue; }
 
+    // Create pending invitation record (matched on Clerk webhook or getAuthUser)
+    const pendingExists = await db.user.findFirst({ where: { email: trimmed, clerkId: { startsWith: "pending_" } } });
+    if (!pendingExists) {
+      await db.user.create({
+        data: {
+          clerkId: `pending_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          email: trimmed,
+          role: "MEMBER",
+          orgId: org.id,
+        },
+      });
+    }
+
     // Send invitation email
     if (RESEND_API_KEY) {
       try {
@@ -38,6 +51,7 @@ export async function POST(req: NextRequest) {
               <div style="font-size:20px;font-weight:700;margin-bottom:24px;">Threat<span style="color:#14b89a;">Cast</span></div>
               <h1 style="font-size:20px;margin-bottom:16px;">${user.firstName || 'Your colleague'} invited you to ${org.name}</h1>
               <p style="color:#333;line-height:1.6;">Join your team on ThreatCast to participate in AI-powered cybersecurity tabletop exercises.</p>
+              <p style="color:#666;font-size:14px;">Sign up with this email address (<strong>${trimmed}</strong>) and you'll be automatically added to ${org.name}.</p>
               <a href="https://threatcast.io/sign-up" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Accept Invitation →</a>
             </div>`,
           }),
@@ -45,9 +59,9 @@ export async function POST(req: NextRequest) {
         results.push({ email: trimmed, status: "sent" });
       } catch { results.push({ email: trimmed, status: "failed" }); }
     } else {
-      results.push({ email: trimmed, status: "no_email_configured" });
+      results.push({ email: trimmed, status: "invitation_created" });
     }
   }
 
-  return NextResponse.json({ results, sent: results.filter(r => r.status === "sent").length });
+  return NextResponse.json({ results, sent: results.filter(r => r.status === "sent" || r.status === "invitation_created").length });
 }

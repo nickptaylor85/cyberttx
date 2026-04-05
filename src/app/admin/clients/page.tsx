@@ -14,6 +14,7 @@ export default function ClientsPage() {
   const [isDemo, setIsDemo] = useState(false);
   const [unlimited, setUnlimited] = useState(false);
   const [error, setError] = useState("");
+  const [domains, setDomains] = useState("");
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => { loadOrgs(); }, []);
@@ -37,14 +38,24 @@ export default function ClientsPage() {
           ENTERPRISE: { users: 999, ttx: 999 },
         };
         const limits = planLimits[plan] || planLimits.GROWTH;
-        await createOrganization({
+        const org = await createOrganization({
           name, slug,
           plan,
           isDemo,
           maxUsers: unlimited ? 9999 : limits.users,
           maxTtxPerMonth: unlimited ? 9999 : limits.ttx,
         });
-        setName(""); setSlug(""); setShowCreate(false); setIsDemo(false); setUnlimited(false);
+        // Save allowed email domains if specified
+        if (domains.trim()) {
+          try {
+            await fetch("/api/admin/domains", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ orgId: (org as any).id, domains: domains.split(",").map((d: string) => d.trim()) }),
+            });
+          } catch {}
+        }
+        setName(""); setSlug(""); setShowCreate(false); setIsDemo(false); setUnlimited(false); setDomains("");
         loadOrgs();
       } catch (e: any) { setError(e.message || "Failed to create"); }
     });
@@ -77,6 +88,7 @@ export default function ClientsPage() {
               <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={isDemo} onChange={e => setIsDemo(e.target.checked)} className="accent-cyber-500" /><span className="text-sm text-gray-300">Demo portal</span></label>
               <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={unlimited} onChange={e => setUnlimited(e.target.checked)} className="accent-cyber-500" /><span className="text-sm text-gray-300">Unlimited exercises</span></label>
             </div>
+            <div><label className="cyber-label">Allowed Email Domains</label><input className="cyber-input w-full" value={domains} onChange={e => setDomains(e.target.value)} placeholder="acme.com, acme.co.uk (users with these email domains auto-join)" /><p className="text-gray-600 text-xs mt-1">Comma-separated. Users who sign up with matching email addresses are automatically added to this portal.</p></div>
             {error && <p className="text-red-400 text-sm">{error}</p>}
             <button onClick={handleCreate} disabled={isPending || !name || !slug} className="cyber-btn-primary text-sm disabled:opacity-50">{isPending ? "Creating..." : "Create Portal"}</button>
           </div>
