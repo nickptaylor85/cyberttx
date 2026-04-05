@@ -1,20 +1,25 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-// ONLY truly public routes
-const isPublicRoute = createRouteMatcher([
+// Pages that don't need auth
+const isPublicPage = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
-  "/api/webhooks(.*)",
   "/pricing",
   "/about",
+]);
+
+// API routes that don't need auth
+const isPublicApi = createRouteMatcher([
+  "/api/webhooks(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
   const url = req.nextUrl;
   const hostname = req.headers.get("host") || "";
   const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "cyberttx.com";
+  const isApiRoute = url.pathname.startsWith("/api/");
 
   // Subdomain detection
   let subdomain: string | null = null;
@@ -39,18 +44,38 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next({ headers });
   }
 
-  // ENFORCE AUTH on all non-public routes
-  if (!isPublicRoute(req)) {
-    const session = await auth();
-    if (!session.userId) {
-      if (url.pathname.startsWith("/api/")) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+  // Public webhooks - pass through
+  if (isPublicApi(req)) {
+    return NextResponse.next();
+  }
+
+  // Get auth state
+  const { userId } = await auth();
+
+  // API routes: inject userId header if authenticated, return 401 if not
+  if (isApiRoute) {
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const headers = new Headers(req.headers);
+    headers.set("x-clerk-user-id", userId);
+    return NextResponse.next({ headers });
+  }
+
+  // Page routes: redirect to sign-in if not authenticated
+  if (!isPublicPage(req)) {
+    if (!userId) {
       return NextResponse.redirect(new URL("/sign-in", req.url));
     }
-    // Pass userId to route handlers via header — avoids calling auth() again
     const headers = new Headers(req.headers);
-    headers.set("x-clerk-user-id", session.userId);
+    headers.set("x-clerk-user-id", userId);
+    return NextResponse.next({ headers });
+  }
+
+  // Public pages: still inject userId if available
+  if (userId) {
+    const headers = new Headers(req.headers);
+    headers.set("x-clerk-user-id", userId);
     return NextResponse.next({ headers });
   }
 
