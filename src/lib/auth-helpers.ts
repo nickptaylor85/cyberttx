@@ -32,6 +32,11 @@ export async function getAuthUser() {
   let user = await db.user.findUnique({ where: { clerkId } });
 
   if (user) {
+    // Sync SUPER_ADMIN role from env var (in case it was updated after provisioning)
+    const superAdminIds = (process.env.SUPER_ADMIN_CLERK_IDS || "").split(",").map(s => s.trim());
+    if (superAdminIds.includes(clerkId) && user.role !== "SUPER_ADMIN") {
+      user = await db.user.update({ where: { id: user.id }, data: { role: "SUPER_ADMIN" } });
+    }
     // If user has no org, link to demo
     if (!user.orgId) {
       const headersList = await headers();
