@@ -1,5 +1,8 @@
 "use client";
 
+import { LanguageProvider, useLanguage } from "@/lib/i18n/LanguageContext";
+import { t as translate, LangCode } from "@/lib/i18n/translations";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -107,6 +110,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   return (
+    <LanguageProvider>
     <div className="min-h-screen flex">
       {/* Mobile overlay */}
       {mobileOpen && (
@@ -182,5 +186,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         <div className="p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
     </div>
+    </LanguageProvider>
   );
 }

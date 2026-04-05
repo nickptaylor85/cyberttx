@@ -126,6 +126,7 @@ export default function NewTtxPage() {
           ...config,
           toolIds: orgTools,
           selectedCharacters: [...selectedRoster, ...adHocPayload],
+          language: document.cookie.match(/lang=(\w+)/)?.[1] || "en",
         }),
       });
       if (!res.ok) {

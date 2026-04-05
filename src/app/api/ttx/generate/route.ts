@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { theme, difficulty, mode, questionCount, mitreAttackIds, selectedCharacters, customIncident } = body;
+  const { theme, difficulty, mode, questionCount, mitreAttackIds, selectedCharacters, customIncident, language } = body;
 
   const characters = (selectedCharacters || []).map((c: any) => ({
     name: c.name, role: c.role, department: c.department || undefined,
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
             name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
           })),
           questionCount: questionCount || 12,
-          orgProfile: org.profile as any, characters, pastPerformance: null, customIncident,
+          orgProfile: org.profile as any, characters, pastPerformance: null, customIncident, language: language || "en",
         });
 
         await db.ttxSession.update({

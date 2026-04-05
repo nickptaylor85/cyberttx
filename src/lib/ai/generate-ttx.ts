@@ -57,6 +57,7 @@ interface GenerateTtxParams {
   characters?: Character[];
   pastPerformance?: PastPerformance | null;
   customIncident?: string;
+  language?: string;
 }
 
 const DIFFICULTY_CONFIG = {
@@ -178,7 +179,7 @@ function buildLearningContext(perf?: PastPerformance | null): string {
 export async function generateTtxScenario(params: GenerateTtxParams): Promise<TtxScenario> {
   const {
     theme, difficulty, mitreAttackIds, securityTools, questionCount,
-    orgProfile, characters, pastPerformance, customIncident,
+    orgProfile, characters, pastPerformance, customIncident, language,
   } = params;
 
   const diffConfig = DIFFICULTY_CONFIG[difficulty];
@@ -219,6 +220,13 @@ ${characterContext}
 ${learningContext}
 
 ${customIncident ? `\nCUSTOM INCIDENT TO BASE SCENARIO ON:\n${customIncident}\n\nUse this real incident as the foundation. Adapt it to the target organization, add realistic details, and create decision-point questions based on the actual events described.` : ""}
+
+${language && language !== "en" ? `
+LANGUAGE REQUIREMENT:
+Generate ALL content in the following language: ${language}.
+This includes: scenario title, narrative text, stage descriptions, question text, answer options, explanations, and all other written content.
+Technical terms (MITRE ATT&CK, CVE numbers, tool names) should remain in English.
+` : ""}
 CRITICAL RULES:
 1. Exactly 4 options per question (A-D), exactly ONE correct
 2. Wrong options must be plausible — never obviously absurd
