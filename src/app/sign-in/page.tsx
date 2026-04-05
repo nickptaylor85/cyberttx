@@ -82,7 +82,7 @@ export default function SignInPage() {
           <h1 className="font-display text-2xl font-bold text-white mt-4">Sign in to ThreatCast</h1>
         </div>
         <Suspense fallback={<div className="cyber-card text-center py-8"><p className="text-gray-500">Loading...</p></div>}><SignInForm /></Suspense>
-        <p className="text-center text-gray-500 text-sm mt-4">Don&apos;t have an account? <Link href="/sign-up" className="text-cyber-400 hover:text-cyber-300">Create one</Link></p>
+        <p className="text-center text-gray-500 text-sm mt-4"><a href="/forgot-password" className="text-gray-500 hover:text-gray-300">Forgot password?</a> · Don&apos;t have an account? <Link href="/sign-up" className="text-cyber-400 hover:text-cyber-300">Create one</Link></p>
       </div>
     </div>
   );

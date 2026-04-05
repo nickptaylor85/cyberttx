@@ -192,7 +192,7 @@ export default function LandingPage() {
               </svg>
             </div>
             <span className="font-display text-sm font-semibold text-gray-400">ThreatCast</span></div><div className="flex items-center gap-6 text-xs text-gray-500"><Link href="/sign-in" className="hover:text-gray-300">Client Portal</Link><Link href="/admin" className="hover:text-gray-300">Admin</Link><a href="mailto:support@threatcast.io" className="hover:text-gray-300">Support</a>
-          </div>
+          </div><div className="flex items-center gap-6 text-xs text-gray-500"><a href="/terms" className="hover:text-gray-300">Terms</a><a href="/privacy" className="hover:text-gray-300">Privacy</a><a href="/changelog" className="hover:text-gray-300">Changelog</a><a href="/docs" className="hover:text-gray-300">API Docs</a></div>
           <p className="text-gray-600 text-sm">© {new Date().getFullYear()} ThreatCast. All rights reserved.</p>
         </div>
       </footer>

@@ -6,6 +6,18 @@ import { SUPPORTED_LANGUAGES, LangCode } from "@/lib/i18n/translations";
 export default function SettingsPage() {
   const { lang, setLang, t } = useLanguage();
 
+  // Password change state
+  const [currentPw, setCurrentPw] = useState(""); const [newPw, setNewPw] = useState("");
+  const [pwError, setPwError] = useState(""); const [pwSuccess, setPwSuccess] = useState(false); const [pwLoading, setPwLoading] = useState(false);
+  async function changePassword() {
+    setPwError(""); setPwLoading(true);
+    const res = await fetch("/api/auth/change-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }) });
+    const data = await res.json();
+    if (data.success) { setPwSuccess(true); setCurrentPw(""); setNewPw(""); setTimeout(() => setPwSuccess(false), 3000); }
+    else setPwError(data.error || "Failed");
+    setPwLoading(false);
+  }
+
   // MFA state
   const [mfa, setMfa] = useState<{ enabled: boolean; secret?: string; qrCode?: string }>({ enabled: false });
   const [mfaCode, setMfaCode] = useState("");
@@ -47,6 +59,18 @@ export default function SettingsPage() {
   return (
     <div>
       <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">{t("settings.title")}</h1></div>
+
+      {/* Password Change */}
+      <div className="cyber-card mb-6">
+        <h2 className="text-white text-sm font-semibold mb-3">Change Password</h2>
+        <div className="space-y-3">
+          <div><label className="cyber-label">Current Password</label><input type="password" className="cyber-input w-full" value={currentPw} onChange={e => setCurrentPw(e.target.value)} /></div>
+          <div><label className="cyber-label">New Password</label><input type="password" className="cyber-input w-full" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Minimum 8 characters" minLength={8} /></div>
+          {pwError && <p className="text-red-400 text-xs">{pwError}</p>}
+          {pwSuccess && <p className="text-green-400 text-xs">Password updated!</p>}
+          <button onClick={changePassword} disabled={pwLoading || !currentPw || newPw.length < 8} className="cyber-btn-primary text-sm disabled:opacity-50">{pwLoading ? "Updating..." : "Update Password"}</button>
+        </div>
+      </div>
 
       {/* MFA */}
       <div className="cyber-card mb-6">
