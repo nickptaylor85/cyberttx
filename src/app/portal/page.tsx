@@ -69,14 +69,14 @@ export default async function PortalDashboard() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="font-display text-2xl font-bold text-white">{org.name}</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-white">{org.name}</h1>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">
             {org._count.users} team members · {org._count.ttxSessions} exercises run
           </p>
         </div>
-        <Link href="/portal/ttx/new" className="cyber-btn-primary">
+        <Link href="/portal/ttx/new" className="cyber-btn-primary text-center">
           🎯 New Exercise
         </Link>
       </div>
@@ -99,27 +99,25 @@ export default async function PortalDashboard() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid gap-4 mb-6">
         {/* Quick Stats */}
-        <div className="lg:col-span-2 grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {[
             { label: "TTX This Month", value: org.ttxUsedThisMonth, max: org.maxTtxPerMonth, icon: "🎯" },
             { label: "Team Members", value: org._count.users, max: org.maxUsers, icon: "👥" },
             { label: "Total Sessions", value: org._count.ttxSessions, max: null, icon: "📊" },
           ].map((stat, i) => (
-            <div key={i} className="cyber-card">
-              <span className="text-xl">{stat.icon}</span>
-              <p className="font-display text-2xl font-bold text-white mt-2">{stat.value}</p>
-              <p className="text-gray-500 text-sm">
+            <div key={i} className="cyber-card p-3 sm:p-6">
+              <span className="text-lg sm:text-xl">{stat.icon}</span>
+              <p className="font-display text-lg sm:text-2xl font-bold text-white mt-1 sm:mt-2">{stat.value}</p>
+              <p className="text-gray-500 text-[10px] sm:text-sm">
                 {stat.label}
                 {stat.max && <span className="text-gray-600"> / {stat.max}</span>}
               </p>
               {stat.max && (
                 <div className="mt-2 h-1 bg-surface-3 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-cyber-500 rounded-full transition-all"
-                    style={{ width: `${Math.min(100, (stat.value / stat.max) * 100)}%` }}
-                  />
+                  <div className="h-full bg-cyber-500 rounded-full transition-all"
+                    style={{ width: `${Math.min(100, (stat.value / stat.max) * 100)}%` }} />
                 </div>
               )}
             </div>

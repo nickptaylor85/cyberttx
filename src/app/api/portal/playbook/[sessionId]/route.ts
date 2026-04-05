@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOrCreateUser } from "@/lib/auth-helpers";
+import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { generatePlaybook } from "@/lib/ai/generate-playbook";
 import type { TtxScenario } from "@/types";
@@ -10,7 +10,7 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  const user = await getOrCreateUser();
+  const user = await getAuthUser();
   if (!user?.orgId) return NextResponse.json({ error: "No org" }, { status: 403 });
 
   const { sessionId } = await params;
@@ -85,7 +85,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  const user = await getOrCreateUser();
+  const user = await getAuthUser();
   if (!user?.orgId) return NextResponse.json({ error: "No org" }, { status: 403 });
 
   const { sessionId } = await params;

@@ -20,17 +20,15 @@ export default function LandingPage() {
               Cyber<span className="text-cyber-400">TTX</span>
             </span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
-            <Link href="#features" className="hover:text-white transition-colors">Features</Link>
-            <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
+          <div className="flex items-center gap-4 sm:gap-8 text-sm text-gray-400">
             <Link href="/sign-in" className="hover:text-white transition-colors">Sign In</Link>
-            <Link href="/sign-up" className="cyber-btn-primary text-sm">Start Free Trial</Link>
+            <Link href="/sign-up" className="cyber-btn-primary text-xs sm:text-sm">Start Free</Link>
           </div>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 pt-24 pb-20">
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-24 pb-12 sm:pb-20">
         <div className="text-center max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyber-600/10 border border-cyber-600/20 text-cyber-400 text-sm font-medium mb-8">
             <span className="relative flex h-2 w-2">
@@ -40,7 +38,7 @@ export default function LandingPage() {
             AI-Powered Security Training
           </div>
 
-          <h1 className="font-display text-5xl md:text-7xl font-bold text-white leading-[1.1] mb-6">
+          <h1 className="font-display text-3xl sm:text-5xl md:text-7xl font-bold text-white leading-[1.1] mb-4 sm:mb-6">
             Tabletop exercises that
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyber-400 via-cyan-400 to-blue-400">
               feel dangerously real
