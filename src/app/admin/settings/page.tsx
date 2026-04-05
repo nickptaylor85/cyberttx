@@ -9,21 +9,21 @@ async function getConfig() {
     db.securityTool.count({ where: { isActive: true } }),
   ]);
   const envStatus = {
-    clerk: !!process.env.CLERK_SECRET_KEY,
+    auth: !!process.env.AUTH_SECRET || !!process.env.NEXTAUTH_SECRET,
     anthropic: !!process.env.ANTHROPIC_API_KEY,
     stripe: !!process.env.STRIPE_SECRET_KEY,
     pusher: !!process.env.NEXT_PUBLIC_PUSHER_KEY,
     database: !!process.env.DATABASE_URL,
     resend: !!process.env.RESEND_API_KEY,
   };
-  const isProduction = process.env.CLERK_SECRET_KEY?.startsWith("sk_live_") || false;
+  const isProduction = !!process.env.AUTH_SECRET;
   return { orgCount, userCount, sessionCount, toolCount, envStatus, isProduction };
 }
 
 export default async function SettingsPage() {
   const c = await getConfig();
   const checks = [
-    { name: "Clerk Auth", ok: c.envStatus.clerk, env: "CLERK_SECRET_KEY" },
+    { name: "Auth (NextAuth)", ok: c.envStatus.auth, env: "AUTH_SECRET" },
     { name: "Anthropic AI", ok: c.envStatus.anthropic, env: "ANTHROPIC_API_KEY" },
     { name: "Stripe Billing", ok: c.envStatus.stripe, env: "STRIPE_SECRET_KEY" },
     { name: "Pusher Realtime", ok: c.envStatus.pusher, env: "NEXT_PUBLIC_PUSHER_KEY" },

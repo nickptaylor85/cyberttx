@@ -1,34 +1,16 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-// Pages that don't need auth
-const isPublicPage = createRouteMatcher([
-  "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/pricing",
-  "/about",
-]);
-
-// API routes that don't need auth
-const isPublicApi = createRouteMatcher([
-  "/api/webhooks(.*)",
-  "/api/threat-intel(.*)",
-  "/api/signup-status(.*)",
-]);
-
-export default clerkMiddleware(async (auth, req) => {
+export async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const hostname = req.headers.get("host") || "";
   const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "threatcast.io";
-  const isApiRoute = url.pathname.startsWith("/api/");
 
   // Subdomain detection
   let subdomain: string | null = null;
   if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
     subdomain = url.searchParams.get("org") || null;
   } else if (url.searchParams.get("org")) {
-    // Support ?org=slug for admin cross-org portal access in production
     subdomain = url.searchParams.get("org");
   } else if (!hostname.includes("vercel.app")) {
     const parts = hostname.split(".");
@@ -39,6 +21,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 
+  // Inject subdomain as header
   if (subdomain) {
     const headers = new Headers(req.headers);
     headers.set("x-org-slug", subdomain);
@@ -49,43 +32,8 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next({ headers });
   }
 
-  // Public webhooks - pass through
-  if (isPublicApi(req)) {
-    return NextResponse.next();
-  }
-
-  // Get auth state
-  const { userId } = await auth();
-
-  // API routes: inject userId header if available, but DON'T block
-  // Route handlers check auth themselves via getAuthUser()
-  // This fixes Clerk dev mode issues where auth() returns null for POST requests
-  if (isApiRoute) {
-    if (userId) {
-      const headers = new Headers(req.headers);
-      headers.set("x-clerk-user-id", userId);
-      return NextResponse.next({ headers });
-    }
-    // Try session token from Authorization header as fallback
-    const authHeader = req.headers.get("authorization");
-    if (authHeader) {
-      return NextResponse.next();
-    }
-    // Still pass through — route handlers will return 401 if needed
-    return NextResponse.next();
-  }
-
-  // Page routes: inject userId header if available, but DON'T redirect
-  // Clerk's client-side ClerkProvider handles auth UI (sign-in prompts)
-  // This fixes Clerk dev mode issues where auth() returns null inconsistently
-  if (userId) {
-    const headers = new Headers(req.headers);
-    headers.set("x-clerk-user-id", userId);
-    return NextResponse.next({ headers });
-  }
-
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [

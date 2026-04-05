@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
+import UserMenu from "@/components/UserMenu";
 import { cn } from "@/lib/utils";
 
 const navSections = [
@@ -79,7 +79,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="p-4 border-t border-surface-3">
           <div className="flex items-center gap-3">
-            <UserButton afterSignOutUrl="/" />
+            <UserMenu />
             <div className="text-sm">
               <p className="text-gray-300 font-medium">Super Admin</p>
             </div>
@@ -93,7 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <span className="font-display text-sm font-bold text-white">ThreatCast Admin</span>
-          <UserButton afterSignOutUrl="/" />
+          <UserMenu />
         </div>
         <div className="p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
