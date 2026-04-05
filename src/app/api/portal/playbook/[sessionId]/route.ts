@@ -16,7 +16,7 @@ export async function POST(
   const { sessionId } = await params;
 
   // Check if playbook already exists
-  const existing = await db.playbook.findFirst({ where: { sessionId } });
+  const existing = await (db.playbook.findFirst as any)({ where: { sessionId } });
   if (existing) return NextResponse.json(existing);
 
   const session = await db.ttxSession.findUnique({
@@ -63,14 +63,14 @@ export async function POST(
       framework: "NIST",
     });
 
-    const playbook = await db.playbook.create({
+    const playbook = await (db.playbook.create as any)({
       data: {
         sessionId,
         orgId: user.orgId,
         title: content.title || `${scenario.title} - Playbook`,
         content,
         framework: "NIST",
-        theme: session.theme,
+        threatType: session.theme,
       },
     });
 
