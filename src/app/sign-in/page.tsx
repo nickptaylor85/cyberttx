@@ -1,10 +1,10 @@
 "use client";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function SignInPage() {
+function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,22 +16,24 @@ export default function SignInPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(""); setLoading(true);
-
-    const result = await signIn("credentials", {
-      email: email.toLowerCase(),
-      password,
-      redirect: false,
-    });
-
-    if (result?.error) {
-      setError("Invalid email or password");
-      setLoading(false);
-    } else {
-      router.push(callbackUrl);
-      router.refresh();
-    }
+    const result = await signIn("credentials", { email: email.toLowerCase(), password, redirect: false });
+    if (result?.error) { setError("Invalid email or password"); setLoading(false); }
+    else { router.push(callbackUrl); router.refresh(); }
   }
 
+  return (
+    <form onSubmit={handleSubmit} className="cyber-card">
+      <div className="space-y-4">
+        <div><label className="cyber-label">Email</label><input type="email" className="cyber-input w-full" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" required autoFocus /></div>
+        <div><label className="cyber-label">Password</label><input type="password" className="cyber-input w-full" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} /></div>
+        {error && <p className="text-red-400 text-sm">{error}</p>}
+        <button type="submit" disabled={loading} className="cyber-btn-primary w-full py-2.5 disabled:opacity-50">{loading ? "Signing in..." : "Sign In"}</button>
+      </div>
+    </form>
+  );
+}
+
+export default function SignInPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -44,22 +46,9 @@ export default function SignInPage() {
           <h1 className="font-display text-2xl font-bold text-white mt-4">Sign in to ThreatCast</h1>
           <p className="text-gray-500 text-sm mt-2">Enter your credentials to continue</p>
         </div>
-
-        <form onSubmit={handleSubmit} className="cyber-card">
-          <div className="space-y-4">
-            <div>
-              <label className="cyber-label">Email</label>
-              <input type="email" className="cyber-input w-full" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" required autoFocus />
-            </div>
-            <div>
-              <label className="cyber-label">Password</label>
-              <input type="password" className="cyber-input w-full" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={8} />
-            </div>
-            {error && <p className="text-red-400 text-sm">{error}</p>}
-            <button type="submit" disabled={loading} className="cyber-btn-primary w-full py-2.5 disabled:opacity-50">{loading ? "Signing in..." : "Sign In"}</button>
-          </div>
-        </form>
-
+        <Suspense fallback={<div className="cyber-card text-center py-8"><p className="text-gray-500">Loading...</p></div>}>
+          <SignInForm />
+        </Suspense>
         <p className="text-center text-gray-500 text-sm mt-4">Don&apos;t have an account? <Link href="/sign-up" className="text-cyber-400 hover:text-cyber-300">Create one</Link></p>
       </div>
     </div>
