@@ -1,9 +1,9 @@
-import ExerciseFeedback from "@/components/ExerciseFeedback";
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import ExerciseFeedback from "@/components/ExerciseFeedback";
 import type { TtxScenario, TtxStage, ScoreUpdateEvent } from "@/types";
 
 interface SessionData {
@@ -267,7 +267,6 @@ export default function TtxPlayPage() {
           <a href="/portal/ttx/new" className="cyber-btn-primary text-center">🎯 New Exercise</a>
         </div>
         <div className="mt-6"><ExerciseFeedback sessionId={sessionId} /></div>
-        </div>
       </div>
     );
   }

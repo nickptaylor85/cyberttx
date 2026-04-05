@@ -56,6 +56,7 @@ interface GenerateTtxParams {
   orgProfile?: OrgProfile | null;
   characters?: Character[];
   pastPerformance?: PastPerformance | null;
+  customIncident?: string;
 }
 
 const DIFFICULTY_CONFIG = {

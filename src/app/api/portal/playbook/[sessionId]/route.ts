@@ -16,7 +16,7 @@ export async function POST(
   const { sessionId } = await params;
 
   // Check if playbook already exists
-  const existing = await db.playbook.findUnique({ where: { sessionId } });
+  const existing = await db.playbook.findFirst({ where: { sessionId } });
   if (existing) return NextResponse.json(existing);
 
   const session = await db.ttxSession.findUnique({
@@ -70,7 +70,7 @@ export async function POST(
         title: content.title || `${scenario.title} - Playbook`,
         content,
         framework: "NIST",
-        threatType: session.theme,
+        theme: session.theme,
       },
     });
 
@@ -89,7 +89,7 @@ export async function GET(
   if (!user?.orgId) return NextResponse.json({ error: "No org" }, { status: 403 });
 
   const { sessionId } = await params;
-  const playbook = await db.playbook.findUnique({ where: { sessionId } });
+  const playbook = await db.playbook.findFirst({ where: { sessionId } });
   if (!playbook || playbook.orgId !== user.orgId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
