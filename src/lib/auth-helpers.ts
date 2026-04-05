@@ -33,9 +33,16 @@ export async function getAuthUser() {
 
   if (user) {
     // Sync SUPER_ADMIN role from env var (in case it was updated after provisioning)
-    const superAdminIds = (process.env.SUPER_ADMIN_CLERK_IDS || "").split(",").map(s => s.trim());
+    const superAdminIds = (process.env.SUPER_ADMIN_CLERK_IDS || "").split(",").map(s => s.trim()).filter(Boolean);
     if (superAdminIds.includes(clerkId) && user.role !== "SUPER_ADMIN") {
       user = await db.user.update({ where: { id: user.id }, data: { role: "SUPER_ADMIN" } });
+    }
+    // If no SUPER_ADMIN_CLERK_IDS set and no super admins exist, promote this user
+    if (superAdminIds.length === 0 && user.role !== "SUPER_ADMIN") {
+      const existingSuperAdmins = await db.user.count({ where: { role: "SUPER_ADMIN" } });
+      if (existingSuperAdmins === 0) {
+        user = await db.user.update({ where: { id: user.id }, data: { role: "SUPER_ADMIN" } });
+      }
     }
     // If user has no org, link to demo
     if (!user.orgId) {
