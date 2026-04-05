@@ -96,7 +96,7 @@ export default function ClientsPage() {
                     onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
                     required
                   />
-                  <span className="px-4 py-2.5 bg-surface-3 border border-l-0 border-surface-4 rounded-r-lg text-gray-500 text-sm">.cyberttx.com</span>
+                  <span className="px-4 py-2.5 bg-surface-3 border border-l-0 border-surface-4 rounded-r-lg text-gray-500 text-sm">.threatcast.io</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -162,7 +162,7 @@ export default function ClientsPage() {
                     {org.isDemo && <span className="cyber-badge bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">Demo</span>}
                     <span className="cyber-badge bg-surface-3 text-gray-400 border border-surface-4">{org.plan}</span>
                   </div>
-                  <p className="text-gray-500 text-sm mt-0.5">{org.slug}.cyberttx.com</p>
+                  <p className="text-gray-500 text-sm mt-0.5">{org.slug}.threatcast.io</p>
                 </div>
               </div>
               <div className="flex items-center gap-6">
@@ -172,7 +172,7 @@ export default function ClientsPage() {
                 </div>
                 <div className="flex gap-2">
                   <a
-                    href={`https://${org.slug}.cyberttx.com`}
+                    href={`https://${org.slug}.threatcast.io`}
                     target="_blank"
                     className="cyber-btn-secondary text-xs py-1.5 px-3"
                   >

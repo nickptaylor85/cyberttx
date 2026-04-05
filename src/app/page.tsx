@@ -1,3 +1,4 @@
+import InteractiveDemo from "@/components/InteractiveDemo";
 import Link from "next/link";
 
 export default function LandingPage() {
@@ -17,12 +18,12 @@ export default function LandingPage() {
               </svg>
             </div>
             <span className="font-display text-xl font-bold text-white">
-              Cyber<span className="text-cyber-400">TTX</span>
+              Threat<span className="text-cyber-400">Cast</span>
             </span>
           </div>
           <div className="flex items-center gap-4 sm:gap-8 text-sm text-gray-400">
-            <Link href="/sign-in" className="hover:text-white transition-colors">Sign In</Link>
-            <Link href="/sign-up" className="cyber-btn-primary text-xs sm:text-sm">Start Free</Link>
+            <Link href="/sign-in" className="hover:text-white transition-colors">Client Portal</Link><Link href="/admin" className="hover:text-gray-300 transition-colors text-gray-500">Admin</Link>
+            <Link href="/sign-up" className="cyber-btn-primary text-xs sm:text-sm">Start Free Trial</Link>
           </div>
         </div>
       </nav>
@@ -53,7 +54,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/sign-up" className="cyber-btn-primary text-base px-8 py-3">
-              Start Free — No Card Required
+              Start 14-Day Free Trial
             </Link>
             <Link href="#demo" className="cyber-btn-secondary text-base px-8 py-3">
               Watch Demo
@@ -94,7 +95,7 @@ export default function LandingPage() {
         <h2 className="font-display text-3xl md:text-4xl font-bold text-white text-center mb-16">
           Exercise in <span className="text-cyber-400">four steps</span>
         </h2>
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {[
             { step: "01", title: "Configure", desc: "Select your security stack, choose a theme, set difficulty, pick MITRE techniques." },
             { step: "02", title: "Generate", desc: "AI creates a multi-stage incident narrative with tool-specific alerts and decision points." },
@@ -116,18 +117,38 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
+
+      {/* ───── WHY THREATCAST ───── */}
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center mb-3">Built for <span className="text-cyber-400">production security teams</span></h2>
+        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto text-sm sm:text-base">Traditional tabletop exercises cost £5k-£30k per session. ThreatCast gives you unlimited AI exercises for a fraction of the cost.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="cyber-card"><p className="text-2xl mb-3">🔥</p><h3 className="font-display text-base font-semibold text-white mb-2">Real Incident Reconstructions</h3><p className="text-gray-400 text-sm">Scenarios modelled on SolarWinds, MOVEit, Log4Shell. What would YOUR team have done?</p></div>
+          <div className="cyber-card"><p className="text-2xl mb-3">📋</p><h3 className="font-display text-base font-semibold text-white mb-2">Audit-Ready Evidence</h3><p className="text-gray-400 text-sm">Auto-generate compliance evidence for ISO 27001, NIST CSF, SOC 2, NIS2, and DORA.</p></div>
+          <div className="cyber-card"><p className="text-2xl mb-3">🎯</p><h3 className="font-display text-base font-semibold text-white mb-2">MITRE ATT&CK Coverage</h3><p className="text-gray-400 text-sm">Track which techniques your team has been tested on. Visual gap analysis by tactic.</p></div>
+          <div className="cyber-card"><p className="text-2xl mb-3">📊</p><h3 className="font-display text-base font-semibold text-white mb-2">Performance Over Time</h3><p className="text-gray-400 text-sm">Track individual improvement. Show your CISO that Sarah improved from 45% to 78%.</p></div>
+          <div className="cyber-card"><p className="text-2xl mb-3">📖</p><h3 className="font-display text-base font-semibold text-white mb-2">Playbook Generation</h3><p className="text-gray-400 text-sm">AI generates structured IR playbooks — NIST, SANS, ISO 27035, MITRE, CREST frameworks.</p></div>
+          <div className="cyber-card"><p className="text-2xl mb-3">💰</p><h3 className="font-display text-base font-semibold text-white mb-2">95% Cost Reduction</h3><p className="text-gray-400 text-sm">Run unlimited exercises for less than one consultant session. Self-service, on-demand.</p></div>
+        </div>
+      </section>
+
+      {/* ───── INTERACTIVE DEMO ───── */}
+      <section id="demo" className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center mb-3">Experience a <span className="text-cyber-400">live scenario</span></h2>
+        <p className="text-gray-400 text-center mb-8 max-w-xl mx-auto text-sm sm:text-base">No signup needed. 3 real IR questions with tool-specific alerts, MITRE mapping, and scoring.</p>
+        <InteractiveDemo />
+      </section>
       <section id="pricing" className="relative z-10 max-w-7xl mx-auto px-6 py-20">
         <h2 className="font-display text-3xl md:text-4xl font-bold text-white text-center mb-4">
           Simple, transparent pricing
         </h2>
         <p className="text-gray-400 text-center mb-16 max-w-xl mx-auto">
-          Start free. Scale when you&apos;re ready. Every plan includes AI-generated scenarios.
+          14-day free trial on all plans. No credit card required.
         </p>
-        <div className="grid md:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           {[
-            { name: "Free", price: "£0", period: "/forever", users: "5 users", ttx: "3 TTX/month", features: ["Individual mode", "Basic themes", "Leaderboard"], cta: "Get Started", highlight: false },
-            { name: "Starter", price: "£49", period: "/month", users: "15 users", ttx: "15 TTX/month", features: ["Group mode", "All themes", "PDF export", "Leaderboard"], cta: "Start Trial", highlight: false },
-            { name: "Professional", price: "£149", period: "/month", users: "50 users", ttx: "50 TTX/month", features: ["Everything in Starter", "Custom scenarios", "Priority support", "Analytics"], cta: "Start Trial", highlight: true },
+            { name: "Starter", price: "£99", period: "/month", users: "10 users", ttx: "10 TTX/month", features: ["Group mode", "All themes", "PDF export", "Leaderboard"], cta: "Start Trial", highlight: false },
+            { name: "Professional", price: "£249", period: "/month", users: "30 users", ttx: "30 TTX/month", features: ["Everything in Starter", "Custom scenarios", "Priority support", "Analytics"], cta: "Start Trial", highlight: true },
             { name: "Enterprise", price: "Custom", period: "", users: "500+ users", ttx: "Unlimited", features: ["Everything in Pro", "SSO/SAML", "API access", "Dedicated CSM", "On-prem option"], cta: "Contact Sales", highlight: false },
           ].map((plan, i) => (
             <div key={i} className={`cyber-card relative ${plan.highlight ? "border-cyber-600 shadow-lg shadow-cyber-900/20 ring-1 ring-cyber-600/20" : ""}`}>
@@ -170,9 +191,9 @@ export default function LandingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
               </svg>
             </div>
-            <span className="font-display text-sm font-semibold text-gray-400">CyberTTX</span>
+            <span className="font-display text-sm font-semibold text-gray-400">ThreatCast</span></div><div className="flex items-center gap-6 text-xs text-gray-500"><Link href="/sign-in" className="hover:text-gray-300">Client Portal</Link><Link href="/admin" className="hover:text-gray-300">Admin</Link><a href="mailto:support@threatcast.io" className="hover:text-gray-300">Support</a>
           </div>
-          <p className="text-gray-600 text-sm">© {new Date().getFullYear()} CyberTTX. All rights reserved.</p>
+          <p className="text-gray-600 text-sm">© {new Date().getFullYear()} ThreatCast. All rights reserved.</p>
         </div>
       </footer>
     </div>

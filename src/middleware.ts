@@ -18,7 +18,7 @@ const isPublicApi = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
   const url = req.nextUrl;
   const hostname = req.headers.get("host") || "";
-  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "cyberttx.com";
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "threatcast.io";
   const isApiRoute = url.pathname.startsWith("/api/");
 
   // Subdomain detection

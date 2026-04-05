@@ -7,12 +7,12 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Extract the subdomain from a hostname
- * e.g., "acme.cyberttx.com" -> "acme"
- *       "cyberttx.com" -> null
+ * e.g., "acme.threatcast.io" -> "acme"
+ *       "threatcast.io" -> null
  *       "localhost:3000" -> null
  */
 export function extractSubdomain(hostname: string): string | null {
-  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "cyberttx.com";
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "threatcast.io";
 
   // Local development
   if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {

@@ -11,7 +11,7 @@ export default function SignInPage() {
             </svg>
           </div>
           <h1 className="font-display text-2xl font-bold text-white">
-            Cyber<span className="text-cyber-400">TTX</span>
+            Threat<span className="text-cyber-400">Cast</span>
           </h1>
         </div>
         <SignIn afterSignInUrl="/portal" />

@@ -44,7 +44,7 @@ export default async function AdminDashboard() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="font-display text-2xl font-bold text-white">Platform Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your CyberTTX platform</p>
+          <p className="text-gray-500 text-sm mt-1">Manage your ThreatCast platform</p>
         </div>
         <Link href="/admin/clients" className="cyber-btn-primary">
           + New Client Portal
@@ -79,7 +79,7 @@ export default async function AdminDashboard() {
               <div key={org.id} className="flex items-center justify-between py-2 border-b border-surface-3 last:border-0">
                 <div>
                   <p className="text-white text-sm font-medium">{org.name}</p>
-                  <p className="text-gray-500 text-xs">{org.slug}.cyberttx.com</p>
+                  <p className="text-gray-500 text-xs">{org.slug}.threatcast.io</p>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-400">
                   <span>{org._count.users} users</span>

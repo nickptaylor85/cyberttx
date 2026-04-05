@@ -43,7 +43,7 @@ export default async function UsersPage() {
         <div className="cyber-card py-3 px-4">
           <p className="text-gray-500 text-xs">Invite link</p>
           <p className="text-cyber-400 text-sm font-mono">
-            {org.slug}.cyberttx.com/sign-up
+            {org.slug}.threatcast.io/sign-up
           </p>
         </div>
       </div>
