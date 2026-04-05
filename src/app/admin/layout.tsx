@@ -6,15 +6,18 @@ import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { href: "/admin", label: "Dashboard", icon: "📊" },
-  { href: "/admin/clients", label: "Client Portals", icon: "🏢" },
-  { href: "/admin/sessions", label: "Sessions", icon: "🎯" },
-  { href: "/admin/users", label: "All Users", icon: "👥" },
-  { href: "/admin/analytics", label: "Analytics", icon: "📈" },
-  { href: "/admin/billing", label: "Billing", icon: "💰" },
-  { href: "/admin/audit", label: "Audit Log", icon: "📜" },
-  { href: "/admin/settings", label: "Settings", icon: "⚙️" },
+const navSections = [
+  { type: "item" as const, href: "/admin", label: "Dashboard", icon: "📊" },
+  { type: "divider" as const, label: "Manage" },
+  { type: "item" as const, href: "/admin/clients", label: "Client Portals", icon: "🏢" },
+  { type: "item" as const, href: "/admin/sessions", label: "Sessions", icon: "🎯" },
+  { type: "item" as const, href: "/admin/users", label: "All Users", icon: "👥" },
+  { type: "divider" as const, label: "Intelligence" },
+  { type: "item" as const, href: "/admin/analytics", label: "Analytics", icon: "📈" },
+  { type: "item" as const, href: "/admin/billing", label: "Billing", icon: "💰" },
+  { type: "item" as const, href: "/admin/audit", label: "Audit Log", icon: "📜" },
+  { type: "divider" as const, label: "System" },
+  { type: "item" as const, href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -49,10 +52,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <nav className="flex-1 p-3 space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+          {navSections.map((item, i) => {
+            if (item.type === "divider") {
+              return <div key={item.label} className="pt-4 pb-1 px-3"><span className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">{item.label}</span></div>;
+            }
+            const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href!));
             return (
-              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
+              <Link key={item.href} href={item.href!} onClick={() => setMobileOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
                   isActive ? "bg-cyber-600/15 text-cyber-400 border border-cyber-600/20" : "text-gray-400 hover:bg-surface-2 hover:text-gray-200"
