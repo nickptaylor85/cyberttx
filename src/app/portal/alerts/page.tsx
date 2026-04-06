@@ -13,6 +13,7 @@ export default function AlertsPage() {
   const [errors, setErrors] = useState<{ connector: string; error: string }[]>([]);
   const [search, setSearch] = useState(""); const [sevFilter, setSevFilter] = useState("ALL");
   const [building, setBuilding] = useState<string | null>(null);
+  const [buildError, setBuildError] = useState("");
 
   useEffect(() => {
     fetch("/api/portal/alerts").then(r => r.ok ? r.json() : { alerts: [], connectors: 0 }).then(d => {
@@ -67,6 +68,8 @@ export default function AlertsPage() {
           </div>
         )}
 
+        {buildError && <div className="cyber-card border-red-500/20 mb-4"><p className="text-red-400 text-sm">{buildError}</p></div>}
+
         {loading ? <p className="text-gray-500 text-center py-8">Fetching alerts from your security tools...</p> :
           filtered.length === 0 ? <div className="cyber-card text-center py-8"><p className="text-gray-400 text-sm">No alerts found</p></div> :
           <div className="space-y-2">{filtered.map(a => (
@@ -87,19 +90,17 @@ export default function AlertsPage() {
                   </div>
                 </div>
                 <button
-                  disabled={building === a.id}
+                  disabled={!!building}
                   onClick={async () => {
                     setBuilding(a.id);
+                    setBuildError("");
                     try {
-                      const incident = `REAL ALERT FROM ${a.source}:\nTitle: ${a.title}\nSeverity: ${a.severity}\nDescription: ${a.description}\n${a.affectedAssets?.length ? "Assets: " + a.affectedAssets.join(", ") : ""}`;
+                      const incident = "REAL ALERT FROM " + a.source + ":\nTitle: " + a.title + "\nSeverity: " + a.severity + "\nDescription: " + a.description;
                       const res = await fetch("/api/ttx/generate", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                          theme: a.category?.toLowerCase().includes("malware") || a.category?.toLowerCase().includes("ransom") ? "ransomware" :
-                                 a.category?.toLowerCase().includes("phish") ? "phishing" :
-                                 a.category?.toLowerCase().includes("lateral") || a.category?.toLowerCase().includes("movement") ? "apt" :
-                                 a.category?.toLowerCase().includes("exfil") ? "data-exfil" : "ransomware",
+                          theme: "ransomware",
                           difficulty: a.severity === "critical" ? "ADVANCED" : "INTERMEDIATE",
                           mode: "INDIVIDUAL",
                           questionCount: 10,
@@ -107,18 +108,21 @@ export default function AlertsPage() {
                           customIncident: incident,
                         }),
                       });
-                      if (res.ok) {
-                        const session = await res.json();
-                        router.push("/portal/ttx/" + session.id);
+                      const data = await res.json();
+                      if (res.ok && data.id) {
+                        window.location.href = "/portal/ttx/" + data.id;
                       } else {
-                        alert("Failed to generate — " + (await res.json()).error);
+                        setBuildError(data.error || "Generation failed");
                         setBuilding(null);
                       }
-                    } catch (e) { alert("Generation failed"); setBuilding(null); }
+                    } catch (e: any) {
+                      setBuildError(e.message || "Network error");
+                      setBuilding(null);
+                    }
                   }}
                   className="cyber-btn-primary text-xs py-1.5 px-3 flex-shrink-0 whitespace-nowrap disabled:opacity-50"
                 >
-                  {building === a.id ? "Building..." : "Build TTX →"}
+                  {building === a.id ? "Generating..." : "Build TTX →"}
                 </button>
               </div>
             </div>
