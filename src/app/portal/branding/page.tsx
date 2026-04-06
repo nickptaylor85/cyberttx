@@ -1,13 +1,42 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function BrandingPage() {
   const [primaryColor, setPrimaryColor] = useState("#14b89a");
   const [logoUrl, setLogoUrl] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  function save() { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+  // Load saved branding on mount
+  useEffect(() => {
+    fetch("/api/portal/branding")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d) {
+          setCompanyName(d.portalName || "");
+          setLogoUrl(d.logoUrl || "");
+          setPrimaryColor(d.primaryColor || "#14b89a");
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  async function save() {
+    setSaving(true);
+    const res = await fetch("/api/portal/branding", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ portalName: companyName, logoUrl, primaryColor }),
+    });
+    setSaving(false);
+    if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+    else alert("Failed to save branding");
+  }
+
+  if (loading) return <p className="text-gray-500 text-center py-12">Loading...</p>;
 
   return (
     <div>
@@ -48,7 +77,9 @@ export default function BrandingPage() {
         </div>
       </div>
 
-      <button onClick={save} className="cyber-btn-primary">{saved ? "Saved!" : "Save Branding"}</button>
+      <button onClick={save} disabled={saving} className="cyber-btn-primary disabled:opacity-50">
+        {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Branding"}
+      </button>
       <p className="text-gray-600 text-xs mt-2">Branding applies to your portal, certificates, and reports. &quot;Powered by ThreatCast&quot; appears in footer.</p>
     </div>
   );
