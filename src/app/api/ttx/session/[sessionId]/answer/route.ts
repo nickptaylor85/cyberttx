@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import type { TtxScenario } from "@/types";
+import { pusherServer, getTtxChannel, TTX_EVENTS } from "@/lib/pusher-server";
 
 export async function POST(
   req: NextRequest,
@@ -57,6 +58,19 @@ export async function POST(
   const allAnswers = await db.ttxAnswer.findMany({ where: { participantId: participant.id } });
   const totalScore = allAnswers.reduce((sum, a) => sum + a.points, 0);
   await db.ttxParticipant.update({ where: { id: participant.id }, data: { totalScore } });
+
+
+  // Notify team via Pusher (group mode)
+  try {
+    if (session.mode === "GROUP" && session.channelName) {
+      await pusherServer.trigger(getTtxChannel(sessionId), TTX_EVENTS.PLAYER_ANSWERED, {
+        userId: user.id,
+        stageIndex,
+        questionIndex,
+        name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      });
+    }
+  } catch {}
 
   return NextResponse.json({ isCorrect, points, totalScore });
 }

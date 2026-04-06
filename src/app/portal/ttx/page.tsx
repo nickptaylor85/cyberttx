@@ -43,6 +43,22 @@ export default function ExercisesPage() {
         </select>
       </div>
 
+      {/* Joinable team exercises */}
+      {!loading && filtered.filter(s => s.status === "LOBBY" || s.status === "IN_PROGRESS").length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-green-400 text-xs font-semibold mb-2 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            Live & Joinable
+          </h2>
+          <div className="space-y-2">{filtered.filter(s => s.status === "LOBBY" || s.status === "IN_PROGRESS").map(s => (
+            <Link key={s.id + "-live"} href={`/portal/ttx/${s.id}`} className="cyber-card flex items-center justify-between border-green-500/20 hover:border-green-500/40 transition-colors block">
+              <div className="min-w-0 mr-3"><p className="text-white text-sm font-medium truncate">{s.title}</p><p className="text-gray-500 text-xs">{s.theme} · {s._count.participants} players</p></div>
+              <span className="cyber-btn-primary text-xs py-1.5 px-3 flex-shrink-0">{s.status === "LOBBY" ? "Join Lobby" : "Join Live"}</span>
+            </Link>
+          ))}</div>
+        </div>
+      )}
+
       {loading ? <SkeletonList count={5} /> : filtered.length === 0 ? (
         <div className="cyber-card text-center py-12"><p className="text-gray-400 text-sm">No exercises found</p><Link href="/portal/ttx/new" className="cyber-btn-primary text-sm mt-3 inline-block">Create your first exercise</Link></div>
       ) : (
