@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import SuggestTool from "@/components/SuggestTool";
 
 import ToolSelector from "./ToolSelector";
 import { getPortalOrg } from "@/lib/auth-helpers";
@@ -35,6 +36,7 @@ export default async function ToolsPage() {
       ) : (
         <ToolSelector categories={categories} initialSelected={selectedIds} />
       )}
+      <SuggestTool />
     </div>
   );
 }

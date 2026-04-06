@@ -21,11 +21,12 @@ export default function AlertsPage() {
     }).catch(() => setLoading(false));
   }, []);
 
+  const sevOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
   const filtered = alerts.filter(a => {
     if (sevFilter !== "ALL" && a.severity !== sevFilter.toLowerCase()) return false;
     if (search && !a.title.toLowerCase().includes(search.toLowerCase()) && !a.description.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
-  });
+  }).sort((a, b) => (sevOrder[a.severity] ?? 9) - (sevOrder[b.severity] ?? 9));
 
   const sc: Record<string, string> = { critical: "bg-red-500/20 text-red-400", high: "bg-orange-500/20 text-orange-400", medium: "bg-yellow-500/20 text-yellow-400", low: "bg-green-500/20 text-green-400" };
 

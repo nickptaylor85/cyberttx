@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-interface Ticket { id: string; user_email: string; user_name: string; org_name: string; message: string; status: string; created_at: string; resolved_at: string | null; }
+interface Ticket { id: string; user_email: string; user_name: string; org_name: string; message: string; admin_reply?: string; replied_at?: string; status: string; created_at: string; resolved_at: string | null; }
 
 export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -62,9 +62,16 @@ export default function SupportPage() {
                       </div>
                       <p className="text-gray-400 text-sm">{t.message}</p>
                       <p className="text-gray-600 text-xs mt-1">{t.user_email}</p>
+                      {t.admin_reply && <div className="mt-2 p-2 rounded bg-cyan-500/10 border border-cyan-500/20"><p className="text-cyan-400 text-xs font-semibold">Admin reply:</p><p className="text-gray-300 text-xs">{t.admin_reply}</p></div>}
                     </div>
                     <div className="flex gap-1.5 flex-shrink-0">
-                      <a href={`mailto:${t.user_email}?subject=Re: ThreatCast Support`} className="cyber-btn-secondary text-xs py-1 px-2">Reply</a>
+                      <button onClick={async () => {
+                        const reply = prompt("Reply to " + t.user_name + ":");
+                        if (reply) {
+                          await fetch("/api/support", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: t.id, reply }) });
+                          loadTickets();
+                        }
+                      }} className="cyber-btn-secondary text-xs py-1 px-2">Reply</button>
                       <button onClick={() => resolve(t.id)} className="cyber-btn-primary text-xs py-1 px-2">Resolve</button>
                       <button onClick={() => remove(t.id)} className="cyber-btn-danger text-xs py-1 px-2">✕</button>
                     </div>

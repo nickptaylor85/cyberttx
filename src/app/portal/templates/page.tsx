@@ -17,17 +17,31 @@ const PRESET_TEMPLATES = [
 
 export default function TemplatesPage() {
   const router = useRouter();
+  const [generating, setGenerating] = useState<string | null>(null);
 
-  function launch(t: typeof PRESET_TEMPLATES[0]) {
-    const params = new URLSearchParams({ theme: t.theme, difficulty: t.difficulty, questions: t.questions.toString() });
-    router.push(`/portal/ttx/new?${params}`);
+  async function launch(t: typeof PRESET_TEMPLATES[0]) {
+    setGenerating(t.name);
+    try {
+      const res = await fetch("/api/ttx/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ theme: t.theme, difficulty: t.difficulty, mode: "INDIVIDUAL", questionCount: t.questions }),
+      });
+      const data = await res.json();
+      if (res.ok && data.id) {
+        window.location.href = `/portal/ttx/${data.id}`;
+      } else {
+        alert(data.error || "Failed to generate");
+        setGenerating(null);
+      }
+    } catch { alert("Generation failed"); setGenerating(null); }
   }
 
   return (
     <div>
-      <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">Templates</h1><p className="text-gray-500 text-xs mt-1">Pre-configured exercise templates — click to launch</p></div>
+      <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">Templates</h1><p className="text-gray-500 text-xs mt-1">One-click launch — generates and starts the exercise immediately</p></div>
       <div className="grid sm:grid-cols-2 gap-3">{PRESET_TEMPLATES.map(t => (
-        <button key={t.name} onClick={() => launch(t)} className="cyber-card text-left hover:border-cyber-600/30 transition-colors">
+        <button key={t.name} onClick={() => launch(t)} disabled={!!generating} className="cyber-card text-left hover:border-cyber-600/30 transition-colors disabled:opacity-50">
           <p className="text-white text-sm font-semibold">{t.name}</p>
           <p className="text-gray-500 text-xs mt-1">{t.desc}</p>
           <div className="flex gap-2 mt-2">
@@ -35,6 +49,7 @@ export default function TemplatesPage() {
             <span className="cyber-badge text-xs bg-surface-3 text-gray-400">{t.difficulty}</span>
             <span className="cyber-badge text-xs bg-surface-3 text-gray-400">{t.questions}Q</span>
           </div>
+          {generating === t.name && <p className="text-cyber-400 text-xs mt-2 animate-pulse">Generating scenario...</p>}
         </button>
       ))}</div>
     </div>

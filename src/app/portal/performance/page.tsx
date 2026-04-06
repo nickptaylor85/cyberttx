@@ -81,6 +81,34 @@ export default async function PerformancePage() {
           </div>
         </div>
       )}
+
+      {completedSessions.length > 0 && (
+        <div className="cyber-card mt-4">
+          <h2 className="text-white text-sm font-semibold mb-3">Monthly Team Trend</h2>
+          {(() => {
+            const monthly: Record<string, { exercises: number; correct: number; total: number }> = {};
+            completedSessions.forEach(s => {
+              const month = new Date(s.completedAt || s.createdAt).toLocaleDateString("en-GB", { month: "short", year: "2-digit" });
+              if (!monthly[month]) monthly[month] = { exercises: 0, correct: 0, total: 0 };
+              monthly[month].exercises++;
+              s.participants.forEach(p => { monthly[month].correct += p.answers.filter(a => a.isCorrect).length; monthly[month].total += p.answers.length; });
+            });
+            const arr = Object.entries(monthly).map(([month, s]) => ({ month, ...s, accuracy: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0 }));
+            return arr.length > 0 ? (
+              <div className="space-y-2">{arr.map(m => (
+                <div key={m.month}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-gray-400 text-xs">{m.month}</span>
+                    <span className="text-gray-500 text-xs">{m.exercises} exercises</span>
+                    <span className={`font-mono text-xs font-bold ${m.accuracy >= 70 ? "text-green-400" : m.accuracy >= 40 ? "text-yellow-400" : "text-red-400"}`}>{m.accuracy}%</span>
+                  </div>
+                  <div className="h-2 bg-surface-3 rounded-full"><div className={`h-full rounded-full ${m.accuracy >= 70 ? "bg-green-500" : m.accuracy >= 40 ? "bg-yellow-500" : "bg-red-500"}`} style={{ width: `${m.accuracy}%` }} /></div>
+                </div>
+              ))}</div>
+            ) : <p className="text-gray-500 text-xs">Not enough data</p>;
+          })()}
+        </div>
+      )}
     </div>
   );
 }

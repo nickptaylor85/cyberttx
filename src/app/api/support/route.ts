@@ -15,6 +15,8 @@ async function ensureTable() {
         org_id TEXT,
         org_name TEXT,
         message TEXT NOT NULL,
+        admin_reply TEXT,
+        replied_at TIMESTAMP,
         status TEXT DEFAULT 'open',
         created_at TIMESTAMP DEFAULT NOW(),
         resolved_at TIMESTAMP
@@ -53,12 +55,13 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   await ensureTable();
   const user = await getAuthUser();
-  if (!user || user.role !== "SUPER_ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const tickets = await db.$queryRawUnsafe(`
-    SELECT id, user_email, user_name, org_name, message, status, created_at, resolved_at
-    FROM support_tickets ORDER BY created_at DESC LIMIT 100
-  `) as any[];
+  // If admin, return all. If regular user, return only their tickets
+  const isAdmin = user.role === "SUPER_ADMIN";
+  const tickets = isAdmin
+    ? await db.$queryRawUnsafe(`SELECT id, user_email, user_name, org_name, message, admin_reply, replied_at, status, created_at, resolved_at FROM support_tickets ORDER BY created_at DESC LIMIT 100`) as any[]
+    : await db.$queryRawUnsafe(`SELECT id, message, admin_reply, replied_at, status, created_at FROM support_tickets WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20`, user.id) as any[];
 
   return NextResponse.json(tickets);
 }
@@ -67,17 +70,22 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   await ensureTable();
   const user = await getAuthUser();
-  if (!user || user.role !== "SUPER_ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, status } = await req.json();
-  if (!id || !status) return NextResponse.json({ error: "id and status required" }, { status: 400 });
+  const { id, status, reply } = await req.json();
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  await db.$executeRawUnsafe(
-    `UPDATE support_tickets SET status = $1, resolved_at = $2 WHERE id = $3`,
-    status,
-    status === "resolved" ? new Date() : null,
-    id
-  );
+  if (reply) {
+    await db.$executeRawUnsafe(
+      `UPDATE support_tickets SET admin_reply = $1, replied_at = NOW(), status = 'replied' WHERE id = $2`,
+      reply, id
+    );
+  } else if (status) {
+    await db.$executeRawUnsafe(
+      `UPDATE support_tickets SET status = $1, resolved_at = $2 WHERE id = $3`,
+      status, status === "resolved" ? new Date() : null, id
+    );
+  }
 
   return NextResponse.json({ success: true });
 }
@@ -86,7 +94,7 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   await ensureTable();
   const user = await getAuthUser();
-  if (!user || user.role !== "SUPER_ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
