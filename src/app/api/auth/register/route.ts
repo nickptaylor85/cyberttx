@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import { checkUserLimit } from "@/lib/plan-limits";
 import { findOrgForEmail } from "@/lib/org-matching";
 
 export async function POST(req: NextRequest) {
+  // Rate limit registration
+  const ip = req.headers.get("x-forwarded-for") || "unknown";
+  const rl = rateLimit(`register:${ip}`, 5, 60 * 60 * 1000); // 5 per hour per IP
+  if (!rl.allowed) return NextResponse.json({ error: "Too many registration attempts. Try again later." }, { status: 429 });
+
   // Read body once
   const { email, password, firstName, lastName } = await req.json();
 

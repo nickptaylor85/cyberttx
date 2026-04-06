@@ -7,6 +7,9 @@ const client = new Anthropic();
 
 // GET: return cached threat intel events
 export async function GET() {
+  const { getAuthUser } = await import("@/lib/auth-helpers");
+  const user = await getAuthUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   // Return hardcoded recent events + any AI-discovered ones
   const events = getBaselineEvents();
   return NextResponse.json({ events, lastScanned: new Date().toISOString() });

@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 
 async function ensureTable() {
@@ -10,6 +11,8 @@ async function ensureTable() {
 // POST — request password reset
 export async function POST(req: NextRequest) {
   const { email } = await req.json();
+  const rl = rateLimit(`reset:${email}`, 3, 60 * 60 * 1000); // 3 per hour
+  if (!rl.allowed) return NextResponse.json({ error: "Too many reset attempts. Try again later." }, { status: 429 });
   if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
   await ensureTable();
 

@@ -12,7 +12,7 @@ export default async function SharedExercisePage({ params }: { params: Promise<{
     if (rows.length > 0) {
       session = await db.ttxSession.findUnique({
         where: { id: rows[0].session_id },
-        include: { organization: { select: { name: true } }, participants: { include: { user: { select: { firstName: true, lastName: true } }, answers: true }, orderBy: { totalScore: "desc" } } },
+        select: { id: true, title: true, theme: true, difficulty: true, status: true, scenario: true, organization: { select: { name: true } }, participants: { include: { user: { select: { firstName: true } }, answers: { select: { isCorrect: true } } }, orderBy: { totalScore: "desc" } } },
       });
     }
   } catch {}
@@ -50,7 +50,7 @@ export default async function SharedExercisePage({ params }: { params: Promise<{
                 <div key={p.id} className="flex items-center justify-between py-2 border-b border-surface-3/30 last:border-0">
                   <div className="flex items-center gap-3">
                     <span className="text-lg">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}</span>
-                    <p className="text-white text-sm">{p.user?.firstName} {p.user?.lastName}</p>
+                    <p className="text-white text-sm">{p.user?.firstName || "Participant"}</p>
                   </div>
                   <div className="text-right">
                     <p className={`font-mono font-bold ${accuracy >= 70 ? "text-green-400" : accuracy >= 40 ? "text-yellow-400" : "text-red-400"}`}>{accuracy}%</p>
