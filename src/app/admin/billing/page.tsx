@@ -7,6 +7,7 @@ export default async function BillingPage() {
   });
 
   const planPricing: Record<string, number> = { FREE: 0, STARTER: 149, GROWTH: 299, PROFESSIONAL: 599, ENTERPRISE: 1499 };
+  // FREE is a trial, not a plan — exclude from revenue
   const totalMRR = orgs.reduce((a, o) => a + (planPricing[o.plan] || 0), 0);
   const totalARR = totalMRR * 12;
   const paidOrgs = orgs.filter(o => o.plan !== "FREE" && !o.isDemo);
@@ -68,13 +69,13 @@ export default async function BillingPage() {
           <h2 className="text-white text-sm font-semibold mb-3">Plan Pricing</h2>
           <div className="space-y-2">
             {[
-              { plan: "Starter", price: "£149/mo", features: "25 users · 15 TTX/mo · Email support" },
-              { plan: "Growth", price: "£299/mo", features: "50 users · 30 TTX/mo · Priority support · Custom branding" },
-              { plan: "Professional", price: "£599/mo", features: "100 users · Unlimited TTX · SSO · Dedicated CSM" },
-              { plan: "Enterprise", price: "£1,499/mo", features: "Unlimited · SAML · Custom integrations · SLA" },
+              { plan: "Starter", price: "£149/mo", annual: "£1,490/yr", features: "25 users · 15 TTX/mo · Email support · Basic compliance" },
+              { plan: "Growth", price: "£299/mo", annual: "£2,990/yr", features: "50 users · 30 TTX/mo · Priority support · Custom branding · Webhooks" },
+              { plan: "Professional", price: "£599/mo", annual: "£5,990/yr", features: "100 users · Unlimited TTX · SSO · Dedicated CSM · API access" },
+              { plan: "Enterprise", price: "£1,499/mo", annual: "£14,990/yr", features: "Unlimited · SAML · Custom integrations · SLA · On-prem option" },
             ].map(p => (
               <div key={p.plan} className="p-2 rounded bg-surface-0 border border-surface-3">
-                <div className="flex items-center justify-between"><span className="text-white text-sm font-semibold">{p.plan}</span><span className="text-cyber-400 text-sm font-mono">{p.price}</span></div>
+                <div className="flex items-center justify-between"><span className="text-white text-sm font-semibold">{p.plan}</span><div className="text-right"><span className="text-cyber-400 text-sm font-mono">{p.price}</span><span className="text-gray-600 text-xs ml-1">({(p as any).annual})</span></div></div>
                 <p className="text-gray-500 text-xs mt-1">{p.features}</p>
               </div>
             ))}
