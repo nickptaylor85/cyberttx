@@ -65,23 +65,23 @@ export default function NewTtxPage() {
   // Handle ?fromAlert= param from Alert Feed
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const alertData = params.get("fromAlert");
-    if (alertData) {
+    if (params.get("fromAlert")) {
       try {
-        const alert = JSON.parse(decodeURIComponent(alertData));
-        // Pre-fill the custom incident field with alert details
-        const incident = `REAL ALERT FROM ${alert.source || "Security Tool"}:\n` +
-          `Title: ${alert.title}\n` +
-          `Severity: ${alert.severity}\n` +
-          `Description: ${alert.description}\n` +
-          (alert.assets?.length ? `Affected Assets: ${alert.assets.join(", ")}\n` : "") +
-          (alert.mitre?.length ? `MITRE Techniques: ${alert.mitre.join(", ")}\n` : "");
-        setConfig(p => ({
-          ...p,
-          mitreAttackIds: [...new Set([...p.mitreAttackIds, ...(alert.mitre || [])])],
-        }));
-        // Store for the custom incident field
-        (window as any).__alertIncident = incident;
+        const stored = sessionStorage.getItem("tc_alert_incident");
+        if (stored) {
+          const alert = JSON.parse(stored);
+          sessionStorage.removeItem("tc_alert_incident");
+          const incident = `REAL ALERT FROM ${alert.source || "Security Tool"}:\nTitle: ${alert.title}\nSeverity: ${alert.severity}\nDescription: ${alert.description}\n` +
+            (alert.assets?.length ? `Affected Assets: ${alert.assets.join(", ")}\n` : "") +
+            (alert.mitre?.length ? `MITRE Techniques: ${alert.mitre.join(", ")}\n` : "");
+          setConfig(p => ({
+            ...p,
+            mitreAttackIds: [...new Set([...p.mitreAttackIds, ...(alert.mitre || [])])],
+          }));
+          (window as any).__alertIncident = incident;
+          // Auto-advance to launch step since we have all the data
+          setStep(5);
+        }
       } catch {}
     }
   }, []);

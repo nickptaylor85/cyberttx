@@ -83,12 +83,15 @@ export default function AlertsPage() {
                     {a.affectedAssets?.map(asset => <span key={asset} className="cyber-badge text-xs bg-surface-3 text-gray-400">{asset}</span>)}
                   </div>
                 </div>
-                <Link
-                  href={`/portal/ttx/new?fromAlert=${encodeURIComponent(JSON.stringify({ title: a.title, description: a.description, severity: a.severity, source: a.source, mitre: a.mitreTechniques, assets: a.affectedAssets }))}`}
+                <button
+                  onClick={() => {
+                    sessionStorage.setItem("tc_alert_incident", JSON.stringify({ title: a.title, description: a.description, severity: a.severity, source: a.source, mitre: a.mitreTechniques, assets: a.affectedAssets }));
+                    window.location.href = "/portal/ttx/new?fromAlert=1";
+                  }}
                   className="cyber-btn-primary text-xs py-1.5 px-3 flex-shrink-0 whitespace-nowrap"
                 >
                   Build TTX →
-                </Link>
+                </button>
               </div>
             </div>
           ))}</div>

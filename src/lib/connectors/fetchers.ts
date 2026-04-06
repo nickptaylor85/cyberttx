@@ -205,7 +205,7 @@ async function fetchTaegis(config: ConnectorConfig, limit: number): Promise<Secu
       query: gqlQuery,
       variables: {
         in: {
-          cql_query: "FROM alert WHERE severity >= 0.4 EARLIEST=-7d",
+          cql_query: "FROM alert WHERE severity >= 0.6 EARLIEST=-7d",
           limit: limit,
           offset: 0,
         },
