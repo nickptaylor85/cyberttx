@@ -1,15 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface Alert { id: string; title: string; description: string; severity: string; source: string; category: string; mitreTechniques: string[]; timestamp: string; affectedAssets?: string[]; status?: string; }
 
 export default function AlertsPage() {
+  const router = useRouter();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [connectorCount, setConnectorCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<{ connector: string; error: string }[]>([]);
   const [search, setSearch] = useState(""); const [sevFilter, setSevFilter] = useState("ALL");
+  const [building, setBuilding] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/portal/alerts").then(r => r.ok ? r.json() : { alerts: [], connectors: 0 }).then(d => {
@@ -84,13 +87,38 @@ export default function AlertsPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    sessionStorage.setItem("tc_alert_incident", JSON.stringify({ title: a.title, description: a.description, severity: a.severity, source: a.source, mitre: a.mitreTechniques, assets: a.affectedAssets }));
-                    window.location.href = "/portal/ttx/new?fromAlert=1";
+                  disabled={building === a.id}
+                  onClick={async () => {
+                    setBuilding(a.id);
+                    try {
+                      const incident = `REAL ALERT FROM ${a.source}:\nTitle: ${a.title}\nSeverity: ${a.severity}\nDescription: ${a.description}\n${a.affectedAssets?.length ? "Assets: " + a.affectedAssets.join(", ") : ""}`;
+                      const res = await fetch("/api/ttx/generate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          theme: a.category?.toLowerCase().includes("malware") || a.category?.toLowerCase().includes("ransom") ? "ransomware" :
+                                 a.category?.toLowerCase().includes("phish") ? "phishing" :
+                                 a.category?.toLowerCase().includes("lateral") || a.category?.toLowerCase().includes("movement") ? "apt" :
+                                 a.category?.toLowerCase().includes("exfil") ? "data-exfil" : "ransomware",
+                          difficulty: a.severity === "critical" ? "ADVANCED" : "INTERMEDIATE",
+                          mode: "INDIVIDUAL",
+                          questionCount: 10,
+                          mitreAttackIds: a.mitreTechniques || [],
+                          customIncident: incident,
+                        }),
+                      });
+                      if (res.ok) {
+                        const session = await res.json();
+                        router.push("/portal/ttx/" + session.id);
+                      } else {
+                        alert("Failed to generate — " + (await res.json()).error);
+                        setBuilding(null);
+                      }
+                    } catch (e) { alert("Generation failed"); setBuilding(null); }
                   }}
-                  className="cyber-btn-primary text-xs py-1.5 px-3 flex-shrink-0 whitespace-nowrap"
+                  className="cyber-btn-primary text-xs py-1.5 px-3 flex-shrink-0 whitespace-nowrap disabled:opacity-50"
                 >
-                  Build TTX →
+                  {building === a.id ? "Building..." : "Build TTX →"}
                 </button>
               </div>
             </div>
