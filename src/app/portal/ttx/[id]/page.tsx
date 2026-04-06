@@ -357,7 +357,7 @@ export default function ExercisePage() {
       </div>
 
       {/* Question */}
-      {question && !alreadyAnswered ? (
+      {question && (!alreadyAnswered || answered) ? (
         <div className="cyber-card">
           <p className="text-white text-sm font-medium mb-4">{question.question}</p>
           {question.context && <div className="bg-surface-0 border border-surface-3 rounded-lg p-3 mb-4 font-mono text-xs text-gray-400 whitespace-pre-wrap">{question.context}</div>}
@@ -395,7 +395,7 @@ export default function ExercisePage() {
       ) : alreadyAnswered ? (
         <div className="cyber-card text-center py-6">
           <p className="text-gray-400 text-sm">Already answered</p>
-          <button onClick={nextQuestion} className="cyber-btn-primary text-sm mt-3">{isLastQuestion ? "Complete Exercise" : "Next Question →"}</button>
+          <button onClick={nextQuestion} className="cyber-btn-secondary text-sm mt-3">{isLastQuestion ? "Complete Exercise" : "Next Question →"}</button>
         </div>
       ) : null}
     </div>
