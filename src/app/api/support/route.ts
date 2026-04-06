@@ -58,6 +58,10 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   // If admin, return all. If regular user, return only their tickets
+  // Ensure new columns exist (table may pre-date these)
+  try { await db.$executeRawUnsafe(`ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS admin_reply TEXT`); } catch {}
+  try { await db.$executeRawUnsafe(`ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS replied_at TIMESTAMP`); } catch {}
+
   const isAdmin = user.role === "SUPER_ADMIN";
   const tickets = isAdmin
     ? await db.$queryRawUnsafe(`SELECT id, user_email, user_name, org_name, message, admin_reply, replied_at, status, created_at, resolved_at FROM support_tickets ORDER BY created_at DESC LIMIT 100`) as any[]
