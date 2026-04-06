@@ -9,7 +9,8 @@ export async function GET() {
     const profile = await db.orgProfile.findUnique({ where: { orgId: org.id }, select: { additionalContext: true } });
     const match = (profile?.additionalContext || "").match(/SETTINGS:({[^}]*})/);
     const settings = match ? JSON.parse(match[1]) : {};
-    return NextResponse.json({ signupsEnabled: settings.signupsEnabled !== false });
+    // Admin stores signupsDisabled: true/false
+    return NextResponse.json({ signupsEnabled: !settings.signupsDisabled });
   } catch {
     return NextResponse.json({ signupsEnabled: true });
   }
