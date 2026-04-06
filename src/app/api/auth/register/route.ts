@@ -4,6 +4,9 @@ import { db } from "@/lib/db";
 import { findOrgForEmail } from "@/lib/org-matching";
 
 export async function POST(req: NextRequest) {
+  // Read body once
+  const { email, password, firstName, lastName } = await req.json();
+
   // Check if sign-ups are enabled
   try {
     const platformOrg = await db.organization.findUnique({ where: { slug: "__platform__" } });
@@ -14,8 +17,7 @@ export async function POST(req: NextRequest) {
         const settings = JSON.parse(match[1]);
         if (settings.signupsDisabled) {
           // Still allow invited users (they have a pending record)
-          const body = await req.clone().json();
-          const pending = await db.user.findFirst({ where: { email: body.email?.toLowerCase(), clerkId: { startsWith: "pending_" } } });
+          const pending = await db.user.findFirst({ where: { email: email?.toLowerCase(), clerkId: { startsWith: "pending_" } } });
           if (!pending) {
             return NextResponse.json({ error: "New sign-ups are currently disabled. Contact your administrator for an invitation." }, { status: 403 });
           }
@@ -23,8 +25,6 @@ export async function POST(req: NextRequest) {
       }
     }
   } catch {}
-
-  const { email, password, firstName, lastName } = await req.json();
 
   if (!email || !password) {
     return NextResponse.json({ error: "Email and password required" }, { status: 400 });

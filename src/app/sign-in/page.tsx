@@ -51,10 +51,13 @@ function SignInForm() {
     else {
       // Check user role to determine redirect
       const me = await fetch("/api/portal/me").then(r => r.ok ? r.json() : null).catch(() => null);
-      if (me?.role === "SUPER_ADMIN" && callbackUrl === "/portal") {
+      if (me?.role === "SUPER_ADMIN") {
         router.push("/admin");
+      } else if (callbackUrl === "/admin") {
+        // Non-admin tried to access admin — send to portal instead
+        router.push("/portal");
       } else {
-        router.push(callbackUrl);
+        router.push(callbackUrl || "/portal");
       }
       router.refresh();
     }

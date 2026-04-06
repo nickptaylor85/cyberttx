@@ -42,16 +42,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     fetch("/api/portal/me")
       .then(r => r.ok ? r.json() : null)
       .then(d => {
-        if (!d || d.role !== "SUPER_ADMIN") {
+        if (!d) {
+          // Not authenticated — send to sign-in
           setAuthState("denied");
-          router.push("/sign-in?callbackUrl=/admin");
+          router.push("/sign-in");
+        } else if (d.role !== "SUPER_ADMIN") {
+          // Authenticated but not admin — send to portal (not back to sign-in)
+          setAuthState("denied");
+          router.push("/portal");
         } else {
           setAuthState("ok");
         }
       })
       .catch(() => {
         setAuthState("denied");
-        router.push("/sign-in?callbackUrl=/admin");
+        router.push("/sign-in");
       });
   }, [router]);
 
