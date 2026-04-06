@@ -103,9 +103,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <div className="pt-3 mt-3 border-t border-surface-3 flex items-center justify-between">
-          <Link href="/portal" className="text-gray-500 text-xs hover:text-gray-300">View Portal →</Link>
-          <UserMenu />
+        <div className="pt-3 mt-3 border-t border-surface-3">
+          <div className="flex items-center justify-between">
+            <Link href="/portal" className="text-gray-500 text-xs hover:text-gray-300">View Portal →</Link>
+            <UserMenu />
+          </div>
+          <a href="/api/auth/signout" className="text-red-400/60 hover:text-red-400 text-xs mt-2 block">Sign Out</a>
         </div>
       </aside>
 
