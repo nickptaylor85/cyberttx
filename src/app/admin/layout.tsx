@@ -20,6 +20,7 @@ const navSections = [
   { type: "divider" as const, label: "Business" },
   { type: "item" as const, href: "/admin/billing", label: "Billing & Revenue", icon: "💰" },
   { type: "item" as const, href: "/admin/emails", label: "Email Log", icon: "📧" },
+  { type: "item" as const, href: "/admin/reports", label: "Scheduled Reports", icon: "📅" },
   { type: "item" as const, href: "/admin/announcements", label: "Announcements", icon: "📢" },
   { type: "divider" as const, label: "System" },
   { type: "item" as const, href: "/admin/api-keys", label: "API Keys", icon: "🔑" },
@@ -27,6 +28,7 @@ const navSections = [
   { type: "item" as const, href: "/admin/audit", label: "Audit Log", icon: "📋" },
   { type: "item" as const, href: "/admin/support", label: "Support", icon: "🎫" },
   { type: "item" as const, href: "/admin/export", label: "Export", icon: "📥" },
+  { type: "item" as const, href: "/admin/feature-flags", label: "Feature Flags", icon: "🚩" },
   { type: "item" as const, href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];
 
