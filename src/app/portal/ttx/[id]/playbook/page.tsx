@@ -19,7 +19,15 @@ export default function PlaybookPage() {
         if (!r.ok) throw new Error("Failed to generate playbook");
         return r.json();
       })
-      .then(setPlaybook)
+      .then(pb => {
+        setPlaybook(pb);
+        // Auto-save to playbook library
+        fetch("/api/portal/playbooks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId, title: pb.title, theme: pb.theme, playbook: pb }),
+        }).catch(() => {});
+      })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, [sessionId]);
