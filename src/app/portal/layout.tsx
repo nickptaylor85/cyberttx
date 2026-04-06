@@ -3,6 +3,7 @@ import { signOut } from "next-auth/react";
 
 import { LanguageProvider, useLanguage } from "@/lib/i18n/LanguageContext";
 import SupportWidget from "@/components/SupportWidget";
+import XpWidget from "@/components/XpWidget";
 import { t as translate, LangCode } from "@/lib/i18n/translations";
 
 import { useState, useEffect } from "react";
