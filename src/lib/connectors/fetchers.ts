@@ -179,7 +179,12 @@ async function fetchTaegis(config: ConnectorConfig, limit: number): Promise<Secu
               engine { name version }
               creator { detector { detector_id detector_name } }
             }
-            entities
+            entities {
+              relationships {
+                key
+                value
+              }
+            }
             tags
           }
         }
@@ -218,19 +223,21 @@ async function fetchTaegis(config: ConnectorConfig, limit: number): Promise<Secu
   const alerts = data?.alertsServiceSearch?.alerts?.list || [];
 
   return alerts.map((a: any) => {
-    // Tags and entities are string arrays in Taegis
-    // Extract MITRE techniques from tags (strings like "MITRE:T1566" or just "T1566")
+    // Tags are [String] in Taegis
     const tagStrings: string[] = Array.isArray(a.tags) ? a.tags : [];
     const mitreTags = tagStrings.filter((t: string) => /T\d{4}/.test(t));
 
-    // Also extract from title patterns (e.g. "T1566: Phishing")
+    // Also extract from title patterns
     const titleMitre = extractMitreTechniques(
       (a.metadata?.title || "") + " " + tagStrings.join(" ")
     );
 
-    // Entities are string arrays (hostnames, IPs, users)
-    const entityStrings: string[] = Array.isArray(a.entities) ? a.entities : [];
-    const assets = entityStrings.filter(Boolean).slice(0, 10);
+    // Entities is EntityRelationships type with relationships array
+    const relationships = a.entities?.relationships || [];
+    const assets = relationships
+      .map((r: any) => r.value || r.key)
+      .filter(Boolean)
+      .slice(0, 10);
 
     // Map severity (Taegis uses 0.0-1.0 float)
     const sevFloat = a.metadata?.severity || 0;
