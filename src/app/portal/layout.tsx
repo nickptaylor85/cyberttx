@@ -31,6 +31,7 @@ const allNavSections: (NavItem | NavSection)[] = [
     { href: "/portal/coverage", label: "MITRE Coverage", icon: "🛡️" },
     { href: "/portal/compliance", label: "Compliance", icon: "📋", adminOnly: true },
     { href: "/portal/achievements", label: "Achievements", icon: "🏅" },
+    { href: "/portal/certificates", label: "My Certificates", icon: "🏆" },
     { href: "/portal/playbooks", label: "Playbooks", icon: "📖" },
   ]},
 

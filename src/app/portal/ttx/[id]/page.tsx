@@ -228,7 +228,7 @@ export default function ExercisePage() {
 
         <div className="flex flex-wrap gap-2">
           <Link href={`/portal/ttx/${sessionId}/replay`} className="cyber-btn-secondary text-sm">🔄 Replay</Link>
-          <a href={`/api/portal/certificate?sessionId=${sessionId}`} target="_blank" className="cyber-btn-secondary text-sm">🏆 Certificate</a>
+          <a href={`/api/portal/certificate/pdf?sessionId=${sessionId}`} className="cyber-btn-secondary text-sm">🏆 Certificate PDF</a>
           <a href={`/api/portal/report?sessionId=${sessionId}`} target="_blank" className="cyber-btn-secondary text-sm">📄 Report</a>
           <Link href={`/portal/ttx/${sessionId}/playbook`} className="cyber-btn-secondary text-sm">📋 Playbook</Link>
           <Link href="/portal/ttx/new" className="cyber-btn-primary text-sm">🎯 New Exercise</Link>
