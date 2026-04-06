@@ -159,6 +159,7 @@ async function fetchTaegis(config: ConnectorConfig, limit: number): Promise<Secu
   // Step 2: Query alerts using alertsServiceSearch with CQL
   // Docs: https://docs.taegis.secureworks.com/apis/using_alerts_api/
   // CQL: FROM alert WHERE severity >= 0.6 EARLIEST=-7d
+  // entities and tags are [String] in the Taegis schema, not objects
   const gqlQuery = `
     query alertsServiceSearch($in: SearchRequestInput!) {
       alertsServiceSearch(in: $in) {
@@ -178,18 +179,8 @@ async function fetchTaegis(config: ConnectorConfig, limit: number): Promise<Secu
               engine { name version }
               creator { detector { detector_id detector_name } }
             }
-            entities {
-              entities {
-                type
-                value
-              }
-            }
-            tags {
-              tag {
-                key
-                value
-              }
-            }
+            entities
+            tags
           }
         }
       }
@@ -227,20 +218,19 @@ async function fetchTaegis(config: ConnectorConfig, limit: number): Promise<Secu
   const alerts = data?.alertsServiceSearch?.alerts?.list || [];
 
   return alerts.map((a: any) => {
-    // Extract MITRE techniques from tags
-    const mitreTags = (a.tags || [])
-      .filter((t: any) => t.tag?.key?.toLowerCase().includes("mitre") || t.tag?.key?.toLowerCase().includes("technique"))
-      .map((t: any) => t.tag?.value)
-      .filter(Boolean);
+    // Tags and entities are string arrays in Taegis
+    // Extract MITRE techniques from tags (strings like "MITRE:T1566" or just "T1566")
+    const tagStrings: string[] = Array.isArray(a.tags) ? a.tags : [];
+    const mitreTags = tagStrings.filter((t: string) => /T\d{4}/.test(t));
 
     // Also extract from title patterns (e.g. "T1566: Phishing")
-    const titleMitre = extractMitreTechniques(a.metadata?.title || "");
+    const titleMitre = extractMitreTechniques(
+      (a.metadata?.title || "") + " " + tagStrings.join(" ")
+    );
 
-    // Extract affected assets from entities
-    const assets = (a.entities?.entities || [])
-      .filter((e: any) => ["hostname", "ip_address", "user", "device"].includes(e.type?.toLowerCase()))
-      .map((e: any) => e.value)
-      .filter(Boolean);
+    // Entities are string arrays (hostnames, IPs, users)
+    const entityStrings: string[] = Array.isArray(a.entities) ? a.entities : [];
+    const assets = entityStrings.filter(Boolean).slice(0, 10);
 
     // Map severity (Taegis uses 0.0-1.0 float)
     const sevFloat = a.metadata?.severity || 0;
