@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
             name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
           })),
           questionCount: questionCount || 12,
-          orgProfile: org.profile as any, characters, pastPerformance: null, customIncident, language: language || "en",
+          orgProfile: org.profile as any, characters, pastPerformance: await (async () => { try { const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx"); return analyzePastPerformance(org.id, db); } catch { return null; } })(), customIncident, language: language || "en",
         });
 
         await db.ttxSession.update({

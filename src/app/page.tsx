@@ -1,199 +1,122 @@
-import InteractiveDemo from "@/components/InteractiveDemo";
 import Link from "next/link";
 
-export default function LandingPage() {
+export default function Home() {
   return (
-    <div className="min-h-screen bg-surface-0 cyber-grid-bg relative overflow-hidden">
-      {/* Ambient glow effects */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-cyber-600/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Navigation */}
-      <nav className="relative z-10 border-b border-surface-3/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-cyber-600 flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-              </svg>
-            </div>
-            <span className="font-display text-xl font-bold text-white">
-              Threat<span className="text-cyber-400">Cast</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-4 sm:gap-8 text-sm text-gray-400">
-            <Link href="/sign-in" className="hover:text-white transition-colors">Client Portal</Link><Link href="/admin" className="hover:text-gray-300 transition-colors text-gray-500">Admin</Link>
-            <Link href="/sign-up" className="cyber-btn-primary text-xs sm:text-sm">Get Started</Link>
-          </div>
+    <div className="min-h-screen">
+      {/* Nav */}
+      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-cyber-600 flex items-center justify-center"><svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg></div>
+          <span className="font-display text-lg font-bold text-white">Threat<span className="text-cyber-400">Cast</span></span>
+        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/sign-in" className="text-gray-400 text-sm hover:text-white">Sign In</Link>
+          <Link href="/sign-up" className="cyber-btn-primary text-sm">Start Free →</Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-24 pb-12 sm:pb-20">
-        <div className="text-center max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyber-600/10 border border-cyber-600/20 text-cyber-400 text-sm font-medium mb-8">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyber-500"></span>
-            </span>
-            AI-Powered Security Training
-          </div>
-
-          <h1 className="font-display text-3xl sm:text-5xl md:text-7xl font-bold text-white leading-[1.1] mb-4 sm:mb-6">
-            Tabletop exercises that
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyber-400 via-cyan-400 to-blue-400">
-              feel dangerously real
-            </span>
-          </h1>
-
-          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            AI generates realistic incident scenarios tailored to your security stack. 
-            Run real-time multiplayer TTX sessions. Score, compete, and sharpen your team&apos;s 
-            incident response — aligned to MITRE ATT&CK.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/sign-up" className="cyber-btn-primary text-base px-8 py-3">
-              Request a Demo
-            </Link>
-            <Link href="#demo" className="cyber-btn-secondary text-base px-8 py-3">
-              Watch Demo
-            </Link>
-          </div>
+      <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyber-600/10 border border-cyber-600/20 text-cyber-400 text-xs mb-6">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyber-400 animate-pulse" /> Now with live SIEM/XDR integration
         </div>
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
+          AI-Powered Cybersecurity<br /><span className="text-cyber-400">Tabletop Exercises</span>
+        </h1>
+        <p className="text-gray-400 text-lg sm:text-xl mt-6 max-w-2xl mx-auto leading-relaxed">
+          Replace £30k consultancy exercises with unlimited, realistic incident simulations. 
+          Pull real alerts from your SIEM. Train your team on actual threats.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+          <Link href="/sign-up" className="cyber-btn-primary px-8 py-3 text-base">Start Free Trial →</Link>
+          <Link href="/sign-in" className="cyber-btn-secondary px-8 py-3 text-base">Sign In</Link>
+        </div>
+        <p className="text-gray-600 text-xs mt-4">No credit card required · 5 free exercises · Cancel anytime</p>
+      </section>
 
-        {/* Feature cards */}
-        <div className="grid md:grid-cols-3 gap-6 mt-24">
+      {/* Features */}
+      <section className="max-w-5xl mx-auto px-6 pb-20">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
-            {
-              icon: "🤖",
-              title: "AI-Generated Scenarios",
-              description: "Claude creates unique, realistic incident scenarios tailored to your security tools, difficulty level, and chosen MITRE ATT&CK techniques."
-            },
-            {
-              icon: "⚡",
-              title: "Real-Time Multiplayer",
-              description: "Run group exercises with live scoring, competitive leaderboards, and synchronized stage progression. Individual mode available too."
-            },
-            {
-              icon: "🛡️",
-              title: "Your Stack, Your Scenarios",
-              description: "Select your security tools — CrowdStrike, Tenable, Sentinel, Zscaler — and scenarios reference real alerts from your actual tooling."
-            },
-          ].map((feature, i) => (
-            <div key={i} className="cyber-card group animate-fade-in" style={{ animationDelay: `${i * 150}ms` }}>
-              <div className="text-3xl mb-4">{feature.icon}</div>
-              <h3 className="font-display text-lg font-semibold text-white mb-2">{feature.title}</h3>
-              <p className="text-gray-400 text-sm leading-relaxed">{feature.description}</p>
+            { icon: "🎯", title: "AI-Generated Scenarios", desc: "Claude generates unique, realistic scenarios tailored to your industry, tools, and team structure. Never repeat the same exercise twice." },
+            { icon: "🚨", title: "Real Alert Integration", desc: "Connect CrowdStrike, Taegis, Defender, Splunk and more. Build exercises from actual alerts in your environment." },
+            { icon: "👥", title: "Real-Time Multiplayer", desc: "Run team exercises with live scoring. See who answered, track performance, compete on the leaderboard." },
+            { icon: "🎭", title: "Named Characters", desc: "Create recurring characters with personalities. The AI weaves them into scenarios — sending Slack messages, making decisions, arguing in incident calls." },
+            { icon: "📊", title: "MITRE ATT&CK Mapping", desc: "Every exercise maps to MITRE techniques. Track coverage gaps with a visual heatmap. Target your weakest areas." },
+            { icon: "📋", title: "Playbook Generation", desc: "Every exercise generates an incident response playbook. Export as PDF or Word for your compliance evidence pack." },
+            { icon: "🏆", title: "Certificates & Compliance", desc: "Earn certificates, track expiry. Map exercises to ISO 27001, NIST CSF, SOC 2, NIS2, DORA, PCI DSS 4.0." },
+            { icon: "🌐", title: "12 Languages", desc: "Generate exercises in English, Spanish, French, German, Japanese, Chinese, Arabic, Hindi, and more." },
+            { icon: "🔌", title: "8 SIEM Connectors", desc: "Taegis, CrowdStrike, Defender, Sentinel, Tenable, Splunk, Elastic, Cortex XDR — with more on the way." },
+          ].map(f => (
+            <div key={f.title} className="cyber-card hover:border-cyber-600/30 transition-colors">
+              <span className="text-2xl">{f.icon}</span>
+              <h3 className="text-white text-sm font-semibold mt-2">{f.title}</h3>
+              <p className="text-gray-500 text-xs mt-1 leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 py-20">
-        <h2 className="font-display text-3xl md:text-4xl font-bold text-white text-center mb-16">
-          Exercise in <span className="text-cyber-400">four steps</span>
-        </h2>
-        <div className="grid md:grid-cols-3 gap-8">
+      {/* How it works */}
+      <section className="max-w-4xl mx-auto px-6 pb-20">
+        <h2 className="font-display text-2xl font-bold text-white text-center mb-8">How It Works</h2>
+        <div className="grid sm:grid-cols-4 gap-4">
           {[
-            { step: "01", title: "Configure", desc: "Select your security stack, choose a theme, set difficulty, pick MITRE techniques." },
-            { step: "02", title: "Generate", desc: "AI creates a multi-stage incident narrative with tool-specific alerts and decision points." },
-            { step: "03", title: "Execute", desc: "Run the TTX solo or as a team in real-time. Answer questions as the incident unfolds." },
-            { step: "04", title: "Debrief", desc: "Review scores, export reports, and identify gaps in your incident response playbook." },
-          ].map((item, i) => (
-            <div key={i} className="relative">
-              <div className="text-5xl font-display font-bold text-surface-3 mb-4">{item.step}</div>
-              <h3 className="font-display text-lg font-semibold text-white mb-2">{item.title}</h3>
-              <p className="text-gray-500 text-sm">{item.desc}</p>
-              {i < 3 && (
-                <div className="hidden md:block absolute top-8 -right-4 text-surface-4">
-                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-                </div>
-              )}
+            { step: "01", title: "Connect", desc: "Link your SIEM, set up your company profile, add your security stack" },
+            { step: "02", title: "Generate", desc: "AI builds a realistic scenario from your real alerts or chosen theme" },
+            { step: "03", title: "Execute", desc: "Run solo or as a team. Answer questions as the incident unfolds" },
+            { step: "04", title: "Improve", desc: "Review playbook, earn certificate, track progress, close MITRE gaps" },
+          ].map(s => (
+            <div key={s.step} className="text-center">
+              <span className="font-display text-3xl font-bold text-cyber-600/30">{s.step}</span>
+              <h3 className="text-white text-sm font-semibold mt-1">{s.title}</h3>
+              <p className="text-gray-500 text-xs mt-1">{s.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Pricing */}
-
-      {/* ───── WHY THREATCAST ───── */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center mb-3">Built for <span className="text-cyber-400">production security teams</span></h2>
-        <p className="text-gray-400 text-center mb-10 max-w-2xl mx-auto text-sm sm:text-base">Traditional tabletop exercises cost £5k-£30k per session. ThreatCast gives you unlimited AI exercises for a fraction of the cost.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="cyber-card"><p className="text-2xl mb-3">🔥</p><h3 className="font-display text-base font-semibold text-white mb-2">Real Incident Reconstructions</h3><p className="text-gray-400 text-sm">Scenarios modelled on SolarWinds, MOVEit, Log4Shell. What would YOUR team have done?</p></div>
-          <div className="cyber-card"><p className="text-2xl mb-3">📋</p><h3 className="font-display text-base font-semibold text-white mb-2">Audit-Ready Evidence</h3><p className="text-gray-400 text-sm">Auto-generate compliance evidence for ISO 27001, NIST CSF, SOC 2, NIS2, and DORA.</p></div>
-          <div className="cyber-card"><p className="text-2xl mb-3">🎯</p><h3 className="font-display text-base font-semibold text-white mb-2">MITRE ATT&CK Coverage</h3><p className="text-gray-400 text-sm">Track which techniques your team has been tested on. Visual gap analysis by tactic.</p></div>
-          <div className="cyber-card"><p className="text-2xl mb-3">📊</p><h3 className="font-display text-base font-semibold text-white mb-2">Performance Over Time</h3><p className="text-gray-400 text-sm">Track individual improvement. Show your CISO that Sarah improved from 45% to 78%.</p></div>
-          <div className="cyber-card"><p className="text-2xl mb-3">📖</p><h3 className="font-display text-base font-semibold text-white mb-2">Playbook Generation</h3><p className="text-gray-400 text-sm">AI generates structured IR playbooks — NIST, SANS, ISO 27035, MITRE, CREST frameworks.</p></div>
-          <div className="cyber-card"><p className="text-2xl mb-3">💰</p><h3 className="font-display text-base font-semibold text-white mb-2">95% Cost Reduction</h3><p className="text-gray-400 text-sm">Run unlimited exercises for less than one consultant session. Self-service, on-demand.</p></div>
-        </div>
-      </section>
-
-      {/* ───── INTERACTIVE DEMO ───── */}
-      <section id="demo" className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center mb-3">Experience a <span className="text-cyber-400">live scenario</span></h2>
-        <p className="text-gray-400 text-center mb-8 max-w-xl mx-auto text-sm sm:text-base">No signup needed. 3 real IR questions with tool-specific alerts, MITRE mapping, and scoring.</p>
-        <InteractiveDemo />
-      </section>
-      <section id="pricing" className="relative z-10 max-w-7xl mx-auto px-6 py-20">
-        <h2 className="font-display text-3xl md:text-4xl font-bold text-white text-center mb-4">
-          Simple, transparent pricing
-        </h2>
-        <p className="text-gray-400 text-center mb-16 max-w-xl mx-auto">
-          Replace £30k consultancy exercises with unlimited AI-powered drills.
-        </p>
-        <div className="grid md:grid-cols-3 gap-6">
+      <section className="max-w-5xl mx-auto px-6 pb-20">
+        <h2 className="font-display text-2xl font-bold text-white text-center mb-2">Pricing</h2>
+        <p className="text-gray-500 text-center text-sm mb-8">Start free. Scale as your team grows.</p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { name: "Growth", price: "£599", period: "/month", users: "25 users", ttx: "15 exercises/month", features: ["Group & individual modes", "All themes incl. real-world incidents", "After-action PDF reports", "MITRE ATT&CK coverage tracking", "Compliance evidence (ISO, NIST, SOC 2)"], cta: "Get Started", highlight: false },
-            { name: "Professional", price: "£1,499", period: "/month", users: "75 users", ttx: "50 exercises/month", features: ["Everything in Growth", "Executive board-level exercises", "IR playbook generation (5 frameworks)", "Team performance analytics", "Priority support & onboarding"], cta: "Get Started", highlight: true },
-            { name: "Enterprise", price: "£3,499", period: "/month", users: "Unlimited users", ttx: "Unlimited exercises", features: ["Everything in Professional", "SSO/SAML integration", "REST API access", "Dedicated customer success manager", "Custom scenario development", "On-premise deployment option"], cta: "Contact Sales", highlight: false },
-          ].map((plan, i) => (
-            <div key={i} className={`cyber-card relative ${plan.highlight ? "border-cyber-600 shadow-lg shadow-cyber-900/20 ring-1 ring-cyber-600/20" : ""}`}>
-              {plan.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-cyber-600 rounded-full text-xs font-semibold text-white">
-                  Most Popular
-                </div>
-              )}
-              <h3 className="font-display text-lg font-semibold text-white">{plan.name}</h3>
-              <div className="mt-4 mb-6">
-                <span className="text-3xl font-display font-bold text-white">{plan.price}</span>
-                <span className="text-gray-500 text-sm">{plan.period}</span>
-              </div>
-              <div className="space-y-1 text-sm text-gray-400 mb-6">
-                <p>{plan.users}</p>
-                <p>{plan.ttx}</p>
-              </div>
-              <ul className="space-y-2 mb-8">
-                {plan.features.map((f, j) => (
-                  <li key={j} className="flex items-center gap-2 text-sm text-gray-300">
-                    <svg className="w-4 h-4 text-cyber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button className={plan.highlight ? "cyber-btn-primary w-full" : "cyber-btn-secondary w-full"}>
-                {plan.cta}
-              </button>
+            { plan: "Starter", price: "£149", features: ["25 users", "15 exercises/mo", "Email support", "Basic compliance"] },
+            { plan: "Growth", price: "£299", features: ["50 users", "30 exercises/mo", "Priority support", "Custom branding", "Webhooks"], popular: true },
+            { plan: "Professional", price: "£599", features: ["100 users", "Unlimited exercises", "SSO", "Dedicated CSM", "API access"] },
+            { plan: "Enterprise", price: "£1,499", features: ["Unlimited users", "SAML", "Custom integrations", "SLA", "On-prem option"] },
+          ].map(p => (
+            <div key={p.plan} className={`cyber-card ${(p as any).popular ? "border-cyber-600/30 relative" : ""}`}>
+              {(p as any).popular && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 cyber-badge text-xs bg-cyber-600 text-white px-3">Most Popular</span>}
+              <h3 className="text-white text-base font-semibold">{p.plan}</h3>
+              <p className="font-display text-2xl font-bold text-cyber-400 mt-2">{p.price}<span className="text-gray-500 text-sm font-normal">/mo</span></p>
+              <ul className="mt-4 space-y-2">{p.features.map(f => <li key={f} className="text-gray-400 text-xs flex items-center gap-2"><span className="text-cyber-400">✓</span>{f}</li>)}</ul>
+              <Link href="/sign-up" className={`mt-4 w-full inline-block text-center text-sm py-2 rounded-lg ${(p as any).popular ? "cyber-btn-primary" : "cyber-btn-secondary"}`}>Get Started</Link>
             </div>
           ))}
         </div>
       </section>
 
+      {/* CTA */}
+      <section className="max-w-3xl mx-auto px-6 pb-20 text-center">
+        <div className="cyber-card border-cyber-600/20 bg-gradient-to-br from-cyber-600/5 to-transparent">
+          <h2 className="font-display text-2xl font-bold text-white">Ready to level up your incident response?</h2>
+          <p className="text-gray-400 text-sm mt-2">Start with 5 free exercises. No credit card required.</p>
+          <Link href="/sign-up" className="cyber-btn-primary px-8 py-3 text-base mt-6 inline-block">Start Free Trial →</Link>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="relative z-10 border-t border-surface-3/50 py-12">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-cyber-600 flex items-center justify-center">
-              <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-              </svg>
-            </div>
-            <span className="font-display text-sm font-semibold text-gray-400">ThreatCast</span></div><div className="flex items-center gap-6 text-xs text-gray-500"><Link href="/sign-in" className="hover:text-gray-300">Client Portal</Link><Link href="/admin" className="hover:text-gray-300">Admin</Link><a href="mailto:support@threatcast.io" className="hover:text-gray-300">Support</a>
-          </div><div className="flex items-center gap-6 text-xs text-gray-500"><a href="/terms" className="hover:text-gray-300">Terms</a><a href="/privacy" className="hover:text-gray-300">Privacy</a><a href="/changelog" className="hover:text-gray-300">Changelog</a><a href="/docs" className="hover:text-gray-300">API Docs</a></div>
-          <p className="text-gray-600 text-sm">© {new Date().getFullYear()} ThreatCast. All rights reserved.</p>
+      <footer className="border-t border-surface-3 py-8 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2"><div className="w-6 h-6 rounded bg-cyber-600 flex items-center justify-center"><svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg></div><span className="text-gray-500 text-sm">ThreatCast</span></div>
+          <div className="flex gap-4 text-gray-600 text-xs">
+            <Link href="/terms" className="hover:text-gray-400">Terms</Link>
+            <Link href="/privacy" className="hover:text-gray-400">Privacy</Link>
+            <a href="mailto:support@threatcast.io" className="hover:text-gray-400">Contact</a>
+          </div>
+          <p className="text-gray-700 text-xs">© 2026 ThreatCast. Glasgow, Scotland.</p>
         </div>
       </footer>
     </div>

@@ -1,6 +1,8 @@
 {
-  "crons": [{
-    "path": "/api/threat-intel",
-    "schedule": "0 7 * * *"
-  }]
+  "crons": [
+    {
+      "path": "/api/cron/scheduled-exercises",
+      "schedule": "0 8 * * 1"
+    }
+  ]
 }
