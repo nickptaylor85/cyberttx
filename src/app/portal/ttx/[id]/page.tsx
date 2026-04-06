@@ -32,6 +32,7 @@ export default function ExercisePage() {
   const [canAdvance, setCanAdvance] = useState(false);
   const [starting, setStarting] = useState(false);
   const [cloning, setCloning] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
   const [joining, setJoining] = useState(false);
 
   // Fetch session + user info
@@ -116,6 +117,13 @@ export default function ExercisePage() {
     setupPusher();
     return () => { if (channel) channel.unbind_all(); };
   }, [session?.channelName, session?.id, fetchSession]);
+
+  // Share exercise
+  async function shareExercise() {
+    const res = await fetch("/api/portal/share", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId }) });
+    const data = await res.json();
+    if (data.shareUrl) { setShareUrl(data.shareUrl); navigator.clipboard.writeText(data.shareUrl); }
+  }
 
   // Clone exercise for new attempt
   async function attemptExercise() {
@@ -252,6 +260,7 @@ export default function ExercisePage() {
           <a href={`/api/portal/certificate/pdf?sessionId=${sessionId}`} className="cyber-btn-secondary text-sm">🏆 Certificate PDF</a>
           <a href={`/api/portal/report?sessionId=${sessionId}`} target="_blank" className="cyber-btn-secondary text-sm">📄 Report</a>
           <Link href={`/portal/ttx/${sessionId}/playbook`} className="cyber-btn-secondary text-sm">📋 Playbook</Link>
+          <button onClick={shareExercise} className="cyber-btn-secondary text-sm">{shareUrl ? "✓ Link Copied!" : "🔗 Share"}</button>
           <Link href="/portal/ttx/new" className="cyber-btn-primary text-sm">🎯 New Exercise</Link>
         </div>
       </div>

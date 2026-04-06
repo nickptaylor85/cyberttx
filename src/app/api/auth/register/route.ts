@@ -55,7 +55,26 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, userId: existing.id, migrated: true }, { status: 201 });
+    // Send verification email
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const verifyToken = Array.from({ length: 32 }, () => "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 36)]).join("");
+      await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS email_verifications (id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text, email TEXT NOT NULL, token TEXT NOT NULL, verified BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT NOW())`);
+      await db.$executeRawUnsafe(`INSERT INTO email_verifications (email, token) VALUES ($1, $2)`, emailLower, verifyToken);
+      const verifyUrl = `https://threatcast.io/api/auth/verify?token=${verifyToken}&email=${encodeURIComponent(emailLower)}`;
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "ThreatCast <noreply@threatcast.io>", to: [emailLower],
+          subject: "Verify your ThreatCast email",
+          html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><h2>Verify your email</h2><p>Click below to verify your email address:</p><a href="${verifyUrl}" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Verify Email</a></div>`,
+        }),
+      }).catch(() => {});
+    } catch {}
+  }
+
+  return NextResponse.json({ success: true, userId: existing.id, migrated: true }, { status: 201 });
   }
 
   // Brand new user
