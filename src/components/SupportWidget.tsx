@@ -5,11 +5,23 @@ export default function SupportWidget() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  function send() {
+  async function send() {
     if (!message.trim()) return;
-    setSent(true); setMessage("");
-    setTimeout(() => { setSent(false); setOpen(false); }, 2000);
+    setSending(true);
+    try {
+      await fetch("/api/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      setSent(true); setMessage("");
+      setTimeout(() => { setSent(false); setOpen(false); }, 2500);
+    } catch {
+      alert("Failed to send. Try emailing support@threatcast.io");
+    }
+    setSending(false);
   }
 
   return (
@@ -25,7 +37,7 @@ export default function SupportWidget() {
               <textarea className="cyber-input w-full h-24 resize-none text-sm" placeholder="Describe your issue or question..." value={message} onChange={e => setMessage(e.target.value)} />
               <div className="flex items-center justify-between mt-3">
                 <a href="mailto:support@threatcast.io" className="text-gray-500 text-xs hover:text-gray-300">Or email us</a>
-                <button onClick={send} disabled={!message.trim()} className="cyber-btn-primary text-xs disabled:opacity-50">Send</button>
+                <button onClick={send} disabled={!message.trim() || sending} className="cyber-btn-primary text-xs disabled:opacity-50">{sending ? "Sending..." : "Send"}</button>
               </div>
             </>}
           </div>
