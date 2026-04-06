@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
-import PDFDocument from "pdfkit";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 export async function GET(req: NextRequest) {
   const sessionId = req.nextUrl.searchParams.get("sessionId");
@@ -28,59 +28,63 @@ export async function GET(req: NextRequest) {
   const date = s.completedAt ? new Date(s.completedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : new Date().toLocaleDateString("en-GB");
   const grade = accuracy >= 90 ? "PLATINUM" : accuracy >= 75 ? "GOLD" : accuracy >= 60 ? "SILVER" : "BRONZE";
 
-  const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: 40 });
-  const chunks: Buffer[] = [];
-  doc.on("data", (chunk: Buffer) => chunks.push(chunk));
-  const done = new Promise<Buffer>((resolve) => { doc.on("end", () => resolve(Buffer.concat(chunks))); });
+  // Build PDF with pdf-lib (pure JS, works on Vercel)
+  const doc = await PDFDocument.create();
+  const page = doc.addPage([841.89, 595.28]); // A4 landscape
+  const { width, height } = page.getSize();
+  const helvetica = await doc.embedFont(StandardFonts.Helvetica);
+  const helveticaBold = await doc.embedFont(StandardFonts.HelveticaBold);
 
-  const w = 841; const h = 595; // A4 landscape
+  const teal = rgb(0.078, 0.722, 0.604); // #14b89a
+  const white = rgb(1, 1, 1);
+  const gray = rgb(0.6, 0.6, 0.6);
+  const dark = rgb(0.06, 0.06, 0.12);
+  const gradeColors: Record<string, ReturnType<typeof rgb>> = {
+    PLATINUM: rgb(0.655, 0.545, 0.98), GOLD: rgb(0.984, 0.749, 0.141),
+    SILVER: rgb(0.612, 0.639, 0.686), BRONZE: rgb(0.851, 0.467, 0.024),
+  };
+  const gc = gradeColors[grade] || teal;
+
   // Background
-  doc.rect(0, 0, w, h).fill("#0f0f1e");
+  page.drawRectangle({ x: 0, y: 0, width, height, color: dark });
+
   // Border
-  doc.rect(30, 30, w - 60, h - 60).lineWidth(2).strokeColor("#14b89a").stroke();
-  doc.rect(36, 36, w - 72, h - 72).lineWidth(0.5).strokeColor("#14b89a").strokeOpacity(0.3).stroke();
+  page.drawRectangle({ x: 30, y: 30, width: width - 60, height: height - 60, borderColor: teal, borderWidth: 2 });
+  page.drawRectangle({ x: 36, y: 36, width: width - 72, height: height - 72, borderColor: rgb(0.078, 0.722, 0.604), borderWidth: 0.5, opacity: 0.3 });
+
+  function centerText(text: string, y: number, font: typeof helvetica, size: number, color: ReturnType<typeof rgb>) {
+    const tw = font.widthOfTextAtSize(text, size);
+    page.drawText(text, { x: (width - tw) / 2, y, font, size, color });
+  }
 
   // Content
-  const cx = w / 2;
-  doc.fillColor("#14b89a").fontSize(14).text("THREATCAST", 0, 80, { align: "center", width: w });
-  doc.fillColor("#14b89a").fontSize(36).text("CERTIFICATE", 0, 120, { align: "center", width: w, characterSpacing: 6 });
-  doc.fillColor("#888").fontSize(12).text("OF COMPLETION", 0, 165, { align: "center", width: w, characterSpacing: 4 });
-  doc.fillColor("#ccc").fontSize(11).text("This certifies that", 0, 200, { align: "center", width: w });
-  doc.fillColor("#14b89a").fontSize(28).text(name, 0, 225, { align: "center", width: w });
-  doc.fillColor("#ccc").fontSize(11).text("has successfully completed the cybersecurity tabletop exercise", 0, 270, { align: "center", width: w });
-  doc.fillColor("#fff").fontSize(16).text(`"${s.title}"`, 0, 295, { align: "center", width: w });
+  centerText("THREATCAST", height - 100, helveticaBold, 14, teal);
+  centerText("CERTIFICATE", height - 140, helvetica, 36, teal);
+  centerText("OF COMPLETION", height - 165, helvetica, 11, gray);
+  centerText("This certifies that", height - 200, helvetica, 11, gray);
+  centerText(name, height - 230, helveticaBold, 26, teal);
+  centerText("has successfully completed the cybersecurity tabletop exercise", height - 265, helvetica, 11, gray);
+  centerText(`"${s.title}"`, height - 290, helveticaBold, 15, white);
+  centerText(grade, height - 330, helveticaBold, 14, gc);
+  centerText(`${accuracy}%`, height - 365, helveticaBold, 36, gc);
+  centerText(`${correct}/${total} correct  |  ${s.difficulty}  |  ${s.theme}`, height - 400, helvetica, 10, gray);
+  centerText(`${s.organization?.name || "ThreatCast"}  |  ${date}`, height - 420, helvetica, 10, gray);
 
-  // Grade + Score
-  doc.fillColor("#14b89a").fontSize(14).text(grade, 0, 340, { align: "center", width: w, characterSpacing: 4 });
-  doc.fillColor("#fff").fontSize(36).text(`${accuracy}%`, 0, 365, { align: "center", width: w });
-  doc.fillColor("#999").fontSize(10).text(`${correct}/${total} correct · ${s.difficulty} · ${s.theme}`, 0, 410, { align: "center", width: w });
-  doc.fillColor("#999").fontSize(10).text(`${s.organization?.name || "ThreatCast"} · ${date}`, 0, 430, { align: "center", width: w });
-
-  // MITRE
   const mitre = (s.mitreAttackIds as string[]) || [];
-  if (mitre.length) doc.fillColor("#666").fontSize(8).text(`MITRE ATT&CK: ${mitre.join(", ")}`, 0, 460, { align: "center", width: w });
+  if (mitre.length) centerText(`MITRE ATT&CK: ${mitre.join(", ")}`, height - 450, helvetica, 8, rgb(0.4, 0.4, 0.4));
 
-  // Footer
-  doc.fillColor("#555").fontSize(8).text(`Issued by ThreatCast · threatcast.io · Certificate ID: TC-${sessionId.slice(-8).toUpperCase()}`, 0, h - 55, { align: "center", width: w });
-  doc.end();
+  centerText(`Issued by ThreatCast  |  threatcast.io  |  Certificate ID: TC-${sessionId.slice(-8).toUpperCase()}`, 50, helvetica, 8, rgb(0.35, 0.35, 0.35));
 
-  // Store certificate on user profile
+  // Save certificate to user profile
   try {
     await db.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS user_certificates (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-        user_id TEXT NOT NULL,
-        session_id TEXT NOT NULL,
-        title TEXT,
-        grade TEXT,
-        accuracy INT,
-        theme TEXT,
-        org_name TEXT,
-        earned_at TIMESTAMP DEFAULT NOW(),
-        expires_at TIMESTAMP
+        user_id TEXT NOT NULL, session_id TEXT NOT NULL,
+        title TEXT, grade TEXT, accuracy INT, theme TEXT, org_name TEXT,
+        earned_at TIMESTAMP DEFAULT NOW(), expires_at TIMESTAMP
       )
     `);
-    // Check if already exists
     const existing = await db.$queryRawUnsafe(`SELECT id FROM user_certificates WHERE user_id = $1 AND session_id = $2`, user.id, sessionId) as any[];
     if (!existing.length) {
       const expiresAt = new Date();
@@ -92,8 +96,8 @@ export async function GET(req: NextRequest) {
     }
   } catch {}
 
-  const pdf = await done;
-  return new NextResponse(new Uint8Array(pdf), {
+  const pdfBytes = await doc.save();
+  return new NextResponse(new Uint8Array(pdfBytes), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="certificate-${name.replace(/\s+/g, "-")}.pdf"`,
