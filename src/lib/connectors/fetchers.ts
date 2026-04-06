@@ -180,9 +180,12 @@ async function fetchTaegis(config: ConnectorConfig, limit: number): Promise<Secu
               creator { detector { detector_id detector_name } }
             }
             entities {
+              entities
               relationships {
-                key
-                value
+                relationship
+                to_entity
+                from_entity
+                type
               }
             }
             tags
