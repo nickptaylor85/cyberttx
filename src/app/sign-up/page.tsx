@@ -1,6 +1,6 @@
 "use client";
 import { signIn } from "next-auth/react";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -11,7 +11,29 @@ function SignUpForm() {
   const [email, setEmail] = useState(invitedEmail);
   const [password, setPassword] = useState(""); const [firstName, setFirstName] = useState(""); const [lastName, setLastName] = useState("");
   const [error, setError] = useState(""); const [loading, setLoading] = useState(false);
+  const [signupsDisabled, setSignupsDisabled] = useState(false);
+  const [checkingSignups, setCheckingSignups] = useState(!invitedEmail);
   const router = useRouter();
+
+  // Check if sign-ups are disabled (invited users bypass this)
+  useEffect(() => {
+    if (invitedEmail) { setCheckingSignups(false); return; }
+    fetch("/api/public/signup-status").then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.signupsEnabled === false) setSignupsDisabled(true);
+      setCheckingSignups(false);
+    }).catch(() => setCheckingSignups(false));
+  }, []);
+
+  if (checkingSignups) return <div className="text-center py-12"><p className="text-gray-500 text-sm">Loading...</p></div>;
+
+  if (signupsDisabled) return (
+    <div className="cyber-card text-center py-8">
+      <p className="text-3xl mb-3">🔒</p>
+      <p className="text-white text-sm font-semibold">Sign-ups are currently closed</p>
+      <p className="text-gray-500 text-xs mt-2">New registrations are disabled. Contact your administrator for an invitation.</p>
+      <Link href="/sign-in" className="text-cyber-400 text-sm mt-4 inline-block">← Back to sign in</Link>
+    </div>
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setError(""); setLoading(true);
