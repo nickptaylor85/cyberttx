@@ -7,20 +7,22 @@ export async function GET(req: NextRequest) {
   const user = await getAuthUser();
   if (!user?.orgId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const type = req.nextUrl.searchParams.get("type");
-  let csv = "";
 
   if (type === "exercises") {
-    const sessions = await db.ttxSession.findMany({ where: { orgId: user.orgId }, include: { _count: { select: { participants: true } } } });
-    csv = "Title,Theme,Difficulty,Status,Participants,Created,Completed\n" + sessions.map(s => `"${(s.title || '').replace(/"/g, '""')}",${s.theme},${s.difficulty},${s.status},${s._count.participants},${s.createdAt.toISOString()},${s.completedAt?.toISOString() || ''}`).join("\n");
-  } else if (type === "team") {
-    const users = await db.user.findMany({ where: { orgId: user.orgId }, include: { _count: { select: { participations: true } } } });
-    csv = "Name,Email,Role,Exercises\n" + users.map(u => `"${u.firstName || ''} ${u.lastName || ''}",${u.email},${u.role},${u._count.participations}`).join("\n");
-  } else if (type === "compliance" || type === "all") {
-    const sessions = await db.ttxSession.findMany({ where: { orgId: user.orgId, status: "COMPLETED" } });
-    csv = "Exercise,Theme,Date,ISO27001,NIST_CSF,SOC2,NIS2,DORA\n" + sessions.map(s => `"${(s.title || '').replace(/"/g, '""')}",${s.theme},${s.completedAt?.toISOString() || ''},Yes,Yes,Yes,Yes,Yes`).join("\n");
-  } else {
-    return NextResponse.json({ error: "Unknown type" }, { status: 400 });
+    const sessions = await db.ttxSession.findMany({
+      where: { orgId: user.orgId, status: "COMPLETED" },
+      select: { id: true, title: true, theme: true, difficulty: true, createdAt: true, completedAt: true },
+      orderBy: { createdAt: "desc" },
+    });
+    const csv = "ID,Title,Theme,Difficulty,Created,Completed\n" + sessions.map(s => `"${s.id}","${s.title}","${s.theme}","${s.difficulty}","${s.createdAt?.toISOString()}","${s.completedAt?.toISOString() || ""}"`).join("\n");
+    return new NextResponse(csv, { headers: { "Content-Type": "text/csv", "Content-Disposition": "attachment; filename=exercises.csv" } });
   }
 
-  return new NextResponse(csv, { headers: { "Content-Type": "text/csv", "Content-Disposition": `attachment; filename=threatcast-${type}.csv` } });
+  if (type === "users") {
+    const users = await db.user.findMany({ where: { orgId: user.orgId }, select: { id: true, email: true, firstName: true, lastName: true, role: true, createdAt: true } });
+    const csv = "ID,Email,First Name,Last Name,Role,Created\n" + users.map(u => `"${u.id}","${u.email}","${u.firstName || ""}","${u.lastName || ""}","${u.role}","${u.createdAt?.toISOString()}"`).join("\n");
+    return new NextResponse(csv, { headers: { "Content-Type": "text/csv", "Content-Disposition": "attachment; filename=users.csv" } });
+  }
+
+  return NextResponse.json({ error: "Unknown export type" }, { status: 400 });
 }

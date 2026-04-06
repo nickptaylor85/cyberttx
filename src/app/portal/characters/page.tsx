@@ -97,6 +97,7 @@ export default function CharactersPage() {
     const res = await fetch("/api/portal/characters", {
       method: editingChar ? "PUT" : "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        ...(editingChar && { id: editingChar.id }),
         name, role, department: dept, description: desc,
         expertise: expertise.split(",").map(e => e.trim()).filter(Boolean),
         isRecurring: true,
@@ -104,7 +105,7 @@ export default function CharactersPage() {
     });
     if (res.ok) {
       setName(""); setRole(""); setDept(""); setDesc(""); setExpertise("");
-      setShowCreate(false); loadChars();
+      setShowCreate(false); setEditingChar(null); loadChars();
     } else {
       const data = await res.json();
       setError(data.error || "Failed to create");
@@ -170,6 +171,12 @@ export default function CharactersPage() {
                     <p className="text-white text-sm font-semibold">{c.name}</p>
                     <p className="text-cyber-400 text-xs">{c.role}{c.department ? ` · ${c.department}` : ""}</p>
                   </div>
+                  <button onClick={() => {
+                    setEditingChar(c);
+                    setName(c.name); setRole(c.role); setDept(c.department); setDesc(c.description || "");
+                    setExpertise((c.expertise || []).join(", "));
+                    setShowCreate(true);
+                  }} className="text-cyan-400/50 hover:text-cyan-400 text-xs p-1">✏️</button>
                   <button onClick={() => deleteChar(c.id)} className="text-red-400/50 hover:text-red-400 text-xs p-1">✕</button>
                 </div>
                 {c.description && <p className="text-gray-400 text-xs mb-2 line-clamp-3">{c.description}</p>}

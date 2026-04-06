@@ -1,4 +1,5 @@
 "use client";
+import { signOut } from "next-auth/react";
 
 import { LanguageProvider, useLanguage } from "@/lib/i18n/LanguageContext";
 import SupportWidget from "@/components/SupportWidget";
@@ -121,6 +122,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
+  useEffect(() => {
+    fetch("/api/portal/branding").then(r => r.ok ? r.json() : {}).then(setBranding).catch(() => {});
+    fetch("/api/admin/announcements").then(r => r.ok ? r.json() : []).then(setAnnouncements).catch(() => {});
+    fetch("/api/portal/me").then(r => r.ok ? r.json() : {}).then((d: any) => { if (d.role) setUserRole(d.role); }).catch(() => {});
+  }, []);
+
   // Fetch user role for RBAC
   useEffect(() => {
     fetch("/api/portal/me").then(r => r.ok ? r.json() : null).then(d => {
@@ -199,6 +206,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         <div className="p-4 border-t border-surface-3">
           <div className="flex items-center gap-3">
             <UserMenu />
+          <button onClick={() => window.location.href = "/api/auth/signout"} className="text-red-400/60 hover:text-red-400 text-xs mt-1">Sign Out</button>
             <div className="text-sm">
               <p className="text-gray-300 font-medium">Portal</p>
             </div>
@@ -214,6 +222,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </button>
           <span className="font-display text-sm font-bold text-white">Threat<span className="text-cyber-400">Cast</span></span>
           <UserMenu />
+          <a href="/api/auth/signout" className="text-red-400/60 hover:text-red-400 text-xs mt-1">Sign Out</a>
         </div>
         <div className="p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
