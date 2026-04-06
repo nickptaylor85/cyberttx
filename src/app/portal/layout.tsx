@@ -19,6 +19,7 @@ const allNavSections: (NavItem | NavSection)[] = [
   { label: "Exercises", icon: "🎯", defaultOpen: true, items: [
     { href: "/portal/ttx", label: "All Exercises", icon: "🎯" },
     { href: "/portal/ttx/custom", label: "Custom Scenario", icon: "✏️" },
+    { href: "/portal/alerts", label: "Live Alert Feed", icon: "🚨" },
     { href: "/portal/templates", label: "Templates", icon: "📝", adminOnly: true },
     { href: "/portal/schedule", label: "Schedule", icon: "📅", adminOnly: true },
   ]},

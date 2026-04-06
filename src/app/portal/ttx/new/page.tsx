@@ -62,6 +62,30 @@ export default function NewTtxPage() {
     timeLimitSecs: null as number | null,
   });
 
+  // Handle ?fromAlert= param from Alert Feed
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const alertData = params.get("fromAlert");
+    if (alertData) {
+      try {
+        const alert = JSON.parse(decodeURIComponent(alertData));
+        // Pre-fill the custom incident field with alert details
+        const incident = `REAL ALERT FROM ${alert.source || "Security Tool"}:\n` +
+          `Title: ${alert.title}\n` +
+          `Severity: ${alert.severity}\n` +
+          `Description: ${alert.description}\n` +
+          (alert.assets?.length ? `Affected Assets: ${alert.assets.join(", ")}\n` : "") +
+          (alert.mitre?.length ? `MITRE Techniques: ${alert.mitre.join(", ")}\n` : "");
+        setConfig(p => ({
+          ...p,
+          mitreAttackIds: [...new Set([...p.mitreAttackIds, ...(alert.mitre || [])])],
+        }));
+        // Store for the custom incident field
+        (window as any).__alertIncident = incident;
+      } catch {}
+    }
+  }, []);
+
   useEffect(() => {
     // Fetch MITRE technique usage for this portal
     fetch("/api/portal/sessions").then(r => r.ok ? r.json() : []).then(sessions => {
@@ -143,6 +167,7 @@ export default function NewTtxPage() {
           toolIds: orgTools,
           selectedCharacters: [...selectedRoster, ...adHocPayload],
           language: document.cookie.match(/lang=(\w+)/)?.[1] || "en",
+          customIncident: (window as any).__alertIncident || undefined,
         }),
       });
       if (!res.ok) {
