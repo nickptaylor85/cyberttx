@@ -2,24 +2,11 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-// Slack slash command handler: /threatcast [action]
-// POST from Slack with application/x-www-form-urlencoded
 export async function POST(req: NextRequest) {
-  // Verify Slack signing secret (or at least a token)
-  const slackToken = req.headers.get("x-slack-signature");
-  if (!process.env.SLACK_SIGNING_SECRET && !slackToken) {
-    // If no signing secret configured, require at least a valid team domain
-    const teamDomain = (await req.formData().catch(() => new FormData())).get("team_domain") as string;
-    // Re-parse since we consumed formData
-    // For now, just log and continue — add proper verification when Slack app is set up
-  }
   const formData = await req.formData();
   const command = formData.get("command") as string;
   const text = (formData.get("text") as string || "").trim();
-  const userId = formData.get("user_id") as string;
   const userName = formData.get("user_name") as string;
-  const channelName = formData.get("channel_name") as string;
-  const responseUrl = formData.get("response_url") as string;
 
   const parts = text.split(/\s+/);
   const action = parts[0]?.toLowerCase() || "help";
@@ -35,19 +22,12 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "themes") {
-    return NextResponse.json({
-      response_type: "ephemeral",
-      text: "Available themes: ransomware, phishing, insider-threat, supply-chain, cloud-breach, apt, ddos, data-exfil",
-    });
+    return NextResponse.json({ response_type: "ephemeral", text: "Available themes: ransomware, phishing, insider-threat, supply-chain, cloud-breach, apt, ddos, data-exfil" });
   }
 
   if (action === "status") {
     const total = await db.ttxSession.count({ where: { status: "COMPLETED" } });
-    const users = await db.user.count({ where: { clerkId: { startsWith: "hash:" } } });
-    return NextResponse.json({
-      response_type: "ephemeral",
-      text: `📊 ThreatCast Status: ${total} exercises completed, ${users} active users`,
-    });
+    return NextResponse.json({ response_type: "ephemeral", text: `📊 ThreatCast: ${total} exercises completed` });
   }
 
   if (action === "leaderboard") {
@@ -56,24 +36,13 @@ export async function POST(req: NextRequest) {
       include: { user: { select: { firstName: true } } },
     });
     const lines = top.map((p, i) => `${i + 1}. ${p.user.firstName || "User"} — ${p.totalScore} pts`);
-    return NextResponse.json({
-      response_type: "ephemeral",
-      text: `🏆 *Top Performers*\n${lines.join("\n") || "No data yet"}`,
-    });
+    return NextResponse.json({ response_type: "ephemeral", text: `🏆 *Top Performers*\n${lines.join("\n") || "No data yet"}` });
   }
 
   if (action === "run") {
     const theme = parts[1] || "ransomware";
-    // Respond immediately, generate in background
-    if (responseUrl) {
-      fetch(responseUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ response_type: "in_channel", text: `🎯 Generating ${theme} exercise... Check ThreatCast in ~30 seconds.` }),
-      }).catch(() => {});
-    }
-    return NextResponse.json({ response_type: "ephemeral", text: `Generating a ${theme} exercise. You'll be notified when ready.` });
+    return NextResponse.json({ response_type: "ephemeral", text: `🎯 Generating ${theme} exercise... Check ThreatCast in ~30 seconds.` });
   }
 
-  return NextResponse.json({ response_type: "ephemeral", text: `Unknown command. Try \`/threatcast help\`` });
+  return NextResponse.json({ response_type: "ephemeral", text: "Unknown command. Try `/threatcast help`" });
 }
