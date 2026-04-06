@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/weekly-report",
       "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/engagement-notifications",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/daily-digest",
+      "schedule": "30 8 * * 1-5"
     }
   ]
 }
