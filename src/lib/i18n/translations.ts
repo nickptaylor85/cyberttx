@@ -46,7 +46,7 @@ type TranslationKeys = {
 
 const translations: Record<LangCode, TranslationKeys> = {
   en: {
-    "nav.dashboard": "Dashboard", "nav.exercises": "All Exercises", "nav.customScenario": "Custom Scenario",
+    "nav.dashboard": "Dashboard", "nav.exercises": "All Exercises", "nav.customScenario": "Custom Exercise",
     "nav.templates": "Templates", "nav.schedule": "Schedule", "nav.leaderboard": "Leaderboard",
     "nav.mitreCoverage": "MITRE Coverage", "nav.performance": "Performance", "nav.compliance": "Compliance",
     "nav.playbooks": "Playbooks", "nav.companyProfile": "Company Profile", "nav.securityStack": "Security Stack",

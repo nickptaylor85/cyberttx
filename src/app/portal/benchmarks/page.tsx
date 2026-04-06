@@ -7,11 +7,22 @@ export default async function BenchmarksPage() {
   if (!org) return <p className="text-red-400 p-8">Organization not found</p>;
 
   // Your org stats
-  const yourSessions = await db.ttxSession.findMany({ where: { orgId: org.id, status: "COMPLETED" }, include: { participants: { include: { answers: true } } } });
+  const sessions = await db.ttxSession.findMany({ where: { orgId: org.id, status: "COMPLETED" }, orderBy: { createdAt: "asc" }, include: { participants: { include: { answers: true } } } });
+  const yourSessions = sessions;
   const yourCorrect = yourSessions.flatMap(s => s.participants).flatMap(p => p.answers).filter(a => a.isCorrect).length;
   const yourTotal = yourSessions.flatMap(s => s.participants).flatMap(p => p.answers).length;
   const yourAccuracy = yourTotal > 0 ? Math.round((yourCorrect / yourTotal) * 100) : 0;
   const yourExercises = yourSessions.length;
+
+  // Your org profile for industry/size matching
+  const profile = await db.orgProfile.findUnique({ where: { orgId: org.id }, select: { industry: true, companySize: true } });
+  const yourIndustry = profile?.industry || "Technology";
+  const yourSize = profile?.companySize || "50-200";
+
+  // Industry benchmarks (simulated from platform data)
+  const industryOrgs = await db.orgProfile.findMany({ where: { industry: yourIndustry }, select: { orgId: true } });
+  const industryOrgIds = industryOrgs.map(o => o.orgId);
+  const industrySessions = industryOrgIds.length > 0 ? await db.ttxSession.count({ where: { orgId: { in: industryOrgIds }, status: "COMPLETED" } }) : 0;
 
   // Platform averages (anonymised)
   const allSessions = await db.ttxSession.count({ where: { status: "COMPLETED" } });
@@ -53,6 +64,33 @@ export default async function BenchmarksPage() {
             <div className="text-center"><div className="h-32 w-16 bg-surface-3 rounded-t relative"><div className="absolute bottom-0 w-full bg-gray-500 rounded-t" style={{ height: "50%" }} /></div><p className="text-gray-400 text-sm font-bold mt-2">{avgExercisesPerOrg}</p><p className="text-gray-500 text-xs">Avg</p></div>
           </div>
           <p className={`text-center text-sm font-semibold ${exComp.color}`}>{exComp.label}</p>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4 mb-6">
+        <div className="cyber-card">
+          <h2 className="text-white text-sm font-semibold mb-3">Your Industry: {yourIndustry}</h2>
+          <p className="text-gray-500 text-xs mb-2">{industryOrgIds.length} portals in your industry</p>
+          <div className="flex items-center justify-between py-2 border-b border-surface-3/30">
+            <span className="text-gray-400 text-xs">Industry avg exercises</span>
+            <span className="text-white text-sm font-mono">{industryOrgIds.length > 0 ? Math.round(industrySessions / industryOrgIds.length) : "N/A"}</span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-gray-400 text-xs">Your exercises</span>
+            <span className="text-cyber-400 text-sm font-mono">{yourExercises}</span>
+          </div>
+        </div>
+        <div className="cyber-card">
+          <h2 className="text-white text-sm font-semibold mb-3">Company Size: {yourSize}</h2>
+          <p className="text-gray-500 text-xs mb-2">Recommended exercises/month for your size</p>
+          <div className="flex items-center justify-between py-2 border-b border-surface-3/30">
+            <span className="text-gray-400 text-xs">Recommended</span>
+            <span className="text-white text-sm font-mono">{yourSize === "1-50" ? "4" : yourSize === "50-200" ? "8" : yourSize === "200-1000" ? "12" : "20"}/mo</span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-gray-400 text-xs">Your pace</span>
+            <span className="text-cyber-400 text-sm font-mono">{yourExercises > 0 ? Math.round(yourExercises / Math.max(1, Math.round((Date.now() - new Date(sessions[sessions.length - 1]?.createdAt || Date.now()).getTime()) / 2592000000))) : 0}/mo</span>
+          </div>
         </div>
       </div>
 

@@ -62,13 +62,22 @@ export async function POST(req: NextRequest) {
     (async () => {
       try {
         console.log(`[generate] Starting background generation for session ${session.id}`);
-        const scenario = await generateTtxScenario({
+        // Get recent scenario titles so AI never repeats
+      const recentSessions = await db.ttxSession.findMany({
+        where: { orgId: org.id, status: "COMPLETED" },
+        select: { title: true, scenario: true },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      });
+      const recentTitles = recentSessions.map(s => s.title).filter(Boolean);
+
+      const scenario = await generateTtxScenario({
           theme, difficulty, mitreAttackIds: mitreAttackIds || [],
           securityTools: org.securityTools.map(ost => ({
             name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
           })),
           questionCount: questionCount || 12,
-          orgProfile: org.profile as any, characters, pastPerformance: await (async () => { try { const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx"); return analyzePastPerformance(org.id, db); } catch { return null; } })(), customIncident, language: language || "en",
+          orgProfile: org.profile as any, characters, pastPerformance: await (async () => { try { const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx"); return analyzePastPerformance(org.id, db); } catch { return null; } })(), customIncident, recentTitles, language: language || "en",
         });
 
         await db.ttxSession.update({

@@ -18,7 +18,7 @@ const allNavSections: (NavItem | NavSection)[] = [
 
   { label: "Exercises", icon: "🎯", defaultOpen: true, items: [
     { href: "/portal/ttx", label: "All Exercises", icon: "🎯" },
-    { href: "/portal/ttx/custom", label: "Custom Scenario", icon: "✏️" },
+    { href: "/portal/ttx/custom", label: "Custom Exercise", icon: "✏️" },
     { href: "/portal/alerts", label: "Live Alert Feed", icon: "🚨" },
     { href: "/portal/templates", label: "Templates", icon: "📝", adminOnly: true },
     { href: "/portal/schedule", label: "Schedule", icon: "📅", adminOnly: true },
@@ -115,6 +115,8 @@ function SectionGroup({ section, pathname, onNavigate }: { section: NavSection; 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [branding, setBranding] = useState<{ portalName?: string; logoUrl?: string; primaryColor?: string }>({});
+  const [announcements, setAnnouncements] = useState<any[]>([]);
   const [userRole, setUserRole] = useState<string>("MEMBER");
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
@@ -141,7 +143,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   return (
     <LanguageProvider>
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex" style={branding.primaryColor ? { "--brand-color": branding.primaryColor } as React.CSSProperties : {}}>
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />

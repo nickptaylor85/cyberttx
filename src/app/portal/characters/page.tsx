@@ -70,6 +70,7 @@ export default function CharactersPage() {
   const [dept, setDept] = useState(""); const [desc, setDesc] = useState("");
   const [expertise, setExpertise] = useState("");
   const [error, setError] = useState(""); const [saving, setSaving] = useState(false);
+  const [editingChar, setEditingChar] = useState<Character | null>(null);
 
   useEffect(() => { loadChars(); }, []);
 
@@ -94,7 +95,7 @@ export default function CharactersPage() {
     if (!name || !role) return;
     setError(""); setSaving(true);
     const res = await fetch("/api/portal/characters", {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: editingChar ? "PUT" : "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name, role, department: dept, description: desc,
         expertise: expertise.split(",").map(e => e.trim()).filter(Boolean),

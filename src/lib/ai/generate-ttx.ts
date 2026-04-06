@@ -57,6 +57,7 @@ interface GenerateTtxParams {
   characters?: Character[];
   pastPerformance?: PastPerformance | null;
   customIncident?: string;
+  recentTitles?: string[];
   language?: string;
 }
 

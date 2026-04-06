@@ -37,7 +37,7 @@ export default function CustomScenarioPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="font-display text-xl sm:text-2xl font-bold text-white">Custom Scenario Builder</h1>
+        <h1 className="font-display text-xl sm:text-2xl font-bold text-white">Custom Exercise Builder</h1>
         <p className="text-gray-500 text-xs sm:text-sm mt-1">Paste a real incident report, post-mortem, or threat brief — AI converts it into a tabletop exercise</p>
       </div>
 

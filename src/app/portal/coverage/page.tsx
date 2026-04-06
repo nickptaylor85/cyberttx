@@ -56,9 +56,13 @@ export default async function MitreCoveragePage() {
         <div key={g.tactic} className="cyber-card">
           <h2 className="text-white text-sm font-semibold mb-3">{g.tactic}</h2>
           <div className="flex flex-wrap gap-1.5">{g.techniques.map(t => (
-            <div key={t.id} className={`px-2 py-1 rounded text-xs border ${heatColor(t.count)} transition-all`} title={`${t.id}: ${t.name} — ${t.count} exercises`}>
+            <div key={t.id} className={`group relative px-2 py-1 rounded text-xs border cursor-default ${heatColor(t.count)} transition-all`}>
               <span className="font-mono">{t.id}</span>
               {t.count > 0 && <span className="ml-1 opacity-70">×{t.count}</span>}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block z-10 bg-surface-0 border border-surface-3 rounded-lg px-3 py-2 shadow-xl whitespace-nowrap pointer-events-none">
+                <p className="text-white text-xs font-semibold">{t.id}: {t.name}</p>
+                <p className="text-gray-500 text-xs">{t.count} exercise{t.count !== 1 ? "s" : ""} · {t.tactic}</p>
+              </div>
             </div>
           ))}</div>
         </div>

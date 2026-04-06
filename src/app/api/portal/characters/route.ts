@@ -65,3 +65,17 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json(character, { status: 201 });
 }
+
+export async function PUT(req: NextRequest) {
+  const user = await getAuthUser();
+  if (!user?.orgId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { id, name, role, department, description, expertise, isRecurring } = await req.json();
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  const error = validateCharacter({ name, role, department, description, expertise });
+  if (error) return NextResponse.json({ error }, { status: 400 });
+  const character = await db.ttxCharacter.update({
+    where: { id },
+    data: { ...(name && { name }), ...(role && { role }), ...(department && { department }), ...(description !== undefined && { description }), ...(expertise && { expertise }), ...(isRecurring !== undefined && { isRecurring }) },
+  });
+  return NextResponse.json(character);
+}
