@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface Character {
   id: string; name: string; role: string; department: string;
   description: string; expertise: string[]; isRecurring: boolean; createdAt: string;
 }
 
-const SUGGESTED_ROLES = [
+const DEFAULT_ROLES = [
   "CISO", "SOC Manager", "SOC Analyst (L1)", "SOC Analyst (L2)", "SOC Analyst (L3)",
   "Incident Response Lead", "Threat Hunter", "Security Engineer", "Network Engineer",
   "IT Director", "CTO", "CIO", "Sysadmin", "Help Desk Lead",
@@ -15,10 +15,52 @@ const SUGGESTED_ROLES = [
   "VP of Engineering", "DevOps Lead", "Cloud Architect", "DBA",
 ];
 
-const DEPARTMENTS = [
+const DEFAULT_DEPARTMENTS = [
   "Information Security", "IT Operations", "Engineering", "Executive Leadership",
   "Legal & Compliance", "Human Resources", "Finance", "Communications",
+  "Customer Support", "Product", "DevOps", "Infrastructure",
 ];
+
+function ComboInput({ value, onChange, suggestions, placeholder, label }: {
+  value: string; onChange: (v: string) => void; suggestions: string[]; placeholder: string; label: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = (filter || value).toLowerCase();
+    return suggestions.filter(s => !q || s.toLowerCase().includes(q));
+  }, [suggestions, filter, value]);
+
+  return (
+    <div className="relative">
+      <label className="cyber-label">{label}</label>
+      <input
+        className="cyber-input w-full"
+        value={value}
+        onChange={e => { onChange(e.target.value); setFilter(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        placeholder={placeholder}
+      />
+      {open && filtered.length > 0 && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute top-full left-0 right-0 z-40 mt-1 max-h-48 overflow-y-auto bg-surface-1 border border-surface-3 rounded-lg shadow-xl">
+            {filtered.map(s => (
+              <button
+                key={s}
+                onClick={() => { onChange(s); setOpen(false); setFilter(""); }}
+                className={`w-full text-left px-3 py-1.5 text-sm hover:bg-surface-2 transition-colors ${value === s ? "text-cyber-400" : "text-gray-300"}`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function CharactersPage() {
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -36,6 +78,17 @@ export default function CharactersPage() {
     if (res.ok) setCharacters(await res.json());
     setLoading(false);
   }
+
+  // Merge defaults with roles/departments already used in this portal
+  const allRoles = useMemo(() => {
+    const existing = characters.map(c => c.role).filter(Boolean);
+    return [...new Set([...DEFAULT_ROLES, ...existing])].sort();
+  }, [characters]);
+
+  const allDepartments = useMemo(() => {
+    const existing = characters.map(c => c.department).filter(Boolean);
+    return [...new Set([...DEFAULT_DEPARTMENTS, ...existing])].sort();
+  }, [characters]);
 
   async function create() {
     if (!name || !role) return;
@@ -69,13 +122,13 @@ export default function CharactersPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-xl sm:text-2xl font-bold text-white">Characters</h1>
-          <p className="text-gray-500 text-xs mt-1">{characters.length} characters · Shared across your entire portal</p>
+          <p className="text-gray-500 text-xs mt-1">{characters.length} characters · Shared across your portal</p>
         </div>
         <button onClick={() => setShowCreate(!showCreate)} className={showCreate ? "cyber-btn-secondary text-sm" : "cyber-btn-primary text-sm"}>{showCreate ? "Cancel" : "+ New Character"}</button>
       </div>
 
       <div className="cyber-card mb-4 bg-surface-0/50 border-surface-3/50">
-        <p className="text-gray-500 text-xs">Characters are shared with everyone in your portal. When selected for exercises, they&apos;ll act according to their role, expertise, and personality description. AI will reference them by name in scenarios.</p>
+        <p className="text-gray-500 text-xs">Characters are shared with everyone in your portal. Select a suggested role/department or type your own — custom entries are remembered for next time.</p>
       </div>
 
       {showCreate && (
@@ -84,25 +137,14 @@ export default function CharactersPage() {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div><label className="cyber-label">Name *</label><input className="cyber-input w-full" value={name} onChange={e => setName(e.target.value)} placeholder="Sarah Chen" /></div>
-              <div><label className="cyber-label">Role *</label>
-                <select className="cyber-input w-full" value={role} onChange={e => setRole(e.target.value)}>
-                  <option value="">Select role...</option>
-                  {SUGGESTED_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                  <option value="custom">Custom role...</option>
-                </select>
-                {role === "custom" && <input className="cyber-input w-full mt-1" placeholder="Custom role title" onChange={e => setRole(e.target.value)} />}
-              </div>
+              <ComboInput value={role} onChange={setRole} suggestions={allRoles} placeholder="Type or select a role..." label="Role *" />
             </div>
-            <div><label className="cyber-label">Department</label>
-              <select className="cyber-input w-full" value={dept} onChange={e => setDept(e.target.value)}>
-                <option value="">Select department...</option>
-                {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-            <div><label className="cyber-label">Personality & Background</label>
+            <ComboInput value={dept} onChange={setDept} suggestions={allDepartments} placeholder="Type or select a department..." label="Department" />
+            <div>
+              <label className="cyber-label">Personality & Background</label>
               <textarea className="cyber-input w-full h-20 resize-none" value={desc} onChange={e => setDesc(e.target.value)}
-                placeholder="e.g. Cautious and methodical. 15 years experience in financial services security. Always insists on following the runbook before escalating. Known for asking tough questions in incident calls." />
-              <p className="text-gray-600 text-xs mt-1">This shapes how the character behaves in exercises — their decision style, personality, and communication approach. Max 500 chars.</p>
+                placeholder="e.g. Cautious and methodical. 15 years in financial services security. Always insists on following the runbook. Known for tough questions in incident calls." />
+              <p className="text-gray-600 text-xs mt-1">Shapes how the character behaves — decision style, personality, communication approach. Max 500 chars.</p>
             </div>
             <div><label className="cyber-label">Expertise</label><input className="cyber-input w-full" value={expertise} onChange={e => setExpertise(e.target.value)} placeholder="SIEM, EDR, network forensics (comma-separated)" /></div>
             {error && <p className="text-red-400 text-sm">{error}</p>}
