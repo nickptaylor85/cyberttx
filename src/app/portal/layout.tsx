@@ -120,6 +120,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [mobileOpen, setMobileOpen] = useState(false);
   const [branding, setBranding] = useState<{ portalName?: string; logoUrl?: string; primaryColor?: string }>({});
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [userRole, setUserRole] = useState<string>("MEMBER");
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
@@ -141,6 +142,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     fetch("/api/portal/branding").then(r => r.ok ? r.json() : {}).then(setBranding).catch(() => {});
+    try { const d = JSON.parse(localStorage.getItem("tc_dismissed_announcements") || "[]"); setDismissedIds(new Set(d)); } catch {}
     fetch("/api/admin/announcements").then(r => r.ok ? r.json() : []).then(setAnnouncements).catch(() => {});
     fetch("/api/portal/me").then(r => r.ok ? r.json() : {}).then((d: any) => { if (d.role) setUserRole(d.role); }).catch(() => {});
   }, []);
@@ -243,12 +245,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </div>
         <div className="p-4 sm:p-6 lg:p-8">
           <XpWidget />
-          {announcements.length > 0 && (
+          {announcements.filter((a: any) => !dismissedIds.has(a.id)).length > 0 && (
             <div className="mb-4 space-y-2">
-              {announcements.map((a: any) => (
-                <div key={a.id} className={`p-3 rounded-lg border text-sm ${a.type === "warning" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-300" : a.type === "maintenance" ? "bg-purple-500/10 border-purple-500/20 text-purple-300" : "bg-blue-500/10 border-blue-500/20 text-blue-300"}`}>
-                  <p className="font-semibold text-xs">{a.title}</p>
-                  <p className="text-xs opacity-80 mt-0.5">{a.message}</p>
+              {announcements.filter((a: any) => !dismissedIds.has(a.id)).map((a: any) => (
+                <div key={a.id} className={`p-3 rounded-lg border text-sm flex items-start justify-between ${a.type === "warning" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-300" : a.type === "maintenance" ? "bg-purple-500/10 border-purple-500/20 text-purple-300" : "bg-blue-500/10 border-blue-500/20 text-blue-300"}`}>
+                  <div><p className="font-semibold text-xs">{a.title}</p><p className="text-xs opacity-80 mt-0.5">{a.message}</p></div>
+                  <button onClick={() => { const next = new Set(dismissedIds); next.add(a.id); setDismissedIds(next); localStorage.setItem("tc_dismissed_announcements", JSON.stringify([...next])); }} className="text-xs opacity-50 hover:opacity-100 ml-2 flex-shrink-0">✕</button>
                 </div>
               ))}
             </div>
