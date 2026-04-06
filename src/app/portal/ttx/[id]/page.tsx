@@ -281,7 +281,7 @@ export default function ExercisePage() {
 
   // ═══ IN PROGRESS — GAMEPLAY ═══
   // Handle GENERATING status — poll until ready
-  if (session.status === "GENERATING" || !scenario?.stages) {
+  if (session.status === "GENERATING") {
     return (
       <div className="max-w-lg mx-auto text-center py-20">
         <div className="relative flex h-4 w-4 mx-auto mb-4">
@@ -294,6 +294,30 @@ export default function ExercisePage() {
       </div>
     );
   }
+
+  // Handle CANCELLED — generation failed
+  if (session.status === "CANCELLED") {
+    return (
+      <div className="max-w-lg mx-auto text-center py-20">
+        <p className="text-3xl mb-3">⚠️</p>
+        <h2 className="font-display text-lg font-bold text-white mb-2">Generation Failed</h2>
+        <p className="text-gray-500 text-sm mb-4">The AI couldn&apos;t generate this scenario. This can happen with complex prompts.</p>
+        <div className="flex gap-2 justify-center">
+          <Link href="/portal/ttx/new" className="cyber-btn-primary text-sm">Try Again</Link>
+          <Link href="/portal/ttx" className="cyber-btn-secondary text-sm">Back to Exercises</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!scenario?.stages) return (
+    <div className="max-w-lg mx-auto text-center py-20">
+      <p className="text-3xl mb-3">📭</p>
+      <h2 className="font-display text-lg font-bold text-white mb-2">No Scenario Data</h2>
+      <p className="text-gray-500 text-sm mb-4">This exercise doesn&apos;t have scenario content. It may have been created before the current version.</p>
+      <Link href="/portal/ttx" className="cyber-btn-secondary text-sm">Back to Exercises</Link>
+    </div>
+  );
 
   const stage = scenario.stages[currentStage];
   const question = stage?.questions?.[currentQuestion];

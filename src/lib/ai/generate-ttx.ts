@@ -309,7 +309,11 @@ JSON structure:
   }
 
   let jsonText = textContent.text.trim();
+  // Strip markdown fences
   jsonText = jsonText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
+  // Try to extract JSON object if there's extra text around it
+  const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+  if (jsonMatch) jsonText = jsonMatch[0];
 
   try {
     const scenario: TtxScenario = JSON.parse(jsonText);
