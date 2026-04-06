@@ -22,7 +22,9 @@ const navSections = [
   { type: "item" as const, href: "/admin/announcements", label: "Announcements", icon: "📢" },
   { type: "divider" as const, label: "System" },
   { type: "item" as const, href: "/admin/api-keys", label: "API Keys", icon: "🔑" },
+  { type: "item" as const, href: "/admin/health", label: "System Health", icon: "💚" },
   { type: "item" as const, href: "/admin/audit", label: "Audit Log", icon: "📋" },
+  { type: "item" as const, href: "/admin/support", label: "Support", icon: "🎫" },
   { type: "item" as const, href: "/admin/export", label: "Export", icon: "📥" },
   { type: "item" as const, href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];

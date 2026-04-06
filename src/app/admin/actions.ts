@@ -130,3 +130,58 @@ export async function sendInvites(orgId: string, emailList: string[]) {
   }
   return { results, sent: results.filter(r => r.status === "sent" || r.status === "invitation_created").length };
 }
+
+export async function exportClients() {
+  const orgs = await db.organization.findMany({ include: { _count: { select: { users: true, ttxSessions: true } } } });
+  return "Name,Slug,Plan,Demo,Users,Exercises,Created\n" + orgs.map(o =>
+    `"${o.name}",${o.slug},${o.plan},${o.isDemo},${o._count.users},${o._count.ttxSessions},${o.createdAt.toISOString()}`
+  ).join("\n");
+}
+
+export async function exportUsers() {
+  const users = await db.user.findMany({ include: { organization: { select: { name: true } }, _count: { select: { participations: true } } } });
+  return "Name,Email,Role,Organization,Exercises,Active,Created\n" + users.filter(u => !u.clerkId.startsWith("pending_")).map(u =>
+    `"${u.firstName || ''} ${u.lastName || ''}",${u.email},${u.role},"${u.organization?.name || ''}",${u._count.participations},${u.isActive},${u.createdAt.toISOString()}`
+  ).join("\n");
+}
+
+export async function exportSessions() {
+  const sessions = await db.ttxSession.findMany({ include: { organization: { select: { name: true } }, _count: { select: { participants: true } } } });
+  return "Title,Theme,Difficulty,Status,Organization,Participants,Created,Completed\n" + sessions.map(s =>
+    `"${(s.title || '').replace(/"/g, '""')}",${s.theme},${s.difficulty},${s.status},"${s.organization?.name || ''}",${s._count.participants},${s.createdAt.toISOString()},${s.completedAt?.toISOString() || ''}`
+  ).join("\n");
+}
+
+export async function bulkEmailAdmins(subject: string, html: string) {
+  const admins = await db.user.findMany({
+    where: { role: "CLIENT_ADMIN", clerkId: { startsWith: "hash:" } },
+    select: { email: true, firstName: true },
+  });
+  if (!process.env.RESEND_API_KEY) return { sent: 0, total: admins.length, error: "RESEND_API_KEY not set" };
+  let sent = 0;
+  for (const admin of admins) {
+    try {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ from: "ThreatCast <noreply@threatcast.io>", to: [admin.email], subject, html }),
+      });
+      sent++;
+    } catch {}
+  }
+  return { sent, total: admins.length };
+}
+
+export async function resetAllUsageCounters() {
+  const result = await db.organization.updateMany({ data: { ttxUsedThisMonth: 0, billingCycleStart: new Date() } });
+  return { updated: result.count };
+}
+
+export async function cleanupStuckSessions() {
+  const fiveMinAgo = new Date(Date.now() - 300000);
+  const stuck = await db.ttxSession.updateMany({
+    where: { status: "GENERATING", createdAt: { lt: fiveMinAgo } },
+    data: { status: "CANCELLED" },
+  });
+  return { cleaned: stuck.count };
+}

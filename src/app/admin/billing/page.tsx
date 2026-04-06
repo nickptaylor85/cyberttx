@@ -112,6 +112,27 @@ export default async function BillingPage() {
           ))}</tbody>
         </table></div>
       </div>
+
+      {/* Churn Risk */}
+      <div className="cyber-card mt-4">
+        <h2 className="text-white text-sm font-semibold mb-3">Churn Risk — Inactive Clients</h2>
+        <p className="text-gray-500 text-xs mb-3">Clients with no exercises in the last 30 days</p>
+        {(() => {
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
+          const atRisk = orgs.filter(o => !o.isDemo && o.plan !== "FREE" && o._count.ttxSessions > 0).filter(o => {
+            return o.ttxUsedThisMonth === 0;
+          });
+          if (atRisk.length === 0) return <p className="text-green-400 text-xs">No clients at risk of churn</p>;
+          return (
+            <div className="space-y-2">{atRisk.map(o => (
+              <div key={o.id} className="flex items-center justify-between py-1.5 border-b border-red-500/10 last:border-0">
+                <div><p className="text-white text-sm">{o.name}</p><p className="text-gray-500 text-xs">{o.plan} · {o._count.users} users · {o._count.ttxSessions} total exercises · 0 this month</p></div>
+                <span className="text-red-400 text-xs font-semibold">At Risk</span>
+              </div>
+            ))}</div>
+          );
+        })()}
+      </div>
     </div>
   );
 }
