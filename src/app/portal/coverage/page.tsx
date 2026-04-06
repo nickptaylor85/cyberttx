@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { headers } from "next/headers";
+import { getPortalOrg } from "@/lib/auth-helpers";
 export const dynamic = "force-dynamic";
 
 const TACTICS = [
@@ -18,8 +18,7 @@ const TACTICS = [
 ];
 
 export default async function CoveragePage() {
-  const h = await headers(); const slug = h.get("x-org-slug") || "demo";
-  const org = await db.organization.findUnique({ where: { slug } });
+  const org = await getPortalOrg();
   if (!org) return <p className="text-red-400">Organization not found</p>;
   const sessions = await db.ttxSession.findMany({ where: { orgId: org.id, status: "COMPLETED" }, select: { mitreAttackIds: true } });
   const tested = new Set(sessions.flatMap(s => (s.mitreAttackIds as string[]) || []));

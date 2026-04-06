@@ -1,14 +1,14 @@
 import { db } from "@/lib/db";
-import { headers } from "next/headers";
+import { getPortalOrg } from "@/lib/auth-helpers";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 async function getData() {
-  const h = await headers();
-  const slug = h.get("x-org-slug") || "demo";
+  const baseOrg = await getPortalOrg();
+  if (!baseOrg) return null;
   const org = await db.organization.findUnique({
-    where: { slug },
+    where: { id: baseOrg.id },
     include: {
       _count: { select: { users: true, ttxSessions: true } },
       profile: { select: { industry: true } },

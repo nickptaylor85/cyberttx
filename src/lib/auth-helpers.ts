@@ -77,3 +77,31 @@ export async function getAuthUserForOrg(requiredOrgId: string) {
   if (user.orgId !== requiredOrgId) return null;
   return user;
 }
+
+/**
+ * Get the org for the current portal session.
+ * Priority: user's orgId → subdomain header → demo fallback
+ */
+export async function getPortalOrg() {
+  // 1. Try to get from authenticated user
+  try {
+    const user = await getAuthUser();
+    if (user?.orgId) {
+      const org = await db.organization.findUnique({ where: { id: user.orgId } });
+      if (org) return org;
+    }
+  } catch {}
+
+  // 2. Fall back to subdomain header
+  try {
+    const headersList = await headers();
+    const slug = headersList.get("x-org-slug");
+    if (slug) {
+      const org = await db.organization.findUnique({ where: { slug } });
+      if (org) return org;
+    }
+  } catch {}
+
+  // 3. Fall back to demo
+  return db.organization.findUnique({ where: { slug: "demo" } });
+}

@@ -1,14 +1,10 @@
 import { db } from "@/lib/db";
-import { headers } from "next/headers";
+import { getPortalOrg } from "@/lib/auth-helpers";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-async function getOrg() {
-  const headersList = await headers();
-  const slug = headersList.get("x-org-slug") || "demo";
-  return db.organization.findUnique({ where: { slug } });
-}
+
 
 async function getAllTimeLeaderboard(orgId: string) {
   const participants = await db.ttxParticipant.findMany({
@@ -73,7 +69,7 @@ async function getRecentSessionScores(orgId: string) {
 }
 
 export default async function LeaderboardPage() {
-  const org = await getOrg();
+  const org = await getPortalOrg();
   if (!org) return <p className="text-red-400">Organization not found</p>;
 
   const [allTime, recentSessions] = await Promise.all([

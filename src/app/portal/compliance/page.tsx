@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { headers } from "next/headers";
+import { getPortalOrg } from "@/lib/auth-helpers";
 export const dynamic = "force-dynamic";
 
 const FRAMEWORKS = [
@@ -11,8 +11,7 @@ const FRAMEWORKS = [
 ];
 
 export default async function CompliancePage() {
-  const h = await headers(); const slug = h.get("x-org-slug") || "demo";
-  const org = await db.organization.findUnique({ where: { slug } });
+  const org = await getPortalOrg();
   if (!org) return <p className="text-red-400">Org not found</p>;
   const completed = await db.ttxSession.count({ where: { orgId: org.id, status: "COMPLETED" } });
   const now = new Date();

@@ -1,12 +1,11 @@
 import { db } from "@/lib/db";
-import { headers } from "next/headers";
+
 import ToolSelector from "./ToolSelector";
+import { getPortalOrg } from "@/lib/auth-helpers";
 export const dynamic = "force-dynamic";
 
 export default async function ToolsPage() {
-  const h = await headers();
-  const slug = h.get("x-org-slug") || "demo";
-  const org = await db.organization.findUnique({ where: { slug }, select: { id: true } });
+  const org = await getPortalOrg();
   if (!org) return <p className="text-red-400 p-8">Organization not found</p>;
 
   const allTools = await db.securityTool.findMany({ where: { isActive: true }, orderBy: { category: "asc" } });

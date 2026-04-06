@@ -1,13 +1,12 @@
 import { db } from "@/lib/db";
-import { headers } from "next/headers";
-import { getAuthUser } from "@/lib/auth-helpers";
+
+import { getAuthUser, getPortalOrg } from "@/lib/auth-helpers";
 import InviteForm from "./InviteForm";
 import RoleManager from "./RoleManager";
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
-  const h = await headers(); const slug = h.get("x-org-slug") || "demo";
-  const org = await db.organization.findUnique({ where: { slug } });
+  const org = await getPortalOrg();
   if (!org) return <p className="text-red-400">Org not found</p>;
 
   const currentUser = await getAuthUser();
