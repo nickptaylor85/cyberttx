@@ -9,6 +9,7 @@ export default function IntegrationsPage() {
   const [saving, setSaving] = useState(""); const [saved, setSaved] = useState("");
   const [testing, setTesting] = useState("");
   const [webhookUrl, setWebhookUrl] = useState(""); const [teamsUrl, setTeamsUrl] = useState("");
+  const [suggestion, setSuggestion] = useState(""); const [suggestionSent, setSuggestionSent] = useState(false);
 
   useEffect(() => {
     fetch("/api/portal/connectors").then(r => r.ok ? r.json() : []).then(setActiveConnectors).catch(() => {});
@@ -120,6 +121,86 @@ export default function IntegrationsPage() {
             <button className="cyber-btn-primary text-xs mt-2">Save</button>
           </div>
         ))}
+      </div>
+
+      {/* Suggest Integration */}
+      <div className="cyber-card mt-8 border-dashed border-surface-4">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">💡</span>
+          <div className="flex-1">
+            <h3 className="text-white text-sm font-semibold">Missing a tool?</h3>
+            <p className="text-gray-500 text-xs mt-1 mb-3">Suggest an integration and we&apos;ll prioritise it based on demand.</p>
+            {suggestionSent ? (
+              <p className="text-green-400 text-sm">Thanks! We&apos;ll review your suggestion.</p>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  className="cyber-input flex-1 text-sm"
+                  placeholder="e.g. Wiz, Rapid7 InsightIDR, SentinelOne..."
+                  value={suggestion}
+                  onChange={e => setSuggestion(e.target.value)}
+                />
+                <button
+                  onClick={async () => {
+                    if (!suggestion.trim()) return;
+                    await fetch("/api/support", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ message: "Integration suggestion: " + suggestion }),
+                    }).catch(() => {});
+                    setSuggestionSent(true);
+                    setSuggestion("");
+                    setTimeout(() => setSuggestionSent(false), 5000);
+                  }}
+                  disabled={!suggestion.trim()}
+                  className="cyber-btn-primary text-xs disabled:opacity-50"
+                >
+                  Suggest
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Suggest Integration */}
+      <div className="cyber-card mt-8 border-dashed border-surface-4">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">💡</span>
+          <div className="flex-1">
+            <h3 className="text-white text-sm font-semibold">Missing a tool?</h3>
+            <p className="text-gray-500 text-xs mt-1 mb-3">Suggest an integration and we&apos;ll prioritise it based on demand.</p>
+            {suggestionSent ? (
+              <p className="text-green-400 text-sm">Thanks! We&apos;ll review your suggestion.</p>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  className="cyber-input flex-1 text-sm"
+                  placeholder="e.g. Wiz, Rapid7 InsightIDR, SentinelOne..."
+                  value={suggestion}
+                  onChange={e => setSuggestion(e.target.value)}
+                />
+                <button
+                  onClick={async () => {
+                    if (!suggestion.trim()) return;
+                    await fetch("/api/support", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ message: "Integration suggestion: " + suggestion }),
+                    }).catch(() => {});
+                    setSuggestionSent(true);
+                    setSuggestion("");
+                    setTimeout(() => setSuggestionSent(false), 5000);
+                  }}
+                  disabled={!suggestion.trim()}
+                  className="cyber-btn-primary text-xs disabled:opacity-50"
+                >
+                  Suggest
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
