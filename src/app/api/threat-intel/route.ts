@@ -74,3 +74,4 @@ function getBaselineEvents() {
     { title: "UK NCSC: 4 Nationally Significant Attacks Per Week", date: "2025-10-16", sector: "Cross-sector/Government", severity: "critical", threatActor: "Multiple state-sponsored", summary: "NCSC annual review reveals UK faces 4 nationally significant cyber attacks weekly. Escalating threat from state actors.", techniques: ["T1583", "T1595", "T1190"], theme: "apt", source: "baseline" },
   ];
 }
+

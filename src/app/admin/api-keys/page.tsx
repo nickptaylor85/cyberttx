@@ -1,54 +1,52 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-interface ApiKey { id: string; name: string; prefix: string; client: string; createdAt: string; lastUsed: string | null; active: boolean; }
+interface ApiKey { id: string; name: string; key: string; created: string; lastUsed: string | null; }
 
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
-  const [newKey, setNewKey] = useState<string | null>(null);
-  const [name, setName] = useState(""); const [client, setClient] = useState("");
+  const [name, setName] = useState(""); const [newKey, setNewKey] = useState("");
 
-  function generateKey() {
-    if (!name.trim()) return;
-    const key = `tc_${Array.from({ length: 32 }, () => "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 36)]).join("")}`;
-    const k: ApiKey = { id: Date.now().toString(), name, prefix: key.slice(0, 10) + "...", client: client || "All", createdAt: new Date().toISOString(), lastUsed: null, active: true };
-    setKeys(prev => [k, ...prev]);
-    setNewKey(key); setName(""); setClient("");
+  useEffect(() => {
+    const stored = localStorage.getItem("tc_api_keys");
+    if (stored) setKeys(JSON.parse(stored));
+  }, []);
+
+  function save(k: ApiKey[]) { setKeys(k); localStorage.setItem("tc_api_keys", JSON.stringify(k)); }
+
+  function generate() {
+    if (!name) return;
+    const key = "tc_" + Array.from({ length: 32 }, () => "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 36)]).join("");
+    const item: ApiKey = { id: Date.now().toString(), name, key, created: new Date().toISOString(), lastUsed: null };
+    save([item, ...keys]); setNewKey(key); setName("");
   }
+
+  function revoke(id: string) { if (confirm("Revoke this API key? This cannot be undone.")) save(keys.filter(k => k.id !== id)); }
 
   return (
     <div>
-      <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">API Key Management</h1><p className="text-gray-500 text-xs sm:text-sm mt-1">Issue and manage API keys for Enterprise clients</p></div>
-
-      <div className="cyber-card mb-6">
-        <h2 className="text-white text-sm font-semibold mb-3">Generate API Key</h2>
-        <div className="flex gap-2 mb-2">
-          <input className="cyber-input flex-1" placeholder="Key name (e.g. Production API)" value={name} onChange={e => setName(e.target.value)} />
-          <input className="cyber-input flex-1" placeholder="Client (optional)" value={client} onChange={e => setClient(e.target.value)} />
-          <button onClick={generateKey} className="cyber-btn-primary text-sm whitespace-nowrap">Generate</button>
+      <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">API Keys</h1><p className="text-gray-500 text-xs mt-1">Manage API keys for programmatic access</p></div>
+      <div className="cyber-card mb-4 border-cyber-600/30">
+        <h3 className="text-white text-sm font-semibold mb-3">Generate New Key</h3>
+        <div className="flex gap-2">
+          <input className="cyber-input flex-1 text-sm" placeholder="Key name (e.g. CI/CD Pipeline)" value={name} onChange={e => setName(e.target.value)} />
+          <button onClick={generate} disabled={!name} className="cyber-btn-primary text-sm disabled:opacity-50">Generate</button>
         </div>
         {newKey && (
-          <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg mt-2">
-            <p className="text-green-400 text-xs font-semibold mb-1">Copy this key — it won&apos;t be shown again:</p>
-            <code className="text-green-300 text-xs font-mono break-all select-all">{newKey}</code>
+          <div className="mt-3 p-3 rounded bg-green-500/10 border border-green-500/30">
+            <p className="text-green-400 text-xs font-semibold mb-1">API Key Generated — copy now, it won&apos;t be shown again!</p>
+            <p className="font-mono text-xs text-green-300 bg-surface-0 p-2 rounded select-all break-all">{newKey}</p>
           </div>
         )}
       </div>
-
-      {keys.length > 0 && (
-        <div className="cyber-card">
-          <h2 className="text-white text-sm font-semibold mb-3">Active Keys</h2>
-          <div className="space-y-2">{keys.map(k => (
-            <div key={k.id} className="flex items-center justify-between py-2 border-b border-surface-3/50 last:border-0">
-              <div><p className="text-white text-sm">{k.name}</p><p className="text-gray-500 text-xs font-mono">{k.prefix} · {k.client}</p></div>
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${k.active ? "bg-green-400" : "bg-red-400"}`} />
-                <button onClick={() => setKeys(prev => prev.map(x => x.id === k.id ? { ...x, active: false } : x))} className="text-gray-500 hover:text-red-400 text-xs">Revoke</button>
-              </div>
-            </div>
-          ))}</div>
-        </div>
-      )}
+      {keys.length === 0 ? <div className="cyber-card text-center py-8"><p className="text-gray-500 text-sm">No API keys</p></div> :
+        <div className="space-y-2">{keys.map(k => (
+          <div key={k.id} className="cyber-card flex items-center justify-between">
+            <div><p className="text-white text-sm">{k.name}</p><p className="text-gray-500 text-xs font-mono">tc_{"•".repeat(28)}</p><p className="text-gray-600 text-xs mt-0.5">Created {new Date(k.created).toLocaleDateString("en-GB")}</p></div>
+            <button onClick={() => revoke(k.id)} className="cyber-btn-danger text-xs">Revoke</button>
+          </div>
+        ))}</div>
+      }
     </div>
   );
 }
