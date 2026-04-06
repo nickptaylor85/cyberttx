@@ -33,6 +33,8 @@ export default function ExercisePage() {
   const [starting, setStarting] = useState(false);
   const [cloning, setCloning] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackSent, setFeedbackSent] = useState(false);
   const [joining, setJoining] = useState(false);
 
   // Fetch session + user info
@@ -249,6 +251,24 @@ export default function ExercisePage() {
             );
           })}</div>
         </div>
+
+        {/* Exercise Feedback */}
+        {!feedbackSent ? (
+          <div className="cyber-card mb-4">
+            <p className="text-white text-sm font-semibold mb-2">Rate this exercise</p>
+            <div className="flex gap-1 mb-2">{[1,2,3,4,5].map(star => (
+              <button key={star} onClick={() => setFeedbackRating(star)} className={`text-xl ${star <= feedbackRating ? "text-yellow-400" : "text-gray-600"}`}>★</button>
+            ))}</div>
+            {feedbackRating > 0 && (
+              <button onClick={async () => {
+                await fetch("/api/portal/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId, rating: feedbackRating }) });
+                setFeedbackSent(true);
+              }} className="cyber-btn-secondary text-xs">Submit Rating</button>
+            )}
+          </div>
+        ) : (
+          <div className="cyber-card mb-4 border-green-500/20"><p className="text-green-400 text-xs">Thanks for your feedback!</p></div>
+        )}
 
         {/* Allow other team members to attempt this exercise */}
         <button onClick={attemptExercise} disabled={cloning} className="cyber-btn-primary w-full mb-4 py-2.5 disabled:opacity-50">
