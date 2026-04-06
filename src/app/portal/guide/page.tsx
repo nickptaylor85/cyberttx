@@ -1,68 +1,79 @@
 export default function GuidePage() {
   const sections = [
     { title: "Getting Started", icon: "🚀", items: [
-      { q: "How do I run my first exercise?", a: "Go to Exercises → New Exercise. Choose a theme, set difficulty, optionally select MITRE techniques and characters, then click Generate & Launch. The AI builds a realistic scenario in 15-30 seconds." },
-      { q: "How do I set up my company profile?", a: "Go to Organisation → Company Profile. Fill in your industry, company size, cloud provider, and security posture. This makes AI exercises specific to your environment." },
-      { q: "How do I add my security tools?", a: "Go to Organisation → Security Stack. Select tools your team uses (CrowdStrike, Defender, Splunk, etc). The AI will reference your actual tools in scenarios. Missing a tool? Use the Suggest button at the bottom." },
+      { q: "How do I get started?", a: "After signing up, you'll go through a 4-step onboarding: choose your industry, company size, and security tools. This personalises your AI-generated exercises." },
+      { q: "What's my first step?", a: "Try the Daily Drill (⚡ in the sidebar) — it's 3 questions in 2 minutes. Then try the Weekly Challenge (🏅) to see the leaderboard. When ready, create a full exercise from All Exercises → New Exercise." },
+      { q: "How does the XP system work?", a: "Every completed exercise earns XP: (50 base + accuracy bonus) × difficulty multiplier. Beginner ×1, Intermediate ×1.5, Advanced ×2, Expert ×3. You level up from Recruit (0 XP) through 10 levels to Elite Defender (10,000 XP). Your level and streak appear at the top of every page." },
+      { q: "What are streaks?", a: "Complete at least one exercise per day to build a streak. The 🔥 indicator shows consecutive days. Miss a day and it resets. You'll get an email warning before your streak expires." },
     ]},
-    { title: "Live Alert Feed", icon: "🚨", items: [
-      { q: "How do I connect my SIEM/XDR?", a: "Go to Configure → Integrations. Expand a connector (e.g. Taegis, CrowdStrike), enter your API credentials, and click Save & Connect. Alerts appear in the Live Alert Feed." },
-      { q: "Which platforms are supported?", a: "Secureworks Taegis XDR, CrowdStrike Falcon, Microsoft Defender XDR, Microsoft Sentinel, Tenable.io, Splunk, Elastic Security, and Palo Alto Cortex XDR." },
-      { q: "How do I build an exercise from a real alert?", a: "Go to Live Alert Feed, find an alert, and click Build TTX →. The AI generates an exercise based on that actual alert in your environment. Critical alerts appear at the top." },
+    { title: "Daily Drill & Weekly Challenge", icon: "⚡", items: [
+      { q: "What is the Daily Drill?", a: "3 rapid-fire cybersecurity questions with a 2-minute timer. New topic every day (rotating through 15 themes like phishing ID, ransomware response, credential compromise). Takes less time than checking email." },
+      { q: "What is the Weekly Challenge?", a: "A themed exercise that changes every Monday. Everyone across the platform competes on the same challenge. Top 3 get medals (🥇🥈🥉). Your best score is saved — you can retry to improve." },
+      { q: "How is the weekly challenge chosen?", a: "Themes rotate: ransomware → phishing → APT → insider threat → supply chain → cloud breach → data exfil → DDoS. New challenge every Monday." },
+    ]},
+    { title: "Live Alert Feed & SIEM Integration", icon: "🚨", items: [
+      { q: "Which tools are supported?", a: "CrowdStrike Falcon, Secureworks Taegis XDR, Microsoft Defender XDR, Microsoft Sentinel, Splunk, Elastic Security, Tenable.io, and Palo Alto Cortex XDR." },
+      { q: "How do I connect a tool?", a: "Go to Integrations → select your platform → enter API credentials → Save. The alert feed will start pulling critical and high severity alerts within seconds." },
+      { q: "What does 'Build TTX' do?", a: "Click Build TTX on any alert to generate a full tabletop exercise based on that real alert. The AI uses the alert's severity, MITRE techniques, and affected assets to create a realistic scenario." },
+      { q: "Are my SIEM credentials safe?", a: "Credentials are stored encrypted. The GET endpoint only returns the first 4 characters masked (e.g. 'abc1••••'). We only access alert metadata — never raw event data." },
     ]},
     { title: "Exercises", icon: "🎯", items: [
-      { q: "What are the difficulty levels?", a: "Beginner (foundational), Intermediate (hands-on response), Advanced (complex multi-vector), Expert (APT-level with ambiguous decisions). The AI adapts based on your past performance." },
-      { q: "How do templates work?", a: "Templates are one-click launch exercises. Click a template → AI generates immediately → you land on the exercise. No wizard steps needed." },
-      { q: "Can I navigate away during generation?", a: "Yes. You will receive an email when the scenario is ready with a direct link. The exercise page auto-polls and starts when generation completes." },
-      { q: "Can team members attempt my exercises?", a: "Yes. Any completed exercise has an Attempt → button. Team members get their own fresh session with the same scenario, tracked separately." },
-      { q: "How do I share an exercise externally?", a: "Share links can be generated from the exercise page. The shared page shows the exercise title, scores, and a CTA to sign up." },
+      { q: "What types of exercises are there?", a: "Individual (solo practice), Group Real-Time (multiplayer with live scoring and lobby), and Custom Exercise (you set the theme, difficulty, and incident description)." },
+      { q: "How many questions per exercise?", a: "Default is 10. Each question has 3 options with one correct answer. After answering, you get a detailed explanation and must wait 3 seconds before continuing." },
+      { q: "Can I retry exercises?", a: "Yes. Click 'Attempt →' on any completed exercise to clone it and try again. Your new results are tracked separately." },
+      { q: "What themes are available?", a: "Ransomware, phishing, insider threat, supply chain, cloud breach, APT, DDoS, data exfiltration — plus custom incidents you describe." },
+      { q: "How does multiplayer work?", a: "Choose 'Group (Real-time)' when creating. A lobby is created with a shareable link. Team members join → host clicks Start → everyone answers simultaneously. Live indicators show who's answered. Scoreboard at the end." },
     ]},
     { title: "Characters", icon: "🎭", items: [
-      { q: "How do descriptions shape behaviour?", a: "If you describe someone as 'cautious and methodical', the AI has them advocate careful analysis. If 'aggressive and decisive', they push for immediate action. Characters with specific expertise demonstrate it in their dialogue." },
-      { q: "Are characters shared?", a: "Yes. Characters belong to the portal. Anyone in your organisation can select and use them. Custom roles and departments are remembered for next time." },
-    ]},
-    { title: "Performance & Compliance", icon: "📊", items: [
-      { q: "How does My Performance work?", a: "Shows month-by-month accuracy trends, improvement/regression indicators, and suggests themes where you need more practice (below 70% accuracy)." },
-      { q: "What are benchmarks?", a: "Benchmarks compare your portal's accuracy and exercise volume against anonymised platform averages, so you know how you stack up." },
-      { q: "How does compliance evidence work?", a: "ThreatCast maps your exercises to 6 frameworks: ISO 27001, NIST CSF, SOC 2, NIS2, DORA, PCI DSS 4.0. Each framework shows which controls are evidenced and what's still needed." },
-      { q: "What is MITRE coverage?", a: "A visual heatmap showing which MITRE ATT&CK techniques your exercises have covered. Grey = uncovered, yellow = low, cyan = medium, green = high coverage." },
+      { q: "What are characters?", a: "Named recurring personas (like 'Sarah Chen, CISO' or 'Marcus Webb, SOC Lead') that the AI weaves into your scenarios with realistic dialogue and decision-making." },
+      { q: "How do I create one?", a: "Go to Characters → fill in name, role, department, personality, communication style → Create. They'll appear in future exercises automatically." },
+      { q: "Can I edit characters?", a: "Yes — click the ✏️ button on any character card to update their details." },
     ]},
     { title: "Playbooks & Certificates", icon: "📋", items: [
-      { q: "How do playbooks work?", a: "Every exercise generates an incident response playbook. View it from the completion screen, and it auto-saves to your Playbook Library. Export as PDF or Word." },
-      { q: "How do certificates work?", a: "Download a certificate PDF from any completed exercise. Certificates are auto-stored on your profile with a 1-year expiry. View all certificates under My Certificates." },
-      { q: "Do certificates expire?", a: "Yes, after 1 year. Expired certificates appear dimmed with an EXPIRED badge. Complete the exercise again to earn a new one." },
+      { q: "What is a playbook?", a: "After completing an exercise, click 📋 Playbook to generate an incident response playbook. It contains detection, containment, eradication, and recovery stages with specific actions from the exercise." },
+      { q: "Can I export playbooks?", a: "Yes — PDF and Word (.docx) export from the playbook viewer or your Playbook Library. They're auto-saved when viewed." },
+      { q: "How do certificates work?", a: "Click 🎓 Certificate after completing an exercise. A branded PDF certificate is generated with your name, score, grade (Platinum/Gold/Silver/Bronze), and MITRE techniques. Certificates have a 1-year expiry." },
     ]},
-    { title: "Team & Multiplayer", icon: "👥", items: [
-      { q: "How do I run a team exercise?", a: "When creating an exercise, select Group (Real-time) in the Configuration step. After generation, you land in a lobby. Share the link with your team. When everyone joins, click Start Exercise." },
-      { q: "How do I invite team members?", a: "Go to Organisation → Team and enter email addresses. They receive an invitation email with a pre-filled sign-up link." },
-      { q: "What roles are there?", a: "Portal Admin (invite users, manage settings, view all data) and Participant (run exercises, view own performance). The first person to join becomes Portal Admin." },
+    { title: "Performance & Compliance", icon: "📊", items: [
+      { q: "What does My Performance show?", a: "Monthly accuracy trends (bar chart), total exercises, improvement suggestions based on your weak areas, and where to practice next." },
+      { q: "What about Team Performance?", a: "Aggregated monthly trends for your entire team with accuracy bars." },
+      { q: "What's the MITRE Coverage heatmap?", a: "A visual map of all MITRE ATT&CK techniques you've practised. Hover for details. Green = well covered, yellow = some coverage, grey = gaps. Use it to target specific techniques." },
+      { q: "Which compliance frameworks are supported?", a: "ISO 27001, NIST CSF, SOC 2, NIS2, DORA, PCI DSS 4.0. Each shows evidence items from your exercises, playbooks, and certificates." },
+      { q: "What is Team Compliance?", a: "A traffic-light dashboard showing each team member's training status: green (on track), amber (at risk), red (overdue). Helps managers identify who needs a nudge." },
+      { q: "How do Benchmarks work?", a: "Your organisation's accuracy and exercise volume compared anonymously against the platform average and organisations of similar size." },
+    ]},
+    { title: "Campaigns & Scheduling", icon: "📆", items: [
+      { q: "What are campaigns?", a: "A 12-month training calendar aligned with real security events. January: Security Reset, April: Phishing Season, October: Cybersecurity Awareness Month, etc. One-click launch for each exercise." },
+      { q: "Can I schedule exercises?", a: "Yes — the Schedule page lets you set recurring exercises. Vercel cron jobs auto-generate them every Monday." },
     ]},
     { title: "Integrations", icon: "🔌", items: [
-      { q: "How do I connect Microsoft Teams?", a: "Go to Integrations → Microsoft Teams. Create an Incoming Webhook in your Teams channel, paste the URL, and click Save." },
-      { q: "How do I set up the Slack bot?", a: "Create a Slack app, add a slash command pointing to https://threatcast.io/api/integrations/slack. Commands: /threatcast run [theme], /threatcast status, /threatcast leaderboard." },
-      { q: "Can I suggest a missing integration?", a: "Yes! There is a Suggest button at the bottom of both the Integrations page and the Security Stack page." },
+      { q: "What integrations exist?", a: "8 SIEM/XDR connectors, Slack bot (/threatcast commands), Microsoft Teams webhook, email notifications, and Resend for transactional emails." },
+      { q: "How does the Slack bot work?", a: "Add /threatcast as a slash command: help, run [theme], status, leaderboard, themes." },
+      { q: "How does Microsoft Teams work?", a: "Configure a Teams incoming webhook URL in Settings. ThreatCast sends exercise notifications as adaptive cards with an 'Open ThreatCast' button." },
     ]},
     { title: "Account & Security", icon: "🔒", items: [
-      { q: "How do I enable MFA?", a: "Go to Settings → Two-Factor Authentication. Scan the QR code with your authenticator app and enter the 6-digit code to enable." },
-      { q: "How do I customise portal branding?", a: "Go to Configure → Branding. Set your portal name, logo URL, and primary colour. Changes appear in the sidebar. 'Powered by ThreatCast' shows in the footer." },
-      { q: "How do I contact support?", a: "Click the support bubble (bottom-right). Send a message and check My Tickets to see admin replies. No email needed — everything is in-app." },
+      { q: "How do I reset my password?", a: "Click 'Forgot password?' on the sign-in page. You'll receive an email with a reset link valid for 1 hour." },
+      { q: "Is MFA available?", a: "Yes — TOTP-based MFA via authenticator app. Enable it in Settings → Security." },
+      { q: "What about SSO?", a: "SAML SSO configuration is available on Enterprise plans. Configure in Settings → SSO." },
+      { q: "How is my data protected?", a: "TLS 1.3 in transit, encrypted at rest, bcrypt password hashing (12 rounds), security headers (CSP, HSTS, X-Frame-Options). Hosted on SOC 2-certified infrastructure (Vercel + Neon)." },
+      { q: "Can I customise my portal?", a: "Enterprise plans can set a custom portal name, logo, and brand colour. Go to Configure → Custom Branding." },
     ]},
   ];
 
   return (
     <div>
-      <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">User Guide</h1><p className="text-gray-500 text-xs mt-1">Everything you need to know about ThreatCast</p></div>
-      {sections.map(s => (
-        <div key={s.title} className="mb-6">
-          <h2 className="text-white text-base font-semibold mb-3 flex items-center gap-2"><span>{s.icon}</span>{s.title}</h2>
-          <div className="space-y-2">{s.items.map((item, i) => (
-            <details key={i} className="cyber-card group">
-              <summary className="text-white text-sm font-medium cursor-pointer list-none flex items-center justify-between">{item.q}<span className="text-gray-500 group-open:rotate-180 transition-transform">▾</span></summary>
-              <p className="text-gray-400 text-sm mt-2 leading-relaxed">{item.a}</p>
+      <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">User Guide</h1><p className="text-gray-500 text-xs mt-1">{sections.length} sections · {sections.reduce((a, s) => a + s.items.length, 0)} questions answered</p></div>
+      <div className="space-y-4">{sections.map(s => (
+        <div key={s.title} className="cyber-card">
+          <h2 className="text-white text-sm font-semibold flex items-center gap-2 mb-3"><span>{s.icon}</span>{s.title}</h2>
+          <div className="space-y-0">{s.items.map((item, i) => (
+            <details key={i} className="border-b border-surface-3/30 last:border-0">
+              <summary className="py-2.5 text-gray-300 text-xs cursor-pointer hover:text-white">{item.q}</summary>
+              <p className="pb-3 text-gray-500 text-xs leading-relaxed pl-2 border-l-2 border-cyber-600/30 ml-1">{item.a}</p>
             </details>
           ))}</div>
         </div>
-      ))}
+      ))}</div>
     </div>
   );
 }

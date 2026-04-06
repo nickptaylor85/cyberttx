@@ -1,38 +1,29 @@
-export default function ChangelogPage() {
-  const entries = [
-    { date: "April 2026", version: "1.0", title: "ThreatCast Launch", items: [
-      "AI-powered tabletop exercise generation with Claude",
-      "21 threat themes including 9 real-world incident reconstructions",
-      "12-language support (EN, ES, FR, DE, PT, IT, NL, JA, ZH, KO, AR, HI)",
-      "MITRE ATT&CK coverage tracking and gap analysis",
-      "Compliance evidence mapping (ISO 27001, NIST CSF, SOC 2, NIS2, DORA)",
-      "Board-ready executive reports and PDF certificates",
-      "Custom scenario builder — paste incident reports, AI converts to exercises",
-      "Team performance benchmarks with industry comparison",
-      "12 achievement badges and leaderboards",
-      "Exercise replay with answer explanations",
-      "MFA (TOTP) and SAML SSO configuration",
-      "Webhook/SIEM integrations (Splunk, Sentinel, ServiceNow)",
-      "Custom branding for Enterprise clients",
-      "Email domain matching for automatic portal assignment",
-      "Threat intelligence scanner with daily auto-scan",
-      "Full admin portal with 16 management pages",
-      "Data export (CSV) for clients and administrators",
-    ]},
-  ];
+import Link from "next/link";
+
+const highlights = [
+  { ver: "0.9", title: "Engagement Engine", desc: "Daily drills, weekly challenges, XP/streaks, campaigns, team compliance, Teams bot, email notifications" },
+  { ver: "0.8", title: "Pre-Launch", desc: "Password reset, plan enforcement, terms, privacy, onboarding, feature flags, scheduled reports" },
+  { ver: "0.7", title: "Security Audit", desc: "7 findings fixed: rate limiting, auth hardening, info leak prevention, tenant isolation" },
+  { ver: "0.6", title: "Admin Expansion", desc: "Broadcasts, threat intel, review queue, activity feed, audit log, feature flags" },
+  { ver: "0.5", title: "Analytics", desc: "MITRE heatmap, compliance evidence (6 frameworks), benchmarks, leaderboard, sharing" },
+  { ver: "0.4", title: "Playbooks", desc: "AI playbook generation, PDF/Word export, certificates, custom branding, AI learning" },
+  { ver: "0.3", title: "Multiplayer", desc: "Real-time team exercises, 8 SIEM connectors, Slack bot, email verification" },
+  { ver: "0.2", title: "Core Engine", desc: "AI exercises, 21 themes, characters, cloning, star ratings" },
+  { ver: "0.1", title: "Foundation", desc: "Auth, multi-tenant, RBAC, i18n, MFA, Prisma, Vercel" },
+];
+
+export default function PublicChangelogPage() {
   return (
-    <div className="max-w-3xl mx-auto px-6 py-16">
+    <div className="min-h-screen px-4 py-12 max-w-3xl mx-auto">
+      <Link href="/" className="text-gray-500 text-sm hover:text-white mb-8 inline-block">← Back to ThreatCast</Link>
       <h1 className="font-display text-3xl font-bold text-white mb-2">Changelog</h1>
       <p className="text-gray-500 text-sm mb-8">What&apos;s new in ThreatCast</p>
-      {entries.map(e => (
-        <div key={e.version} className="cyber-card mb-6">
-          <div className="flex items-center gap-3 mb-4"><span className="cyber-badge bg-cyber-600/20 text-cyber-400 text-xs">v{e.version}</span><span className="text-gray-500 text-xs">{e.date}</span></div>
-          <h2 className="font-display text-lg font-bold text-white mb-3">{e.title}</h2>
-          <ul className="space-y-1.5">{e.items.map((item, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-gray-400"><span className="text-cyber-500 mt-1">•</span>{item}</li>
-          ))}</ul>
+      <div className="space-y-4">{highlights.map(h => (
+        <div key={h.ver} className="cyber-card">
+          <div className="flex items-center gap-2 mb-1"><span className="font-mono text-cyber-400 text-sm font-bold">v{h.ver}</span><h2 className="text-white text-sm font-semibold">{h.title}</h2></div>
+          <p className="text-gray-500 text-xs">{h.desc}</p>
         </div>
-      ))}
+      ))}</div>
     </div>
   );
 }

@@ -29,6 +29,7 @@ const navSections = [
   { type: "item" as const, href: "/admin/support", label: "Support", icon: "🎫" },
   { type: "item" as const, href: "/admin/export", label: "Export", icon: "📥" },
   { type: "item" as const, href: "/admin/feature-flags", label: "Feature Flags", icon: "🚩" },
+  { type: "item" as const, href: "/admin/changelog", label: "Changelog", icon: "📝" },
   { type: "item" as const, href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];
 
