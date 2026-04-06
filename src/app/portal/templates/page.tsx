@@ -1,17 +1,42 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+const PRESET_TEMPLATES = [
+  { name: "Ransomware Response", theme: "ransomware", difficulty: "INTERMEDIATE", questions: 12, desc: "Classic ransomware scenario — encryption, ransom demands, recovery decisions" },
+  { name: "Phishing Campaign", theme: "phishing", difficulty: "BEGINNER", questions: 8, desc: "Spear phishing targeting executives with credential harvesting" },
+  { name: "Insider Threat", theme: "insider-threat", difficulty: "ADVANCED", questions: 15, desc: "Malicious insider with privileged access exfiltrating sensitive data" },
+  { name: "Supply Chain Attack", theme: "supply-chain", difficulty: "ADVANCED", questions: 12, desc: "SolarWinds-style supply chain compromise via trusted vendor" },
+  { name: "Cloud Breach", theme: "cloud-breach", difficulty: "INTERMEDIATE", questions: 10, desc: "Misconfigured cloud storage leading to data exposure" },
+  { name: "APT Campaign", theme: "apt", difficulty: "EXPERT", questions: 15, desc: "State-sponsored persistent threat with multi-stage attack chain" },
+  { name: "DDoS Attack", theme: "ddos", difficulty: "BEGINNER", questions: 8, desc: "Volumetric and application-layer DDoS with extortion" },
+  { name: "Data Exfiltration", theme: "data-exfil", difficulty: "INTERMEDIATE", questions: 12, desc: "Stealthy data exfiltration via DNS tunnelling and cloud storage" },
+  { name: "Board-Level Crisis", theme: "ransomware", difficulty: "EXPERT", questions: 10, desc: "Executive decision-making during a major ransomware crisis" },
+  { name: "Quick Fire Drill", theme: "phishing", difficulty: "BEGINNER", questions: 5, desc: "5-minute rapid assessment for team warm-ups" },
+];
+
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<any[]>([]); const [loading, setLoading] = useState(true); const [show, setShow] = useState(false);
-  const [form, setForm] = useState({ name: "", theme: "ransomware", difficulty: "INTERMEDIATE" });
-  useEffect(() => { fetch("/api/portal/templates").then(r => r.ok ? r.json() : []).then(setTemplates).finally(() => setLoading(false)); }, []);
-  async function create(e: React.FormEvent) { e.preventDefault(); const r = await fetch("/api/portal/templates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) }); if (r.ok) { const t = await r.json(); setTemplates([t, ...templates]); setShow(false); } }
-  async function remove(id: string) { if (!confirm("Delete?")) return; await fetch(`/api/portal/templates?id=${id}`, { method: "DELETE" }); setTemplates(templates.filter(t => t.id !== id)); }
+  const router = useRouter();
+
+  function launch(t: typeof PRESET_TEMPLATES[0]) {
+    const params = new URLSearchParams({ theme: t.theme, difficulty: t.difficulty, questions: t.questions.toString() });
+    router.push(`/portal/ttx/new?${params}`);
+  }
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6"><div><h1 className="font-display text-xl sm:text-2xl font-bold text-white">Exercise Templates</h1><p className="text-gray-500 text-xs sm:text-sm mt-1">Save configs for one-click launch</p></div><button onClick={() => setShow(true)} className="cyber-btn-primary text-sm">+ New</button></div>
-      {show && <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"><div className="bg-surface-1 border border-surface-3 rounded-2xl p-6 w-full max-w-lg"><h2 className="font-display text-lg font-bold text-white mb-4">Create Template</h2><form onSubmit={create} className="space-y-4"><input className="cyber-input w-full" placeholder="Template name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required /><select className="cyber-input w-full" value={form.theme} onChange={e => setForm({...form, theme: e.target.value})}>{["ransomware","apt","insider-threat","supply-chain","bec","cloud-breach","zero-day","data-exfil"].map(t => <option key={t} value={t}>{t}</option>)}</select><select className="cyber-input w-full" value={form.difficulty} onChange={e => setForm({...form, difficulty: e.target.value})}>{["BEGINNER","INTERMEDIATE","ADVANCED","EXPERT"].map(d => <option key={d} value={d}>{d}</option>)}</select><div className="flex gap-3"><button type="button" onClick={() => setShow(false)} className="cyber-btn-secondary flex-1">Cancel</button><button type="submit" className="cyber-btn-primary flex-1">Create</button></div></form></div></div>}
-      {loading ? <p className="text-gray-500 text-center py-12">Loading...</p> : templates.length === 0 ? <div className="cyber-card text-center py-12"><p className="text-gray-400">No templates yet</p></div> :
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{templates.map((t: any) => <div key={t.id} className="cyber-card"><p className="text-white text-sm font-medium mb-2">{t.name}</p><div className="flex gap-1 mb-3 text-xs"><span className="px-2 py-0.5 rounded bg-surface-2 text-gray-400 capitalize">{t.theme}</span><span className="px-2 py-0.5 rounded bg-surface-2 text-gray-400">{t.difficulty}</span></div><div className="flex gap-2"><a href={"/portal/ttx/new?theme=" + t.theme + "&difficulty=" + t.difficulty} className="cyber-btn-primary text-xs flex-1 text-center py-2">Launch</a><button onClick={() => remove(t.id)} className="cyber-btn-secondary text-xs py-2 px-3">X</button></div></div>)}</div>}
+      <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">Templates</h1><p className="text-gray-500 text-xs mt-1">Pre-configured exercise templates — click to launch</p></div>
+      <div className="grid sm:grid-cols-2 gap-3">{PRESET_TEMPLATES.map(t => (
+        <button key={t.name} onClick={() => launch(t)} className="cyber-card text-left hover:border-cyber-600/30 transition-colors">
+          <p className="text-white text-sm font-semibold">{t.name}</p>
+          <p className="text-gray-500 text-xs mt-1">{t.desc}</p>
+          <div className="flex gap-2 mt-2">
+            <span className="cyber-badge text-xs bg-surface-3 text-gray-400">{t.theme}</span>
+            <span className="cyber-badge text-xs bg-surface-3 text-gray-400">{t.difficulty}</span>
+            <span className="cyber-badge text-xs bg-surface-3 text-gray-400">{t.questions}Q</span>
+          </div>
+        </button>
+      ))}</div>
     </div>
   );
 }

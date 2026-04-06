@@ -1,97 +1,75 @@
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
-import { generatePlaybook } from "@/lib/ai/generate-playbook";
-import type { TtxScenario } from "@/types";
-
-export const maxDuration = 60;
 
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   const user = await getAuthUser();
-  if (!user?.orgId) return NextResponse.json({ error: "No org" }, { status: 403 });
+  if (!user?.orgId) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
   const { sessionId } = await params;
-
-  // Check if playbook already exists
-  const existing = await (db.playbook.findFirst as any)({ where: { sessionId } });
-  if (existing) return NextResponse.json(existing);
-
-  const session = await db.ttxSession.findUnique({
-    where: { id: sessionId },
-    include: {
-      organization: { include: { securityTools: { include: { tool: true } }, profile: true } },
-      participants: { include: { answers: true } },
-    },
+  const session = await db.ttxSession.findFirst({
+    where: { id: sessionId, orgId: user.orgId },
+    select: { title: true, theme: true, scenario: true },
   });
+  if (!session) return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
-  if (!session || session.orgId !== user.orgId) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+  const scenario = session.scenario as any;
+  if (!scenario?.stages) return NextResponse.json({ error: "No scenario data" }, { status: 400 });
 
-  if (session.status !== "COMPLETED") {
-    return NextResponse.json({ error: "TTX must be completed first" }, { status: 400 });
-  }
-
-  const scenario = session.scenario as unknown as TtxScenario;
-  const allAnswers = session.participants.flatMap((p) => p.answers);
-  const totalCorrect = allAnswers.filter((a) => a.isCorrect).length;
-  const avgPercent = allAnswers.length > 0 ? (totalCorrect / allAnswers.length) * 100 : 0;
-
-  // Identify weak areas from wrong answers
-  const wrongByPhase: Record<string, number> = {};
-  const correctByPhase: Record<string, number> = {};
-  allAnswers.forEach((a) => {
-    const stage = scenario.stages[a.stageIndex];
-    if (!stage) return;
-    const phase = stage.mitrePhase;
-    if (a.isCorrect) correctByPhase[phase] = (correctByPhase[phase] || 0) + 1;
-    else wrongByPhase[phase] = (wrongByPhase[phase] || 0) + 1;
-  });
-
-  const weakAreas = Object.entries(wrongByPhase).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
-  const strongAreas = Object.entries(correctByPhase).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
-
-  try {
-    const content = await generatePlaybook({
-      scenario,
-      orgProfile: session.organization.profile,
-      securityTools: session.organization.securityTools.map((t) => t.tool.name),
-      performanceData: { avgScorePercent: Math.round(avgPercent), weakAreas, strongAreas },
-      framework: "NIST",
-    });
-
-    const playbook = await (db.playbook.create as any)({
-      data: {
-        sessionId,
-        orgId: user.orgId,
-        title: content.title || `${scenario.title} - Playbook`,
-        content,
-        framework: "NIST",
-        threatType: session.theme,
+  // Generate playbook from the scenario data directly (no AI call needed)
+  const stages = scenario.stages || [];
+  const playbook = {
+    title: `Incident Response Playbook: ${session.title}`,
+    generatedFrom: session.title,
+    theme: session.theme,
+    sections: [
+      {
+        title: "1. Detection & Identification",
+        content: stages[0]?.narrative || "Initial detection of the incident.",
+        actions: stages[0]?.questions?.map((q: any) => {
+          const correct = q.options?.find((o: any) => o.isCorrect);
+          return `${q.question} → ${correct?.text || "See exercise for answer"}`;
+        }) || [],
       },
-    });
+      {
+        title: "2. Containment",
+        content: stages[1]?.narrative || "Contain the threat to prevent spread.",
+        actions: stages[1]?.questions?.map((q: any) => {
+          const correct = q.options?.find((o: any) => o.isCorrect);
+          return `${q.question} → ${correct?.text || "See exercise for answer"}`;
+        }) || [],
+      },
+      {
+        title: "3. Eradication & Recovery",
+        content: stages[2]?.narrative || "Remove the threat and restore systems.",
+        actions: stages[2]?.questions?.map((q: any) => {
+          const correct = q.options?.find((o: any) => o.isCorrect);
+          return `${q.question} → ${correct?.text || "See exercise for answer"}`;
+        }) || [],
+      },
+      ...(stages.slice(3).map((s: any, i: number) => ({
+        title: `${i + 4}. ${s.title || "Additional Steps"}`,
+        content: s.narrative || "",
+        actions: s.questions?.map((q: any) => {
+          const correct = q.options?.find((o: any) => o.isCorrect);
+          return `${q.question} → ${correct?.text || ""}`;
+        }) || [],
+      }))),
+    ],
+    mitreTechniques: scenario.mitreAttackIds || [],
+  };
 
-    return NextResponse.json(playbook);
-  } catch (e) {
-    console.error("Playbook generation error:", e);
-    return NextResponse.json({ error: "Failed to generate playbook" }, { status: 500 });
-  }
+  return NextResponse.json(playbook);
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
-  const user = await getAuthUser();
-  if (!user?.orgId) return NextResponse.json({ error: "No org" }, { status: 403 });
-
-  const { sessionId } = await params;
-  const playbook = await db.playbook.findFirst({ where: { sessionId } });
-  if (!playbook || playbook.orgId !== user.orgId) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-  return NextResponse.json(playbook);
+  return POST(req, { params });
 }

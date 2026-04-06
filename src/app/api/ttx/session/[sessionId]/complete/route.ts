@@ -54,5 +54,43 @@ export async function POST(
     });
   } catch {}
 
+  // Email portal admins with results
+  if (process.env.RESEND_API_KEY && session.orgId) {
+    try {
+      const admins = await db.user.findMany({
+        where: { orgId: session.orgId, role: { in: ["CLIENT_ADMIN", "SUPER_ADMIN"] } },
+        select: { email: true },
+      });
+      const participant = updated.participants[0];
+      const answers = participant?.answers || [];
+      const correct = answers.filter(a => a.isCorrect).length;
+      const accuracy = answers.length > 0 ? Math.round((correct / answers.length) * 100) : 0;
+      const playerName = `${participant?.user?.firstName || ""} ${participant?.user?.lastName || ""}`.trim() || "A team member";
+
+      for (const admin of admins) {
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "ThreatCast <noreply@threatcast.io>",
+            to: [admin.email],
+            subject: `Exercise completed: ${session.title} (${accuracy}%)`,
+            html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;">
+              <div style="font-size:20px;font-weight:700;margin-bottom:24px;">Threat<span style="color:#14b89a;">Cast</span></div>
+              <h2 style="font-size:18px;">Exercise Completed</h2>
+              <p><strong>${playerName}</strong> completed <strong>${session.title}</strong></p>
+              <div style="background:#f5f5f5;padding:16px;border-radius:8px;margin:16px 0;">
+                <p style="margin:4px 0;"><strong>Score:</strong> ${accuracy}% (${correct}/${answers.length} correct)</p>
+                <p style="margin:4px 0;"><strong>Theme:</strong> ${session.theme}</p>
+                <p style="margin:4px 0;"><strong>Difficulty:</strong> ${session.difficulty}</p>
+              </div>
+              <a href="https://threatcast.io/portal/performance" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">View Results →</a>
+            </div>`,
+          }),
+        }).catch(() => {});
+      }
+    } catch {}
+  }
+
   return NextResponse.json({ success: true });
 }

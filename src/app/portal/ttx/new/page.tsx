@@ -41,6 +41,7 @@ export default function NewTtxPage() {
   const [orgTools, setOrgTools] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [mitreStats, setMitreStats] = useState<{ mostUsed: string[]; leastUsed: string[] }>({ mostUsed: [], leastUsed: [] });
   const [error, setError] = useState("");
 
   // Characters from roster
@@ -60,6 +61,21 @@ export default function NewTtxPage() {
     mitreAttackIds: [] as string[],
     timeLimitSecs: null as number | null,
   });
+
+  useEffect(() => {
+    // Fetch MITRE technique usage for this portal
+    fetch("/api/portal/sessions").then(r => r.ok ? r.json() : []).then(sessions => {
+      const techCounts: Record<string, number> = {};
+      (sessions || []).forEach((s: any) => {
+        (s.mitreAttackIds || []).forEach((t: string) => { techCounts[t] = (techCounts[t] || 0) + 1; });
+      });
+      const sorted = Object.entries(techCounts).sort((a, b) => b[1] - a[1]);
+      setMitreStats({
+        mostUsed: sorted.slice(0, 5).map(([t]) => t),
+        leastUsed: sorted.slice(-5).map(([t]) => t),
+      });
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -461,9 +477,15 @@ export default function NewTtxPage() {
       {step === 4 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-1">MITRE ATT&CK Techniques</h2>
-          <p className="text-gray-500 text-sm mb-6">
+          <p className="text-gray-500 text-sm mb-3">
             Select specific techniques to focus on, or leave empty for AI to choose based on your theme.
           </p>
+          {(mitreStats.mostUsed.length > 0 || mitreStats.leastUsed.length > 0) && (
+            <div className="flex gap-4 mb-4">
+              {mitreStats.mostUsed.length > 0 && <div><p className="text-gray-500 text-xs font-semibold mb-1">Most used in your portal:</p><div className="flex flex-wrap gap-1">{mitreStats.mostUsed.map(t => <span key={t} className="cyber-badge text-xs bg-yellow-500/10 text-yellow-400">{t}</span>)}</div></div>}
+              {mitreStats.leastUsed.length > 0 && <div><p className="text-gray-500 text-xs font-semibold mb-1">Least covered — try these:</p><div className="flex flex-wrap gap-1">{mitreStats.leastUsed.map(t => <button key={t} onClick={() => setConfig(p => ({ ...p, mitreAttackIds: [...new Set([...p.mitreAttackIds, t])] }))} className="cyber-badge text-xs bg-green-500/10 text-green-400 hover:bg-green-500/20 cursor-pointer">{t} +</button>)}</div></div>}
+            </div>
+          )}
 
           <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
             {groupedTechniques.map((group) => (
@@ -624,6 +646,8 @@ export default function NewTtxPage() {
                 {totalCharacters > 0 ? `, featuring ${totalCharacters} named character${totalCharacters > 1 ? "s" : ""}` : ""}
                 . This usually takes 15-30 seconds.
               </p>
+              <p className="text-gray-500 text-xs mt-3">You can navigate away — we&apos;ll email you when it&apos;s ready.</p>
+              <a href="/portal/ttx" className="text-cyber-400 text-sm hover:text-cyber-300 mt-2 inline-block">← Back to exercises</a>
             </div>
           )}
         </div>

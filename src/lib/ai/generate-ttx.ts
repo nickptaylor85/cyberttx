@@ -321,6 +321,22 @@ JSON structure:
       });
     });
     scenario.totalPoints = calculatedTotal;
+
+    // Shuffle answer options so correct answer isn't always A or B
+    scenario.stages.forEach((stage: TtxStage) => {
+      stage.questions.forEach((q) => {
+        // Fisher-Yates shuffle
+        const opts = [...q.options];
+        for (let i = opts.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [opts[i], opts[j]] = [opts[j], opts[i]];
+        }
+        // Re-index after shuffle
+        opts.forEach((o, idx) => { o.index = idx; });
+        q.options = opts;
+      });
+    });
+
     return scenario;
   } catch (e) {
     console.error("Failed to parse AI response:", jsonText.substring(0, 500));
