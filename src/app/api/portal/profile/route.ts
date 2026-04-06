@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
@@ -12,12 +13,13 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   const user = await getAuthUser();
   if (!user?.orgId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const body = await req.json();
-  const { id, orgId, updatedAt, organization, ...data } = body;
-  const profile = await db.orgProfile.upsert({
+  const { industry, companySize, securityTools, ...rest } = await req.json();
+
+  await db.orgProfile.upsert({
     where: { orgId: user.orgId },
-    create: { orgId: user.orgId, ...data },
-    update: data,
+    update: { ...(industry && { industry }), ...(companySize && { companySize }), ...rest },
+    create: { orgId: user.orgId, industry: industry || "", companySize: companySize || "", ...rest },
   });
-  return NextResponse.json(profile);
+
+  return NextResponse.json({ success: true });
 }

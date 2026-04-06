@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { waitUntil } from "@vercel/functions";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { checkExerciseLimit } from "@/lib/plan-limits";
 import { generateTtxScenario } from "@/lib/ai/generate-ttx";
 import { generateChannelName } from "@/lib/utils";
 
@@ -46,6 +47,12 @@ export async function POST(req: NextRequest) {
     name: c.name, role: c.role, department: c.department || undefined,
     description: c.description || undefined, expertise: c.expertise || [],
   }));
+
+  // Plan enforcement
+  const planCheck = await checkExerciseLimit(org.id);
+  if (!planCheck.allowed) {
+    return NextResponse.json({ error: `Monthly exercise limit reached (${planCheck.used}/${planCheck.limit}). Upgrade your plan for more.` }, { status: 429 });
+  }
 
   const session = await db.ttxSession.create({
     data: {

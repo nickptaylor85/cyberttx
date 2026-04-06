@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { checkUserLimit } from "@/lib/plan-limits";
 import { findOrgForEmail } from "@/lib/org-matching";
 
 export async function POST(req: NextRequest) {
@@ -34,6 +35,16 @@ export async function POST(req: NextRequest) {
   }
 
   const emailLower = email.toLowerCase();
+  // Check user limit for the org
+  const emailLowerCheck = email.toLowerCase();
+  const orgIdForCheck = await findOrgForEmail(emailLowerCheck);
+  if (orgIdForCheck) {
+    const userLimit = await checkUserLimit(orgIdForCheck);
+    if (!userLimit.allowed) {
+      return NextResponse.json({ error: `This portal has reached its user limit (${userLimit.current}/${userLimit.limit}). Contact your admin to upgrade.` }, { status: 403 });
+    }
+  }
+
   const hash = await bcrypt.hash(password, 12);
 
   // Check if user already exists

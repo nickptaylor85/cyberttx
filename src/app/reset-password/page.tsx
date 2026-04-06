@@ -5,30 +5,55 @@ import Link from "next/link";
 
 function ResetForm() {
   const params = useSearchParams();
-  const [password, setPassword] = useState(""); const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState(""); const [success, setSuccess] = useState(false); const [loading, setLoading] = useState(false);
+  const token = params.get("token") || "";
+  const email = params.get("email") || "";
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+    e.preventDefault(); setError("");
     if (password !== confirm) { setError("Passwords don't match"); return; }
-    setLoading(true); setError("");
-    const res = await fetch("/api/auth/reset-password", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: params.get("email"), token: params.get("token"), password }) });
-    const data = await res.json();
-    if (data.success) setSuccess(true); else { setError(data.error || "Reset failed"); setLoading(false); }
+    setLoading(true);
+    const res = await fetch("/api/auth/reset-password", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, email, password }),
+    });
+    setLoading(false);
+    if (res.ok) setDone(true);
+    else { const d = await res.json(); setError(d.error || "Failed to reset password"); }
   }
-  if (success) return <div className="cyber-card text-center"><p className="text-green-400 text-sm mb-2">Password reset!</p><Link href="/sign-in" className="cyber-btn-primary text-sm inline-block mt-2">Sign In →</Link></div>;
+
+  if (!token || !email) return <div className="cyber-card text-center py-8"><p className="text-red-400 text-sm">Invalid reset link</p><Link href="/forgot-password" className="text-cyber-400 text-sm mt-4 inline-block">Request a new one</Link></div>;
+
+  if (done) return (
+    <div className="cyber-card text-center py-8">
+      <p className="text-3xl mb-3">✅</p>
+      <p className="text-green-400 text-sm font-semibold">Password reset successfully!</p>
+      <Link href="/sign-in" className="cyber-btn-primary text-sm mt-4 inline-block">Sign In →</Link>
+    </div>
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="cyber-card"><div className="space-y-4">
-      <div><label className="cyber-label">New Password</label><input type="password" className="cyber-input w-full" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} /></div>
-      <div><label className="cyber-label">Confirm Password</label><input type="password" className="cyber-input w-full" value={confirm} onChange={e => setConfirm(e.target.value)} required minLength={8} /></div>
+    <form onSubmit={handleSubmit} className="cyber-card space-y-4">
+      <p className="text-gray-500 text-xs">Resetting password for {email}</p>
+      <div><label className="cyber-label">New Password</label><input type="password" className="cyber-input w-full" value={password} onChange={e => setPassword(e.target.value)} minLength={8} required autoFocus /></div>
+      <div><label className="cyber-label">Confirm Password</label><input type="password" className="cyber-input w-full" value={confirm} onChange={e => setConfirm(e.target.value)} minLength={8} required /></div>
       {error && <p className="text-red-400 text-sm">{error}</p>}
       <button type="submit" disabled={loading} className="cyber-btn-primary w-full py-2.5 disabled:opacity-50">{loading ? "Resetting..." : "Set New Password"}</button>
-    </div></form>
+    </form>
   );
 }
+
 export default function ResetPasswordPage() {
-  return (<div className="min-h-screen flex items-center justify-center px-4"><div className="w-full max-w-sm">
-    <div className="text-center mb-8"><h1 className="font-display text-2xl font-bold text-white">Set new password</h1></div>
-    <Suspense fallback={<div className="cyber-card text-center py-8"><p className="text-gray-500">Loading...</p></div>}><ResetForm /></Suspense>
-  </div></div>);
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8"><h1 className="font-display text-2xl font-bold text-white">Set New Password</h1></div>
+        <Suspense fallback={<div className="cyber-card text-center py-8"><p className="text-gray-500">Loading...</p></div>}><ResetForm /></Suspense>
+      </div>
+    </div>
+  );
 }

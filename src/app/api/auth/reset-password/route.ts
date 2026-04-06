@@ -3,27 +3,55 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
+async function ensureTable() {
+  await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS password_resets (id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text, email TEXT NOT NULL, token TEXT NOT NULL, used BOOLEAN DEFAULT false, expires_at TIMESTAMP NOT NULL, created_at TIMESTAMP DEFAULT NOW())`);
+}
+
+// POST — request password reset
 export async function POST(req: NextRequest) {
-  const { email, token, password } = await req.json();
-  if (!email || !token || !password) return NextResponse.json({ error: "All fields required" }, { status: 400 });
-  if (password.length < 8) return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+  const { email } = await req.json();
+  if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+  await ensureTable();
 
   const user = await db.user.findFirst({ where: { email: email.toLowerCase() } });
-  if (!user?.firstName?.startsWith("rst:")) return NextResponse.json({ error: "Invalid or expired reset link" }, { status: 400 });
+  // Always return success (don't reveal if email exists)
+  if (!user) return NextResponse.json({ success: true });
 
-  const parts = user.firstName.split(":");
-  const storedToken = parts[1];
-  const expiry = new Date(parts[2]);
-  const originalName = parts.slice(3).join(":") || null;
+  const token = Array.from({ length: 48 }, () => "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 36)]).join("");
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-  if (storedToken !== token) return NextResponse.json({ error: "Invalid reset link" }, { status: 400 });
-  if (expiry < new Date()) return NextResponse.json({ error: "Reset link has expired" }, { status: 400 });
+  await db.$executeRawUnsafe(`INSERT INTO password_resets (email, token, expires_at) VALUES ($1, $2, $3)`, email.toLowerCase(), token, expiresAt);
+
+  const resetUrl = `https://threatcast.io/reset-password?token=${token}&email=${encodeURIComponent(email.toLowerCase())}`;
+
+  if (process.env.RESEND_API_KEY) {
+    fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "ThreatCast <noreply@threatcast.io>", to: [email.toLowerCase()],
+        subject: "Reset your ThreatCast password",
+        html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="font-size:20px;font-weight:700;margin-bottom:24px;">Threat<span style="color:#14b89a;">Cast</span></div><h2>Reset your password</h2><p>Click below to set a new password. This link expires in 1 hour.</p><a href="${resetUrl}" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Reset Password</a><p style="color:#888;font-size:12px;margin-top:24px;">If you didn't request this, you can safely ignore this email.</p></div>`,
+      }),
+    }).catch(() => {});
+  }
+
+  return NextResponse.json({ success: true });
+}
+
+// PUT — set new password
+export async function PUT(req: NextRequest) {
+  const { token, email, password } = await req.json();
+  if (!token || !email || !password) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+  if (password.length < 8) return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+  await ensureTable();
+
+  const rows = await db.$queryRawUnsafe(`SELECT id FROM password_resets WHERE email = $1 AND token = $2 AND used = false AND expires_at > NOW()`, email.toLowerCase(), token) as any[];
+  if (rows.length === 0) return NextResponse.json({ error: "Invalid or expired reset link" }, { status: 400 });
 
   const hash = await bcrypt.hash(password, 12);
-  await db.user.update({
-    where: { id: user.id },
-    data: { clerkId: `hash:${hash}`, firstName: originalName },
-  });
+  await db.user.updateMany({ where: { email: email.toLowerCase(), clerkId: { startsWith: "hash:" } }, data: { clerkId: `hash:${hash}` } });
+  await db.$executeRawUnsafe(`UPDATE password_resets SET used = true WHERE token = $1`, token);
 
   return NextResponse.json({ success: true });
 }

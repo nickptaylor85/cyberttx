@@ -123,6 +123,21 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
+  // Check if user needs onboarding
+  useEffect(() => {
+    if (typeof window !== "undefined" && !localStorage.getItem("tc_onboarded") && !window.location.pathname.includes("onboarding")) {
+      fetch("/api/portal/me").then(r => r.ok ? r.json() : null).then((d: any) => {
+        if (d && d.orgId) {
+          // Check if org has a profile set up
+          fetch("/api/portal/profile").then(r => r.ok ? r.json() : null).then((p: any) => {
+            if (!p?.industry) window.location.href = "/portal/onboarding";
+            else localStorage.setItem("tc_onboarded", "true");
+          }).catch(() => {});
+        }
+      }).catch(() => {});
+    }
+  }, []);
+
   useEffect(() => {
     fetch("/api/portal/branding").then(r => r.ok ? r.json() : {}).then(setBranding).catch(() => {});
     fetch("/api/admin/announcements").then(r => r.ok ? r.json() : []).then(setAnnouncements).catch(() => {});
