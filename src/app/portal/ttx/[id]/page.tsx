@@ -29,6 +29,7 @@ export default function ExercisePage() {
   const [myUserId, setMyUserId] = useState<string | null>(null);
   const [lobbyPlayers, setLobbyPlayers] = useState<{ name: string; id: string }[]>([]);
   const [teamAnswered, setTeamAnswered] = useState<Set<string>>(new Set());
+  const [canAdvance, setCanAdvance] = useState(false);
   const [starting, setStarting] = useState(false);
   const [joining, setJoining] = useState(false);
 
@@ -151,6 +152,8 @@ export default function ExercisePage() {
     });
 
     setAnswerHistory(prev => new Map(prev).set(`${currentStage}-${currentQuestion}`, selectedOption));
+    setCanAdvance(false);
+    setTimeout(() => setCanAdvance(true), 3000);
     setTeamAnswered(new Set());
   }
 
@@ -167,7 +170,7 @@ export default function ExercisePage() {
       completeExercise();
       return;
     }
-    setSelectedOption(null); setAnswered(false); setResult(null);
+    setSelectedOption(null); setAnswered(false); setResult(null); setCanAdvance(false);
   }
 
   async function completeExercise() {
@@ -361,7 +364,7 @@ export default function ExercisePage() {
                   {result.explanation && <p className="text-gray-400 text-xs mt-1">{result.explanation}</p>}
                 </div>
               )}
-              <button onClick={nextQuestion} className="cyber-btn-primary w-full">{isLastQuestion ? "Complete Exercise" : "Next Question →"}</button>
+              <button onClick={nextQuestion} disabled={!canAdvance} className="cyber-btn-primary w-full disabled:opacity-30">{!canAdvance ? "Read the explanation..." : isLastQuestion ? "Complete Exercise" : "Next Question →"}</button>
             </div>
           )}
         </div>
