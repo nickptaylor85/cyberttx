@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SkeletonList } from "@/components/Skeleton";
 
@@ -7,6 +8,8 @@ interface Session { id: string; title: string; status: string; theme: string; di
 
 export default function ExercisesPage() {
   const [sessions, setSessions] = useState<Session[]>([]); const [loading, setLoading] = useState(true);
+  const [cloning, setCloning] = useState<string | null>(null);
+  const router = useRouter();
   const [search, setSearch] = useState(""); const [statusFilter, setStatusFilter] = useState("ALL"); const [themeFilter, setThemeFilter] = useState("ALL");
 
   useEffect(() => { fetch("/api/portal/sessions").then(r => r.json()).then(d => { setSessions(d || []); setLoading(false); }).catch(() => setLoading(false)); }, []);
@@ -63,10 +66,37 @@ export default function ExercisesPage() {
         <div className="cyber-card text-center py-12"><p className="text-gray-400 text-sm">No exercises found</p><Link href="/portal/ttx/new" className="cyber-btn-primary text-sm mt-3 inline-block">Create your first exercise</Link></div>
       ) : (
         <div className="space-y-2">{filtered.map(s => (
-          <Link key={s.id} href={`/portal/ttx/${s.id}`} className="cyber-card flex items-center justify-between hover:border-cyber-600/30 transition-colors block">
-            <div className="min-w-0 mr-3"><p className="text-white text-sm font-medium truncate">{s.title}</p><p className="text-gray-500 text-xs mt-0.5">{s.theme} · {s.difficulty} · {s._count.participants} players · {new Date(s.createdAt).toLocaleDateString("en-GB")}</p></div>
-            <span className={`cyber-badge text-xs flex-shrink-0 ${sc[s.status] || "bg-surface-3 text-gray-400"}`}>{s.status === "COMPLETED" ? "Done" : s.status === "IN_PROGRESS" ? "Live" : s.status}</span>
-          </Link>
+          <div key={s.id} className="cyber-card flex items-center justify-between hover:border-cyber-600/30 transition-colors">
+            <Link href={`/portal/ttx/${s.id}`} className="min-w-0 mr-3 flex-1">
+              <p className="text-white text-sm font-medium truncate">{s.title}</p>
+              <p className="text-gray-500 text-xs mt-0.5">{s.theme} · {s.difficulty} · {s._count.participants} players · {new Date(s.createdAt).toLocaleDateString("en-GB")}</p>
+            </Link>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {s.status === "COMPLETED" && (
+                <button
+                  disabled={cloning === s.id}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    setCloning(s.id);
+                    try {
+                      const res = await fetch(`/api/ttx/session/${s.id}/clone`, { method: "POST" });
+                      const data = await res.json();
+                      if (res.ok && data.id) {
+                        router.push(`/portal/ttx/${data.id}`);
+                      } else {
+                        alert(data.error || "Failed to create attempt");
+                        setCloning(null);
+                      }
+                    } catch { setCloning(null); }
+                  }}
+                  className="cyber-btn-primary text-xs py-1 px-2.5 disabled:opacity-50"
+                >
+                  {cloning === s.id ? "Creating..." : "Attempt →"}
+                </button>
+              )}
+              <span className={`cyber-badge text-xs ${sc[s.status] || "bg-surface-3 text-gray-400"}`}>{s.status === "COMPLETED" ? "Done" : s.status === "IN_PROGRESS" ? "Live" : s.status}</span>
+            </div>
+          </div>
         ))}</div>
       )}
     </div>

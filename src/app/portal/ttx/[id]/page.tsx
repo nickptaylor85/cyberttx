@@ -31,6 +31,7 @@ export default function ExercisePage() {
   const [teamAnswered, setTeamAnswered] = useState<Set<string>>(new Set());
   const [canAdvance, setCanAdvance] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [cloning, setCloning] = useState(false);
   const [joining, setJoining] = useState(false);
 
   // Fetch session + user info
@@ -115,6 +116,21 @@ export default function ExercisePage() {
     setupPusher();
     return () => { if (channel) channel.unbind_all(); };
   }, [session?.channelName, session?.id, fetchSession]);
+
+  // Clone exercise for new attempt
+  async function attemptExercise() {
+    setCloning(true);
+    try {
+      const res = await fetch(`/api/ttx/session/${sessionId}/clone`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.id) {
+        window.location.href = `/portal/ttx/${data.id}`;
+      } else {
+        alert(data.error || "Failed");
+        setCloning(false);
+      }
+    } catch { setCloning(false); }
+  }
 
   // Start exercise from lobby
   async function startExercise() {
@@ -225,6 +241,11 @@ export default function ExercisePage() {
             );
           })}</div>
         </div>
+
+        {/* Allow other team members to attempt this exercise */}
+        <button onClick={attemptExercise} disabled={cloning} className="cyber-btn-primary w-full mb-4 py-2.5 disabled:opacity-50">
+          {cloning ? "Creating your attempt..." : "🎯 Attempt This Exercise"}
+        </button>
 
         <div className="flex flex-wrap gap-2">
           <Link href={`/portal/ttx/${sessionId}/replay`} className="cyber-btn-secondary text-sm">🔄 Replay</Link>
