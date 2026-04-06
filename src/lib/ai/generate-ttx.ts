@@ -127,7 +127,9 @@ ${characters.map((c, i) => {
 }).join("\n\n")}
 
 CHARACTER RULES:
-- Characters act consistently with their role and expertise level
+- Characters act consistently with their role, expertise level, AND personality description
+- If a character has a description/background, USE IT to shape how they respond (e.g., if described as "cautious and methodical", they should advocate for careful analysis; if "aggressive and decisive", they should push for immediate action)
+- Characters with specific expertise should demonstrate that expertise in their dialogue and decisions
 - Reference characters BY NAME in narratives (e.g., "At 02:47 GMT, ${characters[0]?.name || 'the analyst'} receives a Slack message from...")
 - Show realistic team dynamics — escalation chains, disagreements, pressure from leadership
 - Include direct quotes from characters in the narrative (simulated Slack/email/call)

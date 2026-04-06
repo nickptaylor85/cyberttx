@@ -1,17 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Suppress X-Powered-By header
-  poweredByHeader: false,
-
-  // Allow images from Clerk and other sources
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "img.clerk.com" },
-      { protocol: "https", hostname: "images.clerk.dev" },
+      { protocol: "https", hostname: "**" },
     ],
   },
-
   // Security headers
   async headers() {
     return [
@@ -22,16 +16,17 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+          { key: "Strict-Transport-Security", value: "max-age=63072000" },
           {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.dev",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https://img.clerk.com https://images.clerk.dev",
+              "img-src 'self' data: https: blob:",
               "font-src 'self'",
-              "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.dev https://api.anthropic.com wss://*.pusher.com",
-              "frame-src 'self' https://*.clerk.accounts.dev",
+              "connect-src 'self' https://api.anthropic.com wss://*.pusher.com https://api.resend.com",
+              "frame-src 'self'",
               "frame-ancestors 'none'",
             ].join("; "),
           },
