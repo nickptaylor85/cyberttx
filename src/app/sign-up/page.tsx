@@ -45,7 +45,8 @@ function SignUpForm() {
           </div>
           <div><label className="cyber-label">Password</label><input type="password" className="cyber-input w-full" value={password} onChange={e => setPassword(e.target.value)} placeholder="Minimum 8 characters" required minLength={8} /></div>
           {error && <p className="text-red-400 text-sm">{error}</p>}
-          <button type="submit" disabled={loading} className="cyber-btn-primary w-full py-2.5 disabled:opacity-50">{loading ? "Creating account..." : orgName ? `Join ${orgName}` : "Create Account"}</button>
+          <p className="text-gray-600 text-xs">By signing up, you agree to our <a href="/terms" className="text-cyber-400 hover:underline" target="_blank">Terms of Service</a> and <a href="/privacy" className="text-cyber-400 hover:underline" target="_blank">Privacy Policy</a>.</p>
+            <button type="submit" disabled={loading} className="cyber-btn-primary w-full py-2.5 disabled:opacity-50">{loading ? "Creating account..." : orgName ? `Join ${orgName}` : "Create Account"}</button>
         </div>
       </form>
     </>

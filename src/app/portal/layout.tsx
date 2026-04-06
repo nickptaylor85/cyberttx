@@ -25,6 +25,7 @@ const allNavSections: (NavItem | NavSection)[] = [
     { href: "/portal/templates", label: "Templates", icon: "📝", adminOnly: true },
     { href: "/portal/challenge", label: "Weekly Challenge", icon: "🏅" },
     { href: "/portal/daily-drill", label: "Daily Drill", icon: "⚡" },
+    { href: "/portal/campaigns", label: "Campaigns", icon: "📆" },
     { href: "/portal/schedule", label: "Schedule", icon: "📅", adminOnly: true },
   ]},
 
@@ -32,6 +33,7 @@ const allNavSections: (NavItem | NavSection)[] = [
     { href: "/portal/my-performance", label: "My Performance", icon: "👤" },
     { href: "/portal/leaderboard", label: "Leaderboard", icon: "🏆" },
     { href: "/portal/performance", label: "Team Performance", icon: "📈", adminOnly: true },
+    { href: "/portal/team-compliance", label: "Team Compliance", icon: "✅", adminOnly: true },
     { href: "/portal/coverage", label: "MITRE Coverage", icon: "🛡️" },
     { href: "/portal/compliance", label: "Compliance", icon: "📋", adminOnly: true },
     { href: "/portal/achievements", label: "Achievements", icon: "🏅" },
