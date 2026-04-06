@@ -29,7 +29,7 @@ export default async function BenchmarksPage() {
   const allAnswers = await db.ttxAnswer.count();
   const allCorrect = await db.ttxAnswer.count({ where: { isCorrect: true } });
   const platformAccuracy = allAnswers > 0 ? Math.round((allCorrect / allAnswers) * 100) : 0;
-  const allOrgs = await db.organization.count({ where: { isDemo: false } });
+  const allOrgs = await db.organization.count({ where: { isDemo: false, slug: { not: "__platform__" } } });
   const avgExercisesPerOrg = allOrgs > 0 ? Math.round(allSessions / allOrgs) : 0;
 
   function compare(yours: number, platform: number): { label: string; color: string } {

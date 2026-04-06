@@ -6,7 +6,7 @@ const PLAN_PRICES: Record<string, number> = { FREE: 0, STARTER: 149, GROWTH: 299
 
 export default async function AdminDashboard() {
   const [orgCount, userCount, sessionCount, completedCount, liveCount, cancelledCount, generatingCount, pendingInvites] = await Promise.all([
-    db.organization.count(),
+    db.organization.count({ where: { slug: { not: "__platform__" } } }),
     db.user.count({ where: { clerkId: { startsWith: "hash:" } } }),
     db.ttxSession.count(),
     db.ttxSession.count({ where: { status: "COMPLETED" } }),

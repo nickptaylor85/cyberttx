@@ -8,6 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const orgs = await db.organization.findMany({
+    where: { slug: { not: "__platform__" } },
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { users: true, ttxSessions: true } } },
   });
