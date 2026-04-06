@@ -14,6 +14,7 @@ const navSections = [
   { type: "item" as const, href: "/admin/users", label: "All Users", icon: "👥" },
   { type: "divider" as const, label: "Intelligence" },
   { type: "item" as const, href: "/admin/analytics", label: "Analytics", icon: "📈" },
+  { type: "item" as const, href: "/admin/activity", label: "Activity Feed", icon: "🔔" },
   { type: "item" as const, href: "/admin/threat-intel", label: "Threat Intel", icon: "🔍" },
   { type: "item" as const, href: "/admin/reviews", label: "Review Queue", icon: "⚖️" },
   { type: "divider" as const, label: "Business" },
