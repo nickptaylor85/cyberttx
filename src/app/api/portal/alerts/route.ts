@@ -9,28 +9,37 @@ export async function GET() {
   const user = await getAuthUser();
   if (!user?.orgId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Get connector configs
   const profile = await db.orgProfile.findUnique({ where: { orgId: user.orgId }, select: { additionalContext: true } });
   const match = (profile?.additionalContext || "").match(/CONNECTORS:([^\s]+)/);
-  if (!match) return NextResponse.json({ alerts: [], connectors: 0 });
+  if (!match) return NextResponse.json({ alerts: [], connectors: 0, errors: [] });
 
   let connectors: any[] = [];
-  try { connectors = JSON.parse(Buffer.from(match[1], "base64").toString()); } catch { return NextResponse.json({ alerts: [], connectors: 0 }); }
+  try { connectors = JSON.parse(Buffer.from(match[1], "base64").toString()); } catch { return NextResponse.json({ alerts: [], connectors: 0, errors: ["Failed to parse connector config"] }); }
 
   const enabledConnectors = connectors.filter(c => c.enabled);
-  if (enabledConnectors.length === 0) return NextResponse.json({ alerts: [], connectors: 0 });
+  if (enabledConnectors.length === 0) return NextResponse.json({ alerts: [], connectors: 0, errors: [] });
 
-  // Fetch from all connectors in parallel
   const results = await Promise.allSettled(enabledConnectors.map(c => fetchAlerts(c, 10)));
 
-  const allAlerts = results.flatMap((r, i) => {
-    if (r.status === "fulfilled") return r.value;
-    console.error(`[alerts] ${enabledConnectors[i].type} failed:`, r.reason?.message);
-    return [];
+  const allAlerts: any[] = [];
+  const errors: { connector: string; error: string }[] = [];
+
+  results.forEach((r, i) => {
+    if (r.status === "fulfilled") {
+      allAlerts.push(...r.value);
+    } else {
+      const errMsg = r.reason?.message || String(r.reason);
+      errors.push({ connector: enabledConnectors[i].type, error: errMsg });
+      console.error(`[alerts] ${enabledConnectors[i].type} failed:`, errMsg);
+    }
   });
 
-  // Sort by timestamp desc
   allAlerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-  return NextResponse.json({ alerts: allAlerts.slice(0, 50), connectors: enabledConnectors.length });
+  return NextResponse.json({
+    alerts: allAlerts.slice(0, 50),
+    connectors: enabledConnectors.length,
+    errors,
+    successCount: results.filter(r => r.status === "fulfilled").length,
+  });
 }

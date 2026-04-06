@@ -4,6 +4,26 @@ import { db } from "@/lib/db";
 import { findOrgForEmail } from "@/lib/org-matching";
 
 export async function POST(req: NextRequest) {
+  // Check if sign-ups are enabled
+  try {
+    const platformOrg = await db.organization.findUnique({ where: { slug: "__platform__" } });
+    if (platformOrg) {
+      const profile = await db.orgProfile.findUnique({ where: { orgId: platformOrg.id }, select: { additionalContext: true } });
+      const match = (profile?.additionalContext || "").match(/SETTINGS:({[^}]*})/);
+      if (match) {
+        const settings = JSON.parse(match[1]);
+        if (settings.signupsDisabled) {
+          // Still allow invited users (they have a pending record)
+          const body = await req.clone().json();
+          const pending = await db.user.findFirst({ where: { email: body.email?.toLowerCase(), clerkId: { startsWith: "pending_" } } });
+          if (!pending) {
+            return NextResponse.json({ error: "New sign-ups are currently disabled. Contact your administrator for an invitation." }, { status: 403 });
+          }
+        }
+      }
+    }
+  } catch {}
+
   const { email, password, firstName, lastName } = await req.json();
 
   if (!email || !password) {

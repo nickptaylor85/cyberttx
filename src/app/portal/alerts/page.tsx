@@ -8,11 +8,12 @@ export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [connectorCount, setConnectorCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<{ connector: string; error: string }[]>([]);
   const [search, setSearch] = useState(""); const [sevFilter, setSevFilter] = useState("ALL");
 
   useEffect(() => {
     fetch("/api/portal/alerts").then(r => r.ok ? r.json() : { alerts: [], connectors: 0 }).then(d => {
-      setAlerts(d.alerts || []); setConnectorCount(d.connectors || 0); setLoading(false);
+      setAlerts(d.alerts || []); setConnectorCount(d.connectors || 0); setErrors(d.errors || []); setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
 
@@ -49,6 +50,19 @@ export default function AlertsPage() {
             <option value="LOW">Low</option>
           </select>
         </div>
+
+        {errors.length > 0 && (
+          <div className="cyber-card border-red-500/20 mb-4">
+            <h3 className="text-red-400 text-xs font-semibold mb-2">Connection Errors</h3>
+            <div className="space-y-1.5">{errors.map((e, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs">
+                <span className="text-red-400 font-semibold flex-shrink-0">{e.connector}:</span>
+                <span className="text-gray-400 break-all">{e.error}</span>
+              </div>
+            ))}</div>
+            <p className="text-gray-600 text-xs mt-2">Check your credentials in Integrations. The error message above is from the vendor API.</p>
+          </div>
+        )}
 
         {loading ? <p className="text-gray-500 text-center py-8">Fetching alerts from your security tools...</p> :
           filtered.length === 0 ? <div className="cyber-card text-center py-8"><p className="text-gray-400 text-sm">No alerts found</p></div> :

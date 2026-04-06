@@ -16,10 +16,19 @@ export default function AdminSettingsPage() {
   const [saml, setSaml] = useState({ entityId: "", ssoUrl: "", certificate: "" });
   const [samlSaved, setSamlSaved] = useState(false);
 
+  // Platform settings
+  const [signupsDisabled, setSignupsDisabled] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsSaved, setSettingsSaved] = useState(false);
+
   // Env health
   const [envStatus, setEnvStatus] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
+    fetch("/api/admin/platform-settings").then(r => r.ok ? r.json() : ({} as any)).then((d: any) => {
+      setSignupsDisabled(!!d.signupsDisabled);
+      setSettingsLoading(false);
+    }).catch(() => setSettingsLoading(false));
     fetch("/api/auth/mfa").then(r => r.json()).then(d => { setMfa(d); setMfaLoading(false); }).catch(() => setMfaLoading(false));
     // Check env vars
     setEnvStatus({
@@ -67,6 +76,36 @@ export default function AdminSettingsPage() {
     <div>
       <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">Admin Settings</h1><p className="text-gray-500 text-xs mt-1">Platform configuration and security</p></div>
 
+      {/* Platform Controls */}
+      <div className="cyber-card mb-4">
+        <h2 className="text-white text-sm font-semibold mb-3">Platform Controls</h2>
+        <div className="flex items-center justify-between py-2">
+          <div>
+            <p className="text-white text-sm">New User Sign-ups</p>
+            <p className="text-gray-500 text-xs">When disabled, only invited users can create accounts</p>
+          </div>
+          <button
+            onClick={async () => {
+              const newVal = !signupsDisabled;
+              setSignupsDisabled(newVal);
+              await fetch("/api/admin/platform-settings", {
+                method: "PUT", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ signupsDisabled: newVal }),
+              });
+              setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000);
+            }}
+            disabled={settingsLoading}
+            className={`w-12 h-6 rounded-full transition-colors relative ${!signupsDisabled ? "bg-green-500" : "bg-red-500"}`}
+          >
+            <span className="absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all" style={{ left: !signupsDisabled ? "26px" : "2px" }} />
+          </button>
+        </div>
+        {settingsSaved && <p className="text-green-400 text-xs mt-1">✓ Setting saved</p>}
+        <p className={`text-xs mt-2 ${signupsDisabled ? "text-red-400" : "text-green-400"}`}>
+          {signupsDisabled ? "⚠ Sign-ups are DISABLED — only invited users can register" : "✓ Sign-ups are open — anyone can create an account"}
+        </p>
+      </div>
+
       {/* Password Change */}
       <div className="cyber-card mb-4">
         <h2 className="text-white text-sm font-semibold mb-3">Change Password</h2>
@@ -108,7 +147,11 @@ export default function AdminSettingsPage() {
         ) : (
           <div>
             <p className="text-red-400/80 text-xs mb-3">⚠ Your admin account does not have MFA enabled. This is strongly recommended.</p>
-            <button onClick={() => { setShowMfaSetup(true); fetch("/api/auth/mfa").then(r => r.json()).then(setMfa); }} className="cyber-btn-primary text-sm">Set Up MFA</button>
+            <button onClick={() => { setShowMfaSetup(true); fetch("/api/admin/platform-settings").then(r => r.ok ? r.json() : ({} as any)).then((d: any) => {
+      setSignupsDisabled(!!d.signupsDisabled);
+      setSettingsLoading(false);
+    }).catch(() => setSettingsLoading(false));
+    fetch("/api/auth/mfa").then(r => r.json()).then(setMfa); }} className="cyber-btn-primary text-sm">Set Up MFA</button>
           </div>
         )}
       </div>
