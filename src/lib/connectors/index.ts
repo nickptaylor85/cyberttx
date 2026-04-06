@@ -30,13 +30,13 @@ export const SUPPORTED_CONNECTORS = [
     type: "taegis",
     name: "Secureworks Taegis XDR",
     icon: "🛡️",
-    description: "Pull detections and alerts from Taegis XDR",
+    description: "Pull detections and alerts from Taegis XDR via GraphQL API",
     fields: [
-      { key: "clientId", label: "Client ID", placeholder: "Taegis API client ID", secret: false },
-      { key: "clientSecret", label: "Client Secret", placeholder: "Taegis API client secret", secret: true },
-      { key: "region", label: "Region", placeholder: "US (delta.taegis.secureworks.com)", secret: false },
+      { key: "clientId", label: "Client ID", placeholder: "Taegis API client ID (from Tenant Settings → Manage API Credentials)", secret: false },
+      { key: "clientSecret", label: "Client Secret", placeholder: "Taegis API client secret (shown once on creation)", secret: true },
+      { key: "region", label: "Region", placeholder: "US1, US2, US3, EU1, or EU2", secret: false },
     ],
-    docsUrl: "https://docs.ctpx.secureworks.com/",
+    docsUrl: "https://docs.taegis.secureworks.com/apis/api_authenticate/",
   },
   {
     type: "crowdstrike",

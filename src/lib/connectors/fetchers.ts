@@ -122,36 +122,144 @@ async function fetchSentinel(config: ConnectorConfig, limit: number): Promise<Se
 }
 
 // ─── Secureworks Taegis XDR ───
+// Docs: https://docs.taegis.secureworks.com/apis/using_alerts_api/
+// Auth: https://docs.taegis.secureworks.com/apis/api_authenticate/
+// Regions: US1=api.ctpx, US2=api.delta, US3=api.foxtrot, EU1=api.echo, EU2=api.golf
 async function fetchTaegis(config: ConnectorConfig, limit: number): Promise<SecurityAlert[]> {
-  const { clientId, clientSecret, region = "delta" } = config.credentials;
-  const baseUrl = `https://${region}.taegis.secureworks.com`;
-  const tokenRes = await fetch(`${baseUrl}/auth/api/v2/auth/token`, {
+  const { clientId, clientSecret, region = "US1" } = config.credentials;
+
+  // Map region to API base URL
+  const regionUrls: Record<string, string> = {
+    "US1": "https://api.ctpx.secureworks.com",
+    "US2": "https://api.delta.taegis.secureworks.com",
+    "US3": "https://api.foxtrot.taegis.secureworks.com",
+    "EU1": "https://api.echo.taegis.secureworks.com",
+    "EU2": "https://api.golf.taegis.secureworks.com",
+  };
+  const apiUrl = regionUrls[region] || regionUrls["US1"];
+
+  // Step 1: OAuth2 token exchange
+  // Uses standard client_credentials grant with Taegis auth endpoint
+  const tokenRes = await fetch(`${apiUrl}/auth/api/v2/auth/token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ grant_type: "client_credentials", client_id: clientId, client_secret: clientSecret }),
-  });
-  const { access_token } = await tokenRes.json();
-
-  // GraphQL query for alerts
-  const gqlRes = await fetch(`${baseUrl}/graphql`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${access_token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      query: `{ alerts(first: ${limit}, orderBy: { field: CREATED_AT, direction: DESC }) { edges { node { id title description severity status createdAt entities { hostname ip } attackTechniques { technique { id name } } } } } }`,
+      grant_type: "client_credentials",
+      client_id: clientId,
+      client_secret: clientSecret,
     }),
   });
-  const { data } = await gqlRes.json();
+  if (!tokenRes.ok) {
+    const err = await tokenRes.text().catch(() => "");
+    throw new Error(`Taegis auth failed (${tokenRes.status}): ${err}`);
+  }
+  const { access_token } = await tokenRes.json();
+  if (!access_token) throw new Error("Taegis auth: no access_token returned");
 
-  return (data?.alerts?.edges || []).map((e: any) => {
-    const a = e.node;
+  // Step 2: Query alerts using alertsServiceSearch with CQL
+  // Docs: https://docs.taegis.secureworks.com/apis/using_alerts_api/
+  // CQL: FROM alert WHERE severity >= 0.6 EARLIEST=-7d
+  const gqlQuery = `
+    query alertsServiceSearch($in: SearchRequestInput!) {
+      alertsServiceSearch(in: $in) {
+        search_id
+        status
+        alerts {
+          total_results
+          list {
+            id
+            tenant_id
+            status
+            metadata {
+              title
+              severity
+              description
+              created_at { seconds }
+              engine { name version }
+              creator { detector { detector_id detector_name } }
+            }
+            entities {
+              entities {
+                type
+                value
+              }
+            }
+            tags {
+              tag {
+                key
+                value
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const gqlRes = await fetch(`${apiUrl}/graphql`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: gqlQuery,
+      variables: {
+        in: {
+          cql_query: "FROM alert WHERE severity >= 0.4 EARLIEST=-7d",
+          limit: limit,
+          offset: 0,
+        },
+      },
+    }),
+  });
+
+  if (!gqlRes.ok) {
+    const err = await gqlRes.text().catch(() => "");
+    throw new Error(`Taegis GraphQL failed (${gqlRes.status}): ${err}`);
+  }
+
+  const { data, errors } = await gqlRes.json();
+  if (errors?.length) {
+    throw new Error(`Taegis GraphQL error: ${errors[0]?.message || JSON.stringify(errors[0])}`);
+  }
+
+  const alerts = data?.alertsServiceSearch?.alerts?.list || [];
+
+  return alerts.map((a: any) => {
+    // Extract MITRE techniques from tags
+    const mitreTags = (a.tags || [])
+      .filter((t: any) => t.tag?.key?.toLowerCase().includes("mitre") || t.tag?.key?.toLowerCase().includes("technique"))
+      .map((t: any) => t.tag?.value)
+      .filter(Boolean);
+
+    // Also extract from title patterns (e.g. "T1566: Phishing")
+    const titleMitre = extractMitreTechniques(a.metadata?.title || "");
+
+    // Extract affected assets from entities
+    const assets = (a.entities?.entities || [])
+      .filter((e: any) => ["hostname", "ip_address", "user", "device"].includes(e.type?.toLowerCase()))
+      .map((e: any) => e.value)
+      .filter(Boolean);
+
+    // Map severity (Taegis uses 0.0-1.0 float)
+    const sevFloat = a.metadata?.severity || 0;
+    const severity = sevFloat >= 0.8 ? "critical" : sevFloat >= 0.6 ? "high" : sevFloat >= 0.4 ? "medium" : "low";
+
     return {
-      id: a.id, title: a.title, description: a.description || "",
-      severity: mapSeverity(a.severity), source: "Taegis XDR",
-      category: a.attackTechniques?.[0]?.technique?.name || "Unknown",
-      mitreTechniques: (a.attackTechniques || []).map((t: any) => t.technique?.id).filter(Boolean),
-      timestamp: a.createdAt,
-      affectedAssets: (a.entities || []).map((e: any) => e.hostname || e.ip).filter(Boolean),
-      status: a.status, rawData: a,
+      id: a.id,
+      title: a.metadata?.title || "Taegis Alert",
+      description: a.metadata?.description || "",
+      severity,
+      source: "Taegis XDR",
+      category: a.metadata?.creator?.detector?.detector_name || a.metadata?.engine?.name || "Detection",
+      mitreTechniques: [...new Set([...mitreTags, ...titleMitre])],
+      timestamp: a.metadata?.created_at?.seconds
+        ? new Date(a.metadata.created_at.seconds * 1000).toISOString()
+        : new Date().toISOString(),
+      affectedAssets: assets.slice(0, 10),
+      status: a.status || "OPEN",
+      rawData: a,
     };
   });
 }
