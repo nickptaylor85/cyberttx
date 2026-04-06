@@ -232,10 +232,14 @@ async function fetchTaegis(config: ConnectorConfig, limit: number): Promise<Secu
       (a.metadata?.title || "") + " " + tagStrings.join(" ")
     );
 
-    // Entities is EntityRelationships type with relationships array
-    const relationships = a.entities?.relationships || [];
-    const assets = relationships
-      .map((r: any) => r.value || r.key)
+    // entities.entities is [String] formatted as "<type>:<value>"
+    // e.g. "hostname:SERVER01", "ip_address:10.0.0.1", "user:jsmith"
+    const entityStrings: string[] = a.entities?.entities || [];
+    const assets = entityStrings
+      .map((e: string) => {
+        const parts = e.split(":");
+        return parts.length > 1 ? parts.slice(1).join(":") : e;
+      })
       .filter(Boolean)
       .slice(0, 10);
 
