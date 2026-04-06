@@ -23,6 +23,7 @@ const allNavSections: (NavItem | NavSection)[] = [
     { href: "/portal/ttx/custom", label: "Custom Exercise", icon: "✏️" },
     { href: "/portal/alerts", label: "Live Alert Feed", icon: "🚨" },
     { href: "/portal/templates", label: "Templates", icon: "📝", adminOnly: true },
+    { href: "/portal/challenge", label: "Weekly Challenge", icon: "🏅" },
     { href: "/portal/schedule", label: "Schedule", icon: "📅", adminOnly: true },
   ]},
 
@@ -240,7 +241,20 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           <UserMenu />
           <a href="/api/auth/signout" className="text-red-400/60 hover:text-red-400 text-xs mt-1">Sign Out</a>
         </div>
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+        <div className="p-4 sm:p-6 lg:p-8">
+          <XpWidget />
+          {announcements.length > 0 && (
+            <div className="mb-4 space-y-2">
+              {announcements.map((a: any) => (
+                <div key={a.id} className={`p-3 rounded-lg border text-sm ${a.type === "warning" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-300" : a.type === "maintenance" ? "bg-purple-500/10 border-purple-500/20 text-purple-300" : "bg-blue-500/10 border-blue-500/20 text-blue-300"}`}>
+                  <p className="font-semibold text-xs">{a.title}</p>
+                  <p className="text-xs opacity-80 mt-0.5">{a.message}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {children}
+        </div>
       </main>
     </div>
     <SupportWidget /></LanguageProvider>
