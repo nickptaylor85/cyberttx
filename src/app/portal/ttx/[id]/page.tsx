@@ -72,6 +72,13 @@ export default function ExercisePage() {
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
 
+  // Auto-poll while GENERATING
+  useEffect(() => {
+    if (!session || (session.status !== "GENERATING")) return;
+    const interval = setInterval(() => { fetchSession(); }, 3000);
+    return () => clearInterval(interval);
+  }, [session?.status, fetchSession]);
+
   // Pusher real-time subscription
   useEffect(() => {
     if (!session?.channelName || !session?.id) return;
@@ -270,7 +277,20 @@ export default function ExercisePage() {
   }
 
   // ═══ IN PROGRESS — GAMEPLAY ═══
-  if (!scenario?.stages) return <p className="text-red-400 text-center py-20">No scenario data</p>;
+  // Handle GENERATING status — poll until ready
+  if (session.status === "GENERATING" || !scenario?.stages) {
+    return (
+      <div className="max-w-lg mx-auto text-center py-20">
+        <div className="relative flex h-4 w-4 mx-auto mb-4">
+          <span className="animate-ping absolute h-full w-full rounded-full bg-cyber-400 opacity-75"></span>
+          <span className="relative rounded-full h-4 w-4 bg-cyber-500"></span>
+        </div>
+        <h2 className="font-display text-lg font-bold text-white mb-2">Building Your Scenario...</h2>
+        <p className="text-gray-500 text-sm">AI is generating your exercise. This usually takes 15-30 seconds.</p>
+        <p className="text-gray-600 text-xs mt-2">This page will update automatically when ready.</p>
+      </div>
+    );
+  }
 
   const stage = scenario.stages[currentStage];
   const question = stage?.questions?.[currentQuestion];
