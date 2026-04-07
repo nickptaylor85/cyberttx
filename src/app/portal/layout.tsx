@@ -18,52 +18,50 @@ interface NavSection { label: string; icon: string; items: NavItem[]; defaultOpe
 const allNavSections: (NavItem | NavSection)[] = [
   { href: "/portal", label: "Dashboard", icon: "📊", exact: true },
 
-  // === INDIVIDUAL (all users see these) ===
+  // ─── ALL USERS ─────────────────────────────
   { label: "Train", icon: "🎯", defaultOpen: true, items: [
     { href: "/portal/daily-drill", label: "Daily Drill", icon: "⚡" },
+    { href: "/portal/duels", label: "Duels", icon: "⚔️" },
     { href: "/portal/challenge", label: "Weekly Challenge", icon: "🏅" },
     { href: "/portal/ttx", label: "All Exercises", icon: "🎯" },
     { href: "/portal/ttx/custom", label: "Custom Exercise", icon: "✏️" },
     { href: "/portal/campaigns", label: "Campaigns", icon: "📆" },
-    { href: "/portal/duels", label: "Duels", icon: "⚔️" },
   ]},
 
   { label: "My Progress", icon: "📊", defaultOpen: true, items: [
-    { href: "/portal/my-performance", label: "My Performance", icon: "📈" },
-    { href: "/portal/achievements", label: "Achievements", icon: "🏅" },
-    { href: "/portal/certificates", label: "My Certificates", icon: "🎓" },
-    { href: "/portal/playbooks", label: "Playbooks", icon: "📖" },
     { href: "/portal/leaderboard", label: "Leaderboard", icon: "🏆" },
+    { href: "/portal/achievements", label: "Achievements", icon: "🏅" },
+    { href: "/portal/my-performance", label: "My Performance", icon: "📈" },
+    { href: "/portal/certificates", label: "Certificates", icon: "🎓" },
+    { href: "/portal/playbooks", label: "Playbooks", icon: "📖" },
   ]},
 
-  // === TEAM (portal admins only) ===
-  { label: "Team", icon: "👥", adminOnly: true, items: [
-    { href: "/portal/performance", label: "Team Performance", icon: "📈" },
-    { href: "/portal/team-compliance", label: "Compliance Tracker", icon: "✅" },
-    { href: "/portal/users", label: "Members", icon: "👥" },
-    { href: "/portal/templates", label: "Templates", icon: "📝" },
-    { href: "/portal/schedule", label: "Schedule", icon: "📅" },
-  ]},
-
-  // === INTELLIGENCE (mixed visibility) ===
   { label: "Intelligence", icon: "🛡️", items: [
     { href: "/portal/alerts", label: "Live Alert Feed", icon: "🚨" },
     { href: "/portal/coverage", label: "MITRE Coverage", icon: "🛡️" },
-    { href: "/portal/compliance", label: "Compliance Evidence", icon: "📋", adminOnly: true },
     { href: "/portal/benchmarks", label: "Benchmarks", icon: "📊" },
   ]},
 
-  // === ORGANISATION (portal admins only) ===
+  // ─── PORTAL ADMINS ONLY ────────────────────
+  { label: "Team", icon: "👥", adminOnly: true, items: [
+    { href: "/portal/team-compliance", label: "Compliance Tracker", icon: "✅" },
+    { href: "/portal/performance", label: "Team Performance", icon: "📈" },
+    { href: "/portal/users", label: "Members", icon: "👥" },
+    { href: "/portal/schedule", label: "Schedule", icon: "📅" },
+    { href: "/portal/templates", label: "Templates", icon: "📝" },
+  ]},
+
   { label: "Organisation", icon: "🏢", adminOnly: true, items: [
-    { href: "/portal/profile", label: "Company Profile", icon: "🏢" },
+    { href: "/portal/integrations", label: "Integrations", icon: "🔌" },
     { href: "/portal/tools", label: "Security Stack", icon: "🔧" },
     { href: "/portal/characters", label: "Characters", icon: "🎭" },
-    { href: "/portal/integrations", label: "Integrations", icon: "🔌" },
+    { href: "/portal/compliance", label: "Compliance Evidence", icon: "📋" },
+    { href: "/portal/profile", label: "Company Profile", icon: "🏢" },
     { href: "/portal/branding", label: "Custom Branding", icon: "🎨" },
     { href: "/portal/export", label: "Export Data", icon: "📥" },
   ]},
 
-  // === SETTINGS (all users) ===
+  // ─── ALL USERS ─────────────────────────────
   { label: "Settings", icon: "⚙️", items: [
     { href: "/portal/notifications", label: "Notifications", icon: "🔔" },
     { href: "/portal/settings", label: "Account", icon: "⚙️" },
