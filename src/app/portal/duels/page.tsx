@@ -40,11 +40,14 @@ export default function DuelsPage() {
   }
 
   async function joinDuel(duelId: string) {
-    await fetch("/api/portal/duels", {
+    const res = await fetch("/api/portal/duels", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "join", duelId }),
     });
-    loadDuels();
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error || "Could not join duel");
+    }
   }
 
   function startPlaying(duel: Duel) {
@@ -168,7 +171,7 @@ export default function DuelsPage() {
           <div className="space-y-2">{pendingForMe.map(d => (
             <div key={d.id} className="flex items-center justify-between py-2 border-b border-surface-3/30 last:border-0">
               <div><p className="text-white text-sm">{d.challenger_name} challenges you!</p><p className="text-gray-500 text-xs capitalize">{d.theme?.replace(/-/g, " ")} · 5 questions</p></div>
-              <button onClick={() => { joinDuel(d.id).then(() => { const updated = { ...d, opponent_id: userId }; startPlaying(updated); }); }} className="cyber-btn-primary text-xs py-1.5 px-3">Accept ⚔️</button>
+              <button onClick={async () => { await joinDuel(d.id); loadDuels(); }} className="cyber-btn-primary text-xs py-1.5 px-3">Accept Challenge</button>
             </div>
           ))}</div>
         </div>
