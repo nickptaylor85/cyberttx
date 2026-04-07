@@ -1,123 +1,98 @@
 import { db } from "@/lib/db";
 
-interface SendEmailOptions {
-  to: string | string[];
-  subject: string;
-  html: string;
-  from?: string;
-  type?: string; // e.g. "broadcast", "invite", "reset", "digest", "duel", "streak"
-}
-
-interface SendResult {
-  success: boolean;
-  messageId?: string;
-  error?: string;
-}
-
+let tableCreated = false;
 async function ensureTable() {
-  await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS email_log (
-    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-    to_email TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    type TEXT DEFAULT 'transactional',
-    status TEXT DEFAULT 'sent',
-    message_id TEXT,
-    error TEXT,
-    from_address TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
-  )`);
+  if (tableCreated) return;
+  try {
+    await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS email_log (id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text, to_email TEXT NOT NULL, subject TEXT NOT NULL, type TEXT DEFAULT 'transactional', status TEXT DEFAULT 'sent', message_id TEXT, error TEXT, from_address TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+    tableCreated = true;
+  } catch {}
 }
 
-export async function sendEmail(opts: SendEmailOptions): Promise<SendResult> {
-  const { to, subject, html, from, type } = opts;
-  const toList = Array.isArray(to) ? to : [to];
-  const fromAddress = from || "ThreatCast <noreply@threatcast.io>";
+function guessType(subject: string): string {
+  const s = subject.toLowerCase();
+  if (s.includes("duel")) return "duel";
+  if (s.includes("streak") || s.includes("training without")) return "streak";
+  if (s.includes("weekly report") || s.includes("weekly digest")) return "report";
+  if (s.includes("weekly challenge") || s.includes("new weekly")) return "challenge";
+  if (s.includes("quick question") || s.includes("daily drill")) return "digest";
+  if (s.includes("reset") || s.includes("password")) return "reset";
+  if (s.includes("verify")) return "verification";
+  if (s.includes("invite") || s.includes("join")) return "invite";
+  return "transactional";
+}
 
-  if (!process.env.RESEND_API_KEY) {
-    console.warn("[email] No RESEND_API_KEY — email not sent:", subject);
-    return { success: false, error: "RESEND_API_KEY not configured" };
-  }
-
+async function logEmail(to: string, subject: string, from: string, status: "sent" | "failed", messageId?: string, error?: string, type?: string) {
   try {
     await ensureTable();
+    await db.$executeRawUnsafe(
+      `INSERT INTO email_log (to_email, subject, type, status, message_id, error, from_address) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      to, subject, type || guessType(subject), status, messageId || null, error || null, from
+    );
   } catch {}
+}
 
-  const results: SendResult[] = [];
+// Drop-in for sendEmail — used by broadcast and duels
+interface SendEmailOptions { to: string; subject: string; html: string; from?: string; type?: string; }
+interface SendResult { success: boolean; messageId?: string; error?: string; }
 
-  for (const recipient of toList) {
+export async function sendEmail(opts: SendEmailOptions): Promise<SendResult> {
+  const fromAddr = opts.from || "ThreatCast <noreply@threatcast.io>";
+  if (!process.env.RESEND_API_KEY) {
+    await logEmail(opts.to, opts.subject, fromAddr, "failed", undefined, "No RESEND_API_KEY", opts.type);
+    return { success: false, error: "No RESEND_API_KEY" };
+  }
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: fromAddr, to: [opts.to], subject: opts.subject, html: opts.html }),
+    });
+    const data = await res.json();
+    if (res.ok && data.id) {
+      await logEmail(opts.to, opts.subject, fromAddr, "sent", data.id, undefined, opts.type);
+      return { success: true, messageId: data.id };
+    }
+    const err = data.message || `HTTP ${res.status}`;
+    await logEmail(opts.to, opts.subject, fromAddr, "failed", undefined, err, opts.type);
+    return { success: false, error: err };
+  } catch (e: any) {
+    await logEmail(opts.to, opts.subject, fromAddr, "failed", undefined, e?.message, opts.type);
+    return { success: false, error: e?.message };
+  }
+}
+
+// Install global interceptor — patches fetch to log all Resend API calls
+// This catches ALL email sends across the entire app without modifying any files
+const originalFetch = globalThis.fetch;
+const patchedFetch: typeof fetch = async (input, init) => {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : (input as Request).url;
+  
+  if (url === "https://api.resend.com/emails" && init?.method === "POST" && init?.body) {
     try {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: fromAddress, to: [recipient], subject, html }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.id) {
-        // Log success
-        try {
-          await db.$executeRawUnsafe(
-            `INSERT INTO email_log (to_email, subject, type, status, message_id, from_address) VALUES ($1, $2, $3, 'sent', $4, $5)`,
-            recipient, subject, type || "transactional", data.id, fromAddress
-          );
-        } catch {}
-        results.push({ success: true, messageId: data.id });
+      const body = JSON.parse(init.body as string);
+      const to = Array.isArray(body.to) ? body.to[0] : body.to;
+      const result = await originalFetch(input, init);
+      const clone = result.clone();
+      const data = await clone.json().catch(() => ({}));
+      
+      if (result.ok && data.id) {
+        await logEmail(to, body.subject || "", body.from || "", "sent", data.id);
       } else {
-        const errorMsg = data.message || data.error || `HTTP ${res.status}`;
-        // Log failure
-        try {
-          await db.$executeRawUnsafe(
-            `INSERT INTO email_log (to_email, subject, type, status, error, from_address) VALUES ($1, $2, $3, 'failed', $4, $5)`,
-            recipient, subject, type || "transactional", errorMsg, fromAddress
-          );
-        } catch {}
-        console.error(`[email] Failed to send to ${recipient}:`, errorMsg);
-        results.push({ success: false, error: errorMsg });
+        await logEmail(to, body.subject || "", body.from || "", "failed", undefined, data.message || `HTTP ${result.status}`);
       }
+      return result;
     } catch (e: any) {
-      const errorMsg = e?.message || "Network error";
+      // Still call original fetch but log the error
       try {
-        await db.$executeRawUnsafe(
-          `INSERT INTO email_log (to_email, subject, type, status, error, from_address) VALUES ($1, $2, $3, 'failed', $4, $5)`,
-          recipient, subject, type || "transactional", errorMsg, fromAddress
-        );
+        const body = JSON.parse(init.body as string);
+        const to = Array.isArray(body.to) ? body.to[0] : body.to;
+        await logEmail(to, body.subject || "", body.from || "", "failed", undefined, e?.message);
       } catch {}
-      console.error(`[email] Exception sending to ${recipient}:`, errorMsg);
-      results.push({ success: false, error: errorMsg });
+      return originalFetch(input, init);
     }
   }
-
-  const allSuccess = results.every(r => r.success);
-  return {
-    success: allSuccess,
-    messageId: results[0]?.messageId,
-    error: allSuccess ? undefined : results.filter(r => !r.success).map(r => r.error).join("; "),
-  };
-}
-
-// Batch send — sends to multiple recipients with same content
-export async function sendEmailBatch(
-  recipients: { email: string; firstName?: string }[],
-  subject: string,
-  htmlTemplate: string,
-  opts?: { from?: string; type?: string }
-): Promise<{ sent: number; failed: number }> {
-  let sent = 0, failed = 0;
-
-  for (const r of recipients) {
-    const personalised = htmlTemplate
-      .replace(/\{\{name\}\}/g, r.firstName || "there")
-      .replace(/\{\{email\}\}/g, r.email);
-
-    const result = await sendEmail({
-      to: r.email, subject, html: personalised,
-      from: opts?.from, type: opts?.type,
-    });
-
-    if (result.success) sent++;
-    else failed++;
-  }
-
-  return { sent, failed };
-}
+  
+  return originalFetch(input, init);
+};
+globalThis.fetch = patchedFetch;

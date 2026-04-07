@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SessionProvider } from "next-auth/react";
 import CookieConsent from "@/components/CookieConsent";
 import "./globals.css";
+import "@/lib/email"; // Install email tracking interceptor
 
 export const metadata: Metadata = {
   title: "ThreatCast - AI-Powered Cybersecurity Tabletop Exercises",
