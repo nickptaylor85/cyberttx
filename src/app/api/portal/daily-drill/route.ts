@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import Anthropic from "@anthropic-ai/sdk";
+import { db } from "@/lib/db";
 
 const DAILY_TOPICS = [
   "phishing email identification", "ransomware initial response", "suspicious login detection",
@@ -16,7 +17,32 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-  const topic = DAILY_TOPICS[dayOfYear % DAILY_TOPICS.length];
+  let topic = DAILY_TOPICS[dayOfYear % DAILY_TOPICS.length];
+  let isAdaptive = false;
+
+  // Try to target user's weak spots
+  try {
+    const participations = await db.ttxParticipant.findMany({
+      where: { userId: user.id, session: { status: "COMPLETED" } },
+      include: { answers: { select: { isCorrect: true } }, session: { select: { theme: true } } },
+      take: 50, orderBy: { session: { createdAt: "desc" } },
+    });
+    const themeStats: Record<string, { correct: number; total: number }> = {};
+    participations.forEach(p => {
+      const theme = p.session.theme || "unknown";
+      if (!themeStats[theme]) themeStats[theme] = { correct: 0, total: 0 };
+      p.answers.forEach(a => { themeStats[theme].total++; if (a.isCorrect) themeStats[theme].correct++; });
+    });
+    const weakest = Object.entries(themeStats)
+      .map(([t, s]) => ({ theme: t, acc: s.total > 0 ? s.correct / s.total : 1 }))
+      .filter(t => t.acc < 0.6)
+      .sort((a, b) => a.acc - b.acc);
+    if (weakest.length > 0) {
+      const themeToTopic: Record<string, string> = { ransomware: "ransomware initial response", phishing: "phishing email identification", "insider-threat": "insider threat warning signs", "supply-chain": "supply chain risk assessment", "cloud-breach": "cloud misconfiguration triage", apt: "lateral movement indicators", ddos: "DDoS mitigation priority", "data-exfil": "data exfiltration indicators" };
+      topic = themeToTopic[weakest[0].theme] || topic;
+      isAdaptive = true;
+    }
+  } catch {}
 
   try {
     const client = new Anthropic();
@@ -32,7 +58,7 @@ export async function GET() {
     });
     const text = (response.content[0] as any).text;
     const match = text.match(/\{[\s\S]*\}/);
-    if (match) return NextResponse.json(JSON.parse(match[0]));
+    if (match) { const data = JSON.parse(match[0]); data.isAdaptive = isAdaptive; return NextResponse.json(data); }
   } catch {}
 
   return NextResponse.json({

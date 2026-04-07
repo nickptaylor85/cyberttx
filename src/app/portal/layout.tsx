@@ -25,6 +25,7 @@ const allNavSections: (NavItem | NavSection)[] = [
     { href: "/portal/ttx", label: "All Exercises", icon: "🎯" },
     { href: "/portal/ttx/custom", label: "Custom Exercise", icon: "✏️" },
     { href: "/portal/campaigns", label: "Campaigns", icon: "📆" },
+    { href: "/portal/duels", label: "Duels", icon: "⚔️" },
   ]},
 
   { label: "My Progress", icon: "📊", defaultOpen: true, items: [

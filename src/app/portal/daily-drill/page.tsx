@@ -6,6 +6,7 @@ interface Question { question: string; options: { text: string; isCorrect: boole
 
 export default function DailyDrillPage() {
   const [topic, setTopic] = useState("");
+  const [isAdaptive, setIsAdaptive] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -18,7 +19,7 @@ export default function DailyDrillPage() {
 
   useEffect(() => {
     fetch("/api/portal/daily-drill").then(r => r.ok ? r.json() : null).then(d => {
-      if (d) { setTopic(d.topic); setQuestions(d.questions || []); }
+      if (d) { setTopic(d.topic); setQuestions(d.questions || []); setIsAdaptive(d.isAdaptive || false); }
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -72,7 +73,7 @@ export default function DailyDrillPage() {
   return (
     <div className="max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <div><h1 className="font-display text-lg font-bold text-white">Daily Drill</h1><p className="text-gray-500 text-xs">{topic}</p></div>
+        <div><h1 className="font-display text-lg font-bold text-white">Daily Drill</h1><div className="flex items-center gap-2"><p className="text-gray-500 text-xs">{topic}</p>{isAdaptive && <span className="cyber-badge text-xs bg-orange-500/20 text-orange-400">Targeting your weak spot</span>}</div></div>
         <div className="text-right">
           <p className={`font-mono text-lg font-bold ${timeLeft < 30 ? "text-red-400" : "text-cyber-400"}`}>{mins}:{secs.toString().padStart(2, "0")}</p>
           <p className="text-gray-600 text-xs">Q{current + 1}/{questions.length}</p>
