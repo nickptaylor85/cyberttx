@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         method: "POST",
         headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "ThreatCast <onboarding@resend.dev>",
+          from: "ThreatCast <hello@threatcast.io>",
           to: [recipient.email],
           subject,
           html: `<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
