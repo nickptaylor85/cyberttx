@@ -1,36 +1,34 @@
 export const dynamic = "force-dynamic";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-  const hasKey = !!process.env.RESEND_API_KEY;
-  const keyPrefix = process.env.RESEND_API_KEY?.slice(0, 8) || "NOT SET";
+export async function GET() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return NextResponse.json({ status: "BROKEN", reason: "RESEND_API_KEY not set" });
 
-  if (!hasKey) {
-    return NextResponse.json({ status: "BROKEN", reason: "RESEND_API_KEY not set in Vercel env vars", hasKey: false });
-  }
-
-  // Send test to a hardcoded address
+  // Check domains
+  let domains;
   try {
-    const res = await fetch("https://api.resend.com/emails", {
+    const dRes = await fetch("https://api.resend.com/domains", {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    domains = await dRes.json();
+  } catch (e: any) { domains = { error: e?.message }; }
+
+  // Send test
+  let sendResult;
+  try {
+    const sRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "ThreatCast <noreply@threatcast.io>",
-        to: ["nick@cyberttx.com"],
-        subject: "ThreatCast Email Test — " + new Date().toISOString(),
-        html: "<div style='font-family:sans-serif;padding:20px;'><h2>Email delivery test</h2><p>If you see this, Resend is working with threatcast.io domain.</p></div>",
+        to: ["nickptaylor85@gmail.com"],
+        subject: "ThreatCast Test — " + new Date().toLocaleTimeString(),
+        html: "<p>If you see this in your inbox, email is working.</p>",
       }),
     });
+    sendResult = { status: sRes.status, data: await sRes.json() };
+  } catch (e: any) { sendResult = { error: e?.message }; }
 
-    const data = await res.json();
-    return NextResponse.json({
-      status: res.ok ? "OK" : "FAILED",
-      hasKey: true,
-      keyPrefix,
-      httpStatus: res.status,
-      resendResponse: data,
-    });
-  } catch (e: any) {
-    return NextResponse.json({ status: "ERROR", hasKey: true, keyPrefix, error: e?.message });
-  }
+  return NextResponse.json({ domains, sendResult, keyPrefix: key.slice(0, 10) });
 }
