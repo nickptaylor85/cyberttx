@@ -19,6 +19,7 @@ const navSections = [
   { type: "item" as const, href: "/admin/reviews", label: "Review Queue", icon: "⚖️" },
   { type: "divider" as const, label: "Business" },
   { type: "item" as const, href: "/admin/billing", label: "Billing & Revenue", icon: "💰" },
+  { type: "item" as const, href: "/admin/broadcast", label: "Broadcast Email", icon: "📣" },
   { type: "item" as const, href: "/admin/emails", label: "Email Log", icon: "📧" },
   { type: "item" as const, href: "/admin/reports", label: "Scheduled Reports", icon: "📅" },
   { type: "item" as const, href: "/admin/announcements", label: "Announcements", icon: "📢" },
