@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   keywords: "cybersecurity,tabletop exercise,incident response,MITRE ATT&CK,security training,TTX,cyber drill",
   metadataBase: new URL("https://threatcast.io"),
   openGraph: {
+    images: [{ url: "https://threatcast.io/api/og", width: 1200, height: 630, alt: "ThreatCast - AI-Powered Cybersecurity Tabletop Exercises" }],
     title: "ThreatCast - AI-Powered Cybersecurity TTX",
     description: "Replace £30k consultancy exercises with unlimited AI-powered tabletop drills. Real-time multiplayer, MITRE ATT&CK aligned, compliance-ready.",
     url: "https://threatcast.io",
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    images: ["https://threatcast.io/api/og"],
     title: "ThreatCast - AI-Powered Cybersecurity TTX",
     description: "Replace £30k consultancy exercises with unlimited AI-powered tabletop drills.",
   },

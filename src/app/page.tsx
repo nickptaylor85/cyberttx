@@ -52,6 +52,25 @@ export default function Home() {
       </section>
 
       {/* Features grid */}
+
+      <section className="max-w-4xl mx-auto px-6 pb-12">
+        <p className="text-gray-600 text-xs text-center mb-4 uppercase tracking-wider">Integrates with your security stack</p>
+        <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">{[
+          "CrowdStrike", "Microsoft Defender", "Splunk", "Elastic", "Taegis XDR", "Tenable", "Cortex XDR"
+        ].map(name => (
+          <span key={name} className="text-gray-500 text-sm font-medium hover:text-gray-300 transition-colors">{name}</span>
+        ))}</div>
+      </section>
+
+      <section className="max-w-4xl mx-auto px-6 pb-12">
+        <p className="text-gray-600 text-xs text-center mb-4 uppercase tracking-wider">Compliance frameworks mapped</p>
+        <div className="flex flex-wrap justify-center gap-2">{[
+          "MITRE ATT&CK", "ISO 27001", "NIST CSF", "SOC 2", "NIS2", "DORA", "PCI DSS 4.0"
+        ].map(f => (
+          <span key={f} className="px-3 py-1.5 rounded-lg bg-surface-2 border border-surface-3 text-gray-400 text-xs font-medium">{f}</span>
+        ))}</div>
+      </section>
+
       <section className="max-w-5xl mx-auto px-6 pb-20">
         <h2 className="font-display text-2xl font-bold text-white text-center mb-2">Everything You Need</h2>
         <p className="text-gray-500 text-center text-sm mb-8">From 2-minute drills to board-level crisis simulations</p>
@@ -99,6 +118,18 @@ export default function Home() {
       </section>
 
       {/* Pricing */}
+      <section className="max-w-4xl mx-auto px-6 pb-16">
+        <div className="cyber-card border-surface-3 bg-gradient-to-br from-surface-2 to-transparent text-center">
+          <p className="text-gray-500 text-xs uppercase tracking-wider mb-4">Built for Security Teams</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            <div><p className="font-display text-xl font-bold text-white">SOC Analysts</p><p className="text-gray-500 text-xs mt-1">Sharpen triage skills daily</p></div>
+            <div><p className="font-display text-xl font-bold text-white">IR Teams</p><p className="text-gray-500 text-xs mt-1">Practice real incident playbooks</p></div>
+            <div><p className="font-display text-xl font-bold text-white">CISOs</p><p className="text-gray-500 text-xs mt-1">Compliance evidence on demand</p></div>
+            <div><p className="font-display text-xl font-bold text-white">MSSPs</p><p className="text-gray-500 text-xs mt-1">White-label for your clients</p></div>
+          </div>
+        </div>
+      </section>
+
       <section className="max-w-5xl mx-auto px-6 pb-20" id="pricing">
         <h2 className="font-display text-2xl font-bold text-white text-center mb-2">Pricing</h2>
         <p className="text-gray-500 text-center text-sm mb-8">Start free. Scale as your team grows.</p>
