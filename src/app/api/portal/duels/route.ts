@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
     const userName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Challenger";
     
     await db.$executeRawUnsafe(
-      `INSERT INTO duels (challenger_id, challenger_name, org_id, theme, questions, status) VALUES ($1, $2, $3, $4, $5, 'OPEN')`,
+      `INSERT INTO duels (challenger_id, challenger_name, org_id, theme, questions, status) VALUES ($1, $2, $3, $4, $5::jsonb, 'OPEN')`,
       user.id, userName, user.orgId, theme || "ransomware", JSON.stringify(questions)
     );
 
@@ -155,9 +155,9 @@ export async function POST(req: NextRequest) {
     const isChallenger = duel.challenger_id === user.id;
 
     if (isChallenger) {
-      await db.$executeRawUnsafe(`UPDATE duels SET challenger_answers = $1, challenger_score = $2 WHERE id = $3`, JSON.stringify(answers), score, duelId);
+      await db.$executeRawUnsafe(`UPDATE duels SET challenger_answers = $1::jsonb, challenger_score = $2 WHERE id = $3`, JSON.stringify(answers), score, duelId);
     } else if (duel.opponent_id === user.id) {
-      await db.$executeRawUnsafe(`UPDATE duels SET opponent_answers = $1, opponent_score = $2 WHERE id = $3`, JSON.stringify(answers), score, duelId);
+      await db.$executeRawUnsafe(`UPDATE duels SET opponent_answers = $1::jsonb, opponent_score = $2 WHERE id = $3`, JSON.stringify(answers), score, duelId);
     } else {
       return NextResponse.json({ error: "You're not in this duel" }, { status: 403 });
     }
