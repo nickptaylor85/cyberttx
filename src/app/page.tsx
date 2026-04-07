@@ -36,17 +36,17 @@ export default function Home() {
           <div className="cyber-card text-center border-cyber-600/20 bg-gradient-to-b from-cyber-600/5 to-transparent">
             <p className="text-3xl mb-2">⚡</p>
             <h3 className="text-white text-sm font-semibold">Daily Drill</h3>
-            <p className="text-gray-500 text-xs mt-1">3 questions, 2 minutes. New every morning.</p>
+            <p className="text-gray-500 text-xs mt-1">3 questions, 2 minutes. Targets your weak spots.</p>
           </div>
           <div className="cyber-card text-center border-purple-600/20 bg-gradient-to-b from-purple-600/5 to-transparent">
-            <p className="text-3xl mb-2">🏅</p>
-            <h3 className="text-white text-sm font-semibold">Weekly Challenge</h3>
-            <p className="text-gray-500 text-xs mt-1">Compete across the platform. New every Monday.</p>
+            <p className="text-3xl mb-2">⚔️</p>
+            <h3 className="text-white text-sm font-semibold">Head-to-Head Duels</h3>
+            <p className="text-gray-500 text-xs mt-1">Challenge a teammate. 5 questions. Winner takes the glory.</p>
           </div>
           <div className="cyber-card text-center border-orange-600/20 bg-gradient-to-b from-orange-600/5 to-transparent">
-            <p className="text-3xl mb-2">🔥</p>
-            <h3 className="text-white text-sm font-semibold">Streaks + XP</h3>
-            <p className="text-gray-500 text-xs mt-1">Level up from Recruit to Elite Defender.</p>
+            <p className="text-3xl mb-2">🏅</p>
+            <h3 className="text-white text-sm font-semibold">Weekly Challenge + XP</h3>
+            <p className="text-gray-500 text-xs mt-1">Compete platform-wide. Level up from Recruit to Elite Defender.</p>
           </div>
         </div>
       </section>
@@ -60,11 +60,11 @@ export default function Home() {
             { icon: "🎯", title: "AI-Generated Scenarios", desc: "Claude generates unique, realistic incidents tailored to your industry and tools. No two exercises are ever the same." },
             { icon: "🚨", title: "Live SIEM Integration", desc: "Connect CrowdStrike, Taegis, Defender, Splunk, Elastic, Tenable, Cortex XDR. Build exercises from real alerts." },
             { icon: "👥", title: "Real-Time Multiplayer", desc: "Run team exercises with live scoring, lobby system, and post-exercise leaderboard. See who answered in real time." },
-            { icon: "🎭", title: "Custom Characters", desc: "Create recurring named characters with personalities. The AI weaves them into scenarios with realistic dialogue." },
+            { icon: "⚔️", title: "Head-to-Head Duels", desc: "Challenge a teammate to a 5-question rapid-fire battle. Same questions, 75-second timer. Winner gets bonus XP." },
             { icon: "📊", title: "MITRE ATT&CK Heatmap", desc: "Track technique coverage visually. Hover for details. Identify gaps. Close them with targeted exercises." },
             { icon: "📋", title: "Playbook Generation", desc: "Every exercise generates an IR playbook. Export as PDF or Word. Auto-saved to your playbook library." },
             { icon: "🏆", title: "Certificates + Compliance", desc: "PDF certificates with 1-year expiry. Map to ISO 27001, NIST CSF, SOC 2, NIS2, DORA, PCI DSS 4.0." },
-            { icon: "📈", title: "Performance Analytics", desc: "Monthly trends, team leaderboards, benchmarks against industry peers, improvement suggestions." },
+            { icon: "🧠", title: "Adaptive Difficulty", desc: "AI tracks your weak spots and targets daily drills to your gaps. Every question explanation links to the real-world incident it happened in." },
             { icon: "📆", title: "Training Campaigns", desc: "12-month calendar: Ransomware Month, Phishing Season, Cyber Awareness Month. One-click launch." },
             { icon: "✅", title: "Team Compliance", desc: "Traffic-light dashboard: who trained, who's at risk, who's overdue. Manager accountability built in." },
             { icon: "🔔", title: "Smart Notifications", desc: "Streak expiry alerts, daily question digests, teammate activity updates. Keeps teams engaged automatically." },
@@ -126,7 +126,7 @@ export default function Home() {
         <div className="grid grid-cols-3 gap-6">
           <div><p className="font-display text-2xl font-bold text-cyber-400">90%</p><p className="text-gray-500 text-xs">cheaper than consultancy</p></div>
           <div><p className="font-display text-2xl font-bold text-cyber-400">2 min</p><p className="text-gray-500 text-xs">daily drill commitment</p></div>
-          <div><p className="font-display text-2xl font-bold text-cyber-400">8</p><p className="text-gray-500 text-xs">SIEM connectors</p></div>
+          <div><p className="font-display text-2xl font-bold text-cyber-400">22</p><p className="text-gray-500 text-xs">real-world incidents</p></div>
         </div>
       </section>
 

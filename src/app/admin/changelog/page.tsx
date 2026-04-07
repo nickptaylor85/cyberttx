@@ -1,6 +1,22 @@
 export const dynamic = "force-dynamic";
 
 const CHANGELOG = [
+  { version: "1.0.0", date: "7 Apr 2026", title: "Launch Ready — Duels, Adaptive AI, Real Incidents", type: "feature", items: [
+    "⚔️ Head-to-Head Duels — challenge a teammate, 5 questions, 75-second timer, email notifications to all portal members",
+    "🧠 Adaptive Difficulty — daily drills now target your weakest themes based on past performance analysis",
+    "📰 'This Really Happened' cards — 22 real-world incidents (MGM, Colonial Pipeline, SolarWinds, MOVEit, etc.) referenced in question explanations",
+    "📧 Duel email notifications — all teammates notified when someone throws down the gauntlet",
+    "📧 Weekly challenge email — Monday 8am notification to all users with challenge theme and CTA",
+    "🔒 Sign-up page now blocks when admin disables sign-ups (was only blocking at API level)",
+    "📱 Portal nav reorganised — individual vs admin sections, best features at top",
+    "🤖 robots.txt + sitemap.xml for SEO",
+    "⚠️ Global error boundary for root layout crashes",
+    "⏳ Loading spinners during page transitions",
+    "🛡️ Auth secret fallback removed — requires AUTH_SECRET env var",
+    "📖 User guide updated to 11 sections, 50+ Q&As",
+    "📝 Admin changelog added (you're reading it!)",
+    "🎯 Landing page rewritten with duels, adaptive AI, pricing, full feature showcase",
+  ]},
   { version: "0.9.0", date: "6 Apr 2026", title: "Engagement Engine", type: "feature", items: [
     "⚡ Daily Quick-Fire Drills — 3 questions, 2-minute timer, AI-generated from 15 topics",
     "🏅 Weekly Challenge — rotating themes, platform-wide leaderboard, medal icons",

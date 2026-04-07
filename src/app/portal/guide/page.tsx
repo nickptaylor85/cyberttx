@@ -7,9 +7,16 @@ export default function GuidePage() {
       { q: "What are streaks?", a: "Complete at least one exercise per day to build a streak. The 🔥 indicator shows consecutive days. Miss a day and it resets. You'll get an email warning before your streak expires." },
     ]},
     { title: "Daily Drill & Weekly Challenge", icon: "⚡", items: [
-      { q: "What is the Daily Drill?", a: "3 rapid-fire cybersecurity questions with a 2-minute timer. New topic every day (rotating through 15 themes like phishing ID, ransomware response, credential compromise). Takes less time than checking email." },
+      { q: "What is the Daily Drill?", a: "3 rapid-fire cybersecurity questions with a 2-minute timer. The AI analyses your past performance and targets your weakest areas. If you're struggling with insider threats, tomorrow's drill focuses on that. Shows a 'Targeting your weak spot' badge when adaptive." },
       { q: "What is the Weekly Challenge?", a: "A themed exercise that changes every Monday. Everyone across the platform competes on the same challenge. Top 3 get medals (🥇🥈🥉). Your best score is saved — you can retry to improve." },
       { q: "How is the weekly challenge chosen?", a: "Themes rotate: ransomware → phishing → APT → insider threat → supply chain → cloud breach → data exfil → DDoS. New challenge every Monday." },
+    ]},
+    { title: "Duels", icon: "⚔️", items: [
+      { q: "What are duels?", a: "Head-to-head battles against a teammate. 5 rapid-fire questions, 75-second timer, same questions for both players. Winner gets bragging rights and bonus XP." },
+      { q: "How do I create a duel?", a: "Go to Train → Duels → pick a theme → Create Duel. An email is sent to every teammate in your portal. The first person to accept is your opponent." },
+      { q: "What happens when I accept a duel?", a: "You become the opponent and the duel goes ACTIVE. Both players answer the same 5 questions independently. When both finish, scores are compared and a winner is declared." },
+      { q: "Can I duel someone specific?", a: "Currently duels are open — anyone on your team can accept. The email notification creates urgency so the fastest teammate gets the match." },
+      { q: "What do I win?", a: "Victory shows 🏆 on the results page. You also earn XP from the questions you answer correctly, with a difficulty multiplier." },
     ]},
     { title: "Live Alert Feed & SIEM Integration", icon: "🚨", items: [
       { q: "Which tools are supported?", a: "CrowdStrike Falcon, Secureworks Taegis XDR, Microsoft Defender XDR, Microsoft Sentinel, Splunk, Elastic Security, Tenable.io, and Palo Alto Cortex XDR." },
@@ -22,6 +29,7 @@ export default function GuidePage() {
       { q: "How many questions per exercise?", a: "Default is 10. Each question has 3 options with one correct answer. After answering, you get a detailed explanation and must wait 3 seconds before continuing." },
       { q: "Can I retry exercises?", a: "Yes. Click 'Attempt →' on any completed exercise to clone it and try again. Your new results are tracked separately." },
       { q: "What themes are available?", a: "Ransomware, phishing, insider threat, supply chain, cloud breach, APT, DDoS, data exfiltration — plus custom incidents you describe." },
+      { q: "What are 'This Really Happened' cards?", a: "After every question explanation, the AI includes a real-world incident reference — like 'This technique was used in the MGM Resorts breach (2023) when Scattered Spider called the helpdesk.' This anchors abstract concepts to memorable real stories. The platform has 22 real incidents in its database covering Colonial Pipeline, SolarWinds, MOVEit, Okta, and more." },
       { q: "How does multiplayer work?", a: "Choose 'Group (Real-time)' when creating. A lobby is created with a shareable link. Team members join → host clicks Start → everyone answers simultaneously. Live indicators show who's answered. Scoreboard at the end." },
     ]},
     { title: "Characters", icon: "🎭", items: [

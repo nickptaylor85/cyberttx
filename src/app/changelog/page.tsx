@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 const highlights = [
-  { ver: "0.9", title: "Engagement Engine", desc: "Daily drills, weekly challenges, XP/streaks, campaigns, team compliance, Teams bot, email notifications" },
+  { ver: "1.0", title: "Launch Ready", desc: "Head-to-head duels with email notifications, adaptive difficulty targeting weak spots, 22 real-world incident references, weekly challenge emails, nav reorganisation, SEO, error boundaries" },
+    { ver: "0.9", title: "Engagement Engine", desc: "Daily drills, weekly challenges, XP/streaks, campaigns, team compliance, Teams bot, email notifications" },
   { ver: "0.8", title: "Pre-Launch", desc: "Password reset, plan enforcement, terms, privacy, onboarding, feature flags, scheduled reports" },
   { ver: "0.7", title: "Security Audit", desc: "7 findings fixed: rate limiting, auth hardening, info leak prevention, tenant isolation" },
   { ver: "0.6", title: "Admin Expansion", desc: "Broadcasts, threat intel, review queue, activity feed, audit log, feature flags" },
