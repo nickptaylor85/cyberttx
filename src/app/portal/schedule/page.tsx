@@ -1,27 +1,34 @@
 "use client";
 import { useState, useEffect } from "react";
 
-interface ScheduledExercise { id: string; title: string; theme: string; difficulty: string; scheduledFor: string; recurring: string; }
+interface ScheduledExercise { id: string; title: string; theme: string; difficulty: string; scheduled_for: string; recurring: string; }
 
 export default function SchedulePage() {
   const [items, setItems] = useState<ScheduledExercise[]>([]);
   const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ title: "", theme: "ransomware", difficulty: "INTERMEDIATE", scheduledFor: "", recurring: "none" });
 
-  useEffect(() => {
-    const stored = localStorage.getItem("tc_scheduled");
-    if (stored) setItems(JSON.parse(stored));
-  }, []);
+  function load() {
+    fetch("/api/portal/schedule").then(r => r.ok ? r.json() : []).then(d => { setItems(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false));
+  }
+  useEffect(() => { load(); }, []);
 
-  function save(newItems: ScheduledExercise[]) { setItems(newItems); localStorage.setItem("tc_scheduled", JSON.stringify(newItems)); }
-
-  function create() {
+  async function create() {
     if (!form.title || !form.scheduledFor) return;
-    const item: ScheduledExercise = { id: Date.now().toString(), ...form };
-    save([item, ...items]); setForm({ title: "", theme: "ransomware", difficulty: "INTERMEDIATE", scheduledFor: "", recurring: "none" }); setShow(false);
+    await fetch("/api/portal/schedule", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    setForm({ title: "", theme: "ransomware", difficulty: "INTERMEDIATE", scheduledFor: "", recurring: "none" }); setShow(false); load();
   }
 
-  function remove(id: string) { save(items.filter(i => i.id !== id)); }
+  async function remove(id: string) {
+    await fetch("/api/portal/schedule", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+    load();
+  }
+
+  if (loading) return <p className="text-gray-500 text-center py-12">Loading...</p>;
 
   return (
     <div>
@@ -47,14 +54,16 @@ export default function SchedulePage() {
         </div>
       )}
 
-      {items.length === 0 ? <div className="cyber-card text-center py-12"><p className="text-gray-400 text-sm">No scheduled exercises</p><p className="text-gray-500 text-xs mt-1">Schedule recurring exercises for compliance evidence</p></div> :
+      {items.length === 0 ? (
+        <div className="cyber-card text-center py-12"><p className="text-gray-400 text-sm">No scheduled exercises</p><p className="text-gray-500 text-xs mt-1">Schedule recurring exercises for compliance evidence</p></div>
+      ) : (
         <div className="space-y-2">{items.map(item => (
           <div key={item.id} className="cyber-card flex items-center justify-between">
-            <div><p className="text-white text-sm">{item.title}</p><p className="text-gray-500 text-xs">{item.theme} · {item.difficulty} · {new Date(item.scheduledFor).toLocaleString("en-GB")} · {item.recurring === "none" ? "One-time" : item.recurring}</p></div>
-            <button onClick={() => remove(item.id)} className="cyber-btn-danger text-xs">Remove</button>
+            <div><p className="text-white text-sm">{item.title}</p><p className="text-gray-500 text-xs">{item.theme} · {item.difficulty} · {new Date(item.scheduled_for).toLocaleString("en-GB")} · {item.recurring === "none" ? "One-time" : item.recurring}</p></div>
+            <button onClick={() => remove(item.id)} className="text-red-400/60 hover:text-red-400 text-xs">Remove</button>
           </div>
         ))}</div>
-      }
+      )}
     </div>
   );
 }

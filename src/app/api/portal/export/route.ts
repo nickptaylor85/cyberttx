@@ -24,5 +24,29 @@ export async function GET(req: NextRequest) {
     return new NextResponse(csv, { headers: { "Content-Type": "text/csv", "Content-Disposition": "attachment; filename=users.csv" } });
   }
 
+  if (type === "playbooks") {
+    try {
+      const playbooks = await db.$queryRawUnsafe(
+        `SELECT id, title, theme, created_at FROM saved_playbooks WHERE org_id = $1 ORDER BY created_at DESC`, user.orgId
+      ) as any[];
+      const csv = "ID,Title,Theme,Saved\n" + playbooks.map((p: any) => `"${p.id}","${(p.title || "").replace(/"/g, '""')}","${p.theme || ""}","${p.created_at}"`).join("\n");
+      return new NextResponse(csv, { headers: { "Content-Type": "text/csv", "Content-Disposition": "attachment; filename=playbooks.csv" } });
+    } catch {
+      return new NextResponse("ID,Title,Theme,Saved\n", { headers: { "Content-Type": "text/csv", "Content-Disposition": "attachment; filename=playbooks.csv" } });
+    }
+  }
+
+  if (type === "certificates") {
+    try {
+      const certs = await db.$queryRawUnsafe(
+        `SELECT id, title, grade, accuracy, created_at, expires_at FROM user_certificates WHERE org_id = $1 ORDER BY created_at DESC`, user.orgId
+      ) as any[];
+      const csv = "ID,Title,Grade,Accuracy,Issued,Expires\n" + certs.map((c: any) => `"${c.id}","${(c.title || "").replace(/"/g, '""')}","${c.grade || ""}",${c.accuracy || 0},"${c.created_at}","${c.expires_at || ""}"`).join("\n");
+      return new NextResponse(csv, { headers: { "Content-Type": "text/csv", "Content-Disposition": "attachment; filename=certificates.csv" } });
+    } catch {
+      return new NextResponse("ID,Title,Grade,Accuracy,Issued,Expires\n", { headers: { "Content-Type": "text/csv", "Content-Disposition": "attachment; filename=certificates.csv" } });
+    }
+  }
+
   return NextResponse.json({ error: "Unknown export type" }, { status: 400 });
 }
