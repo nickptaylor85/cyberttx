@@ -36,7 +36,8 @@ export default function DuelsPage() {
     });
     const data = await res.json();
     setCreating(false);
-    if (data.duelId) loadDuels();
+    if (data.duelId) { loadDuels(); }
+    else { alert(data.error || "Failed to create duel"); }
   }
 
   async function joinDuel(duelId: string) {

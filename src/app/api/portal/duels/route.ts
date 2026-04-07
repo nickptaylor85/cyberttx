@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
@@ -100,6 +101,7 @@ export async function GET() {
 
 // POST — create, join, or answer a duel
 export async function POST(req: NextRequest) {
+  try {
   const user = await getAuthUser();
   if (!user?.orgId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   await ensureTable();
@@ -175,4 +177,8 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+} catch (e: any) {
+  console.error("[duels] Error:", e?.message || e);
+  return NextResponse.json({ error: "Failed to process duel: " + (e?.message || "unknown error") }, { status: 500 });
+}
 }
