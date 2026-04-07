@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { sendEmail } from "@/lib/email";
 
 const QUICK_QUESTIONS = [
   { q: "A user reports their screen is locked with a ransom demand. What do you do first?", a: "Isolate the machine from the network", wrong: ["Pay the ransom", "Restart the computer"] },

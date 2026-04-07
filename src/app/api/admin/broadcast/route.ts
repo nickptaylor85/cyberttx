@@ -3,13 +3,12 @@ export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { sendEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const user = await getAuthUser();
   if (!user || user.role !== "SUPER_ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (!process.env.RESEND_API_KEY) return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 });
-
-  const { subject, body, audience, orgId } = await req.json();
+    const { subject, body, audience, orgId } = await req.json();
   if (!subject || !body) return NextResponse.json({ error: "Subject and body required" }, { status: 400 });
 
   // Get recipients based on audience filter

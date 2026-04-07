@@ -2,134 +2,91 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function EmailsPage() {
-  // All users — both active and pending
-  const allUsers = await db.user.findMany({
-    orderBy: { createdAt: "desc" },
-    select: { id: true, firstName: true, lastName: true, email: true, createdAt: true, updatedAt: true, role: true, isActive: true, clerkId: true, organization: { select: { name: true } } },
-  });
+  // Ensure table exists
+  try {
+    await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS email_log (id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text, to_email TEXT NOT NULL, subject TEXT NOT NULL, type TEXT DEFAULT 'transactional', status TEXT DEFAULT 'sent', message_id TEXT, error TEXT, from_address TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  } catch {}
 
-  const pendingInvites = allUsers.filter(u => u.clerkId.startsWith("pending_"));
-  const registeredUsers = allUsers.filter(u => u.clerkId.startsWith("hash:"));
-  const clerkMigrated = allUsers.filter(u => !u.clerkId.startsWith("hash:") && !u.clerkId.startsWith("pending_"));
+  const emails = await db.$queryRawUnsafe(`SELECT * FROM email_log ORDER BY created_at DESC LIMIT 100`) as any[];
 
-  // Group by date
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const week = new Date(today.getTime() - 7 * 86400000);
-  const month = new Date(today.getTime() - 30 * 86400000);
+  const total = emails.length;
+  const sent = emails.filter((e: any) => e.status === "sent").length;
+  const failed = emails.filter((e: any) => e.status === "failed").length;
 
-  const signupsToday = registeredUsers.filter(u => new Date(u.createdAt) >= today).length;
-  const signupsWeek = registeredUsers.filter(u => new Date(u.createdAt) >= week).length;
-  const signupsMonth = registeredUsers.filter(u => new Date(u.createdAt) >= month).length;
+  // Group by type
+  const byType: Record<string, number> = {};
+  emails.forEach((e: any) => { byType[e.type || "other"] = (byType[e.type || "other"] || 0) + 1; });
 
-  // Build event log
-  const events: { type: string; email: string; name: string; org: string; date: Date; icon: string; color: string }[] = [];
+  // Recent failures
+  const failures = emails.filter((e: any) => e.status === "failed");
 
-  registeredUsers.forEach(u => {
-    events.push({
-      type: "Signup", email: u.email,
-      name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
-      org: u.organization?.name || "Unlinked",
-      date: new Date(u.createdAt), icon: "✅", color: "border-l-green-500",
-    });
-  });
-
-  pendingInvites.forEach(u => {
-    events.push({
-      type: "Invitation Sent", email: u.email, name: "Pending",
-      org: u.organization?.name || "Unknown",
-      date: new Date(u.createdAt), icon: "📧", color: "border-l-yellow-500",
-    });
-  });
-
-  clerkMigrated.forEach(u => {
-    events.push({
-      type: "Legacy (Clerk)", email: u.email,
-      name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
-      org: u.organization?.name || "Unlinked",
-      date: new Date(u.createdAt), icon: "🔄", color: "border-l-blue-500",
-    });
-  });
-
-  events.sort((a, b) => b.date.getTime() - a.date.getTime());
-
-  // Invitation conversion rate
-  const totalInvited = pendingInvites.length + registeredUsers.length;
-  const conversionRate = totalInvited > 0 ? Math.round((registeredUsers.length / totalInvited) * 100) : 0;
-
-  // Org distribution
-  const orgCounts: Record<string, { invites: number; signups: number }> = {};
-  pendingInvites.forEach(u => {
-    const org = u.organization?.name || "Unlinked";
-    if (!orgCounts[org]) orgCounts[org] = { invites: 0, signups: 0 };
-    orgCounts[org].invites++;
-  });
-  registeredUsers.forEach(u => {
-    const org = u.organization?.name || "Unlinked";
-    if (!orgCounts[org]) orgCounts[org] = { invites: 0, signups: 0 };
-    orgCounts[org].signups++;
-  });
+  const tc: Record<string, string> = {
+    broadcast: "bg-purple-500/20 text-purple-400",
+    invite: "bg-blue-500/20 text-blue-400",
+    reset: "bg-yellow-500/20 text-yellow-400",
+    duel: "bg-orange-500/20 text-orange-400",
+    streak: "bg-red-500/20 text-red-400",
+    digest: "bg-cyan-500/20 text-cyan-400",
+    challenge: "bg-green-500/20 text-green-400",
+    report: "bg-emerald-500/20 text-emerald-400",
+    verification: "bg-indigo-500/20 text-indigo-400",
+    transactional: "bg-gray-500/20 text-gray-400",
+  };
 
   return (
     <div>
-      <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">Email & Invitation Log</h1><p className="text-gray-500 text-xs mt-1">Track invitations, signups, and conversions</p></div>
+      <div className="mb-6"><h1 className="font-display text-xl font-bold text-white">Email Log</h1><p className="text-gray-500 text-xs mt-1">All emails sent from the platform</p></div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
-        <div className="cyber-card text-center"><p className="font-display text-2xl font-bold text-green-400">{registeredUsers.length}</p><p className="text-gray-500 text-xs">Registered</p></div>
-        <div className="cyber-card text-center"><p className="font-display text-2xl font-bold text-yellow-400">{pendingInvites.length}</p><p className="text-gray-500 text-xs">Pending</p></div>
-        <div className="cyber-card text-center"><p className="font-display text-2xl font-bold text-cyan-400">{conversionRate}%</p><p className="text-gray-500 text-xs">Conversion</p></div>
-        <div className="cyber-card text-center"><p className="font-display text-2xl font-bold text-white">{signupsToday}</p><p className="text-gray-500 text-xs">Today</p></div>
-        <div className="cyber-card text-center"><p className="font-display text-2xl font-bold text-blue-400">{signupsWeek}</p><p className="text-gray-500 text-xs">This Week</p></div>
-        <div className="cyber-card text-center"><p className="font-display text-2xl font-bold text-purple-400">{signupsMonth}</p><p className="text-gray-500 text-xs">This Month</p></div>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="cyber-card text-center"><p className="font-display text-2xl font-bold text-cyber-400">{sent}</p><p className="text-gray-500 text-xs">Delivered</p></div>
+        <div className="cyber-card text-center"><p className="font-display text-2xl font-bold text-red-400">{failed}</p><p className="text-gray-500 text-xs">Failed</p></div>
+        <div className="cyber-card text-center"><p className="font-display text-2xl font-bold text-white">{total}</p><p className="text-gray-500 text-xs">Total</p></div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4 mb-6">
-        {/* Per-portal breakdown */}
-        <div className="cyber-card">
-          <h2 className="text-white text-sm font-semibold mb-3">Invitations by Portal</h2>
-          {Object.keys(orgCounts).length === 0 ? <p className="text-gray-500 text-xs">No data</p> :
-            <div className="space-y-2">{Object.entries(orgCounts).sort((a, b) => (b[1].invites + b[1].signups) - (a[1].invites + a[1].signups)).map(([org, counts]) => (
-              <div key={org} className="flex items-center justify-between py-1.5 border-b border-surface-3/50 last:border-0">
-                <span className="text-white text-sm">{org}</span>
-                <div className="flex gap-3 text-xs">
-                  <span className="text-yellow-400">{counts.invites} pending</span>
-                  <span className="text-green-400">{counts.signups} joined</span>
-                  <span className="text-gray-500">{counts.invites + counts.signups > 0 ? Math.round((counts.signups / (counts.invites + counts.signups)) * 100) : 0}%</span>
-                </div>
-              </div>
-            ))}</div>
-          }
-        </div>
-
-        {/* Email types legend */}
-        <div className="cyber-card">
-          <h2 className="text-white text-sm font-semibold mb-3">Email Types Sent</h2>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 py-2 border-b border-surface-3/50"><span className="text-lg">📧</span><div><p className="text-white text-sm">Invitation Email</p><p className="text-gray-500 text-xs">Sent when admin invites a user to a portal</p></div></div>
-            <div className="flex items-center gap-3 py-2 border-b border-surface-3/50"><span className="text-lg">👋</span><div><p className="text-white text-sm">Welcome Email</p><p className="text-gray-500 text-xs">Sent on signup with onboarding steps</p></div></div>
-            <div className="flex items-center gap-3 py-2 border-b border-surface-3/50"><span className="text-lg">🔑</span><div><p className="text-white text-sm">Password Reset</p><p className="text-gray-500 text-xs">Sent when user requests password reset</p></div></div>
-            <div className="flex items-center gap-3 py-2 border-b border-surface-3/50"><span className="text-lg">🎯</span><div><p className="text-white text-sm">Exercise Ready</p><p className="text-gray-500 text-xs">Sent when scenario generation completes</p></div></div>
-            <div className="flex items-center gap-3 py-2"><span className="text-lg">📊</span><div><p className="text-white text-sm">Exercise Completed</p><p className="text-gray-500 text-xs">Sent to portal admins with results</p></div></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Full event log */}
-      <div className="cyber-card">
-        <h2 className="text-white text-sm font-semibold mb-3">Activity Log ({events.length} events)</h2>
-        <div className="space-y-1">{events.slice(0, 50).map((e, i) => (
-          <div key={i} className={`flex items-center justify-between py-1.5 border-b border-surface-3/30 last:border-0 border-l-2 pl-3 ${e.color}`}>
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-sm flex-shrink-0">{e.icon}</span>
-              <span className="text-gray-400 text-xs font-semibold flex-shrink-0 w-28">{e.type}</span>
-              <span className="text-white text-xs truncate">{e.email}</span>
+      {/* Failures alert */}
+      {failures.length > 0 && (
+        <div className="cyber-card border-red-500/30 bg-red-500/5 mb-4">
+          <h2 className="text-red-400 text-sm font-semibold mb-2">⚠️ Failed Deliveries ({failures.length})</h2>
+          <div className="space-y-1">{failures.slice(0, 10).map((f: any) => (
+            <div key={f.id} className="flex items-center justify-between py-1.5 border-b border-red-500/10 last:border-0">
+              <div><p className="text-white text-xs">{f.to_email}</p><p className="text-gray-500 text-xs truncate max-w-xs">{f.subject}</p></div>
+              <div className="text-right"><p className="text-red-400 text-xs">{f.error?.slice(0, 50)}</p><p className="text-gray-600 text-xs">{new Date(f.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p></div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-purple-400 text-xs">{e.org}</span>
-              <span className="text-gray-600 text-xs">{e.date.toLocaleDateString("en-GB")} {e.date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
-            </div>
-          </div>
+          ))}</div>
+        </div>
+      )}
+
+      {/* By type */}
+      <div className="cyber-card mb-4">
+        <h2 className="text-white text-sm font-semibold mb-3">By Type</h2>
+        <div className="flex flex-wrap gap-2">{Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([type, count]) => (
+          <span key={type} className={`cyber-badge text-xs ${tc[type] || tc.transactional}`}>{type} <span className="opacity-60 ml-1">×{count}</span></span>
         ))}</div>
+      </div>
+
+      {/* Full log */}
+      <div className="cyber-card overflow-x-auto">
+        <h2 className="text-white text-sm font-semibold mb-3">Recent Emails ({total})</h2>
+        <table className="w-full text-xs">
+          <thead><tr className="border-b border-surface-3">
+            <th className="text-left py-2 text-gray-500 font-normal">Time</th>
+            <th className="text-left py-2 text-gray-500 font-normal">To</th>
+            <th className="text-left py-2 text-gray-500 font-normal">Subject</th>
+            <th className="text-left py-2 text-gray-500 font-normal">Type</th>
+            <th className="text-left py-2 text-gray-500 font-normal">Status</th>
+          </tr></thead>
+          <tbody>{emails.map((e: any) => (
+            <tr key={e.id} className={`border-b border-surface-3/30 last:border-0 ${e.status === "failed" ? "bg-red-500/5" : ""}`}>
+              <td className="py-2 text-gray-500 whitespace-nowrap">{new Date(e.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+              <td className="py-2 text-white">{e.to_email}</td>
+              <td className="py-2 text-gray-400 max-w-48 truncate">{e.subject}</td>
+              <td className="py-2"><span className={`cyber-badge text-xs ${tc[e.type] || tc.transactional}`}>{e.type}</span></td>
+              <td className="py-2">{e.status === "sent" ? <span className="text-green-400">✓</span> : <span className="text-red-400" title={e.error}>✕</span>}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+        {total === 0 && <p className="text-gray-500 text-xs text-center py-8">No emails sent yet</p>}
       </div>
     </div>
   );

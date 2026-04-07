@@ -55,8 +55,22 @@ export default async function AdminDashboard() {
   const sc: Record<string, string> = { COMPLETED: "bg-green-500/20 text-green-400", IN_PROGRESS: "bg-blue-500/20 text-blue-400", CANCELLED: "bg-red-500/20 text-red-400", GENERATING: "bg-yellow-500/20 text-yellow-400", LOBBY: "bg-purple-500/20 text-purple-400" };
   const ac: Record<string, string> = { critical: "border-l-red-500 bg-red-500/5", warning: "border-l-yellow-500 bg-yellow-500/5" };
 
+  // Email failures
+  let emailFailures = 0;
+  try {
+    await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS email_log (id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text, to_email TEXT, subject TEXT, type TEXT, status TEXT, message_id TEXT, error TEXT, from_address TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+    const failures = await db.$queryRawUnsafe(`SELECT COUNT(*) as count FROM email_log WHERE status = 'failed' AND created_at > NOW() - INTERVAL '24 hours'`) as any[];
+    emailFailures = parseInt(failures[0]?.count || "0");
+  } catch {}
+
   return (
     <div>
+      {emailFailures > 0 && (
+        <div className="cyber-card border-red-500/30 bg-red-500/5 mb-4">
+          <p className="text-red-400 text-sm font-semibold">⚠️ {emailFailures} email{emailFailures !== 1 ? "s" : ""} failed to deliver in the last 24 hours</p>
+          <a href="/admin/emails" className="text-red-400/70 text-xs hover:text-red-400">View Email Log →</a>
+        </div>
+      )}
       <div className="mb-6"><h1 className="font-display text-xl sm:text-2xl font-bold text-white">Admin Dashboard</h1><p className="text-gray-500 text-xs mt-1">ThreatCast Platform Overview</p></div>
 
       {/* KPIs */}

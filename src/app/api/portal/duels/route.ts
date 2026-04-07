@@ -3,6 +3,7 @@ export const maxDuration = 30;
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { sendEmail } from "@/lib/email";
 import Anthropic from "@anthropic-ai/sdk";
 
 async function ensureTable() {
@@ -28,38 +29,17 @@ async function ensureTable() {
 }
 
 async function sendDuelEmails(challengerName: string, theme: string, duelId: string, orgId: string, challengerId: string) {
-  if (!process.env.RESEND_API_KEY) return;
-  
-  // Get all active users in the same org EXCEPT the challenger
   const teammates = await db.user.findMany({
     where: { orgId, clerkId: { startsWith: "hash:" }, isActive: true, id: { not: challengerId } },
     select: { email: true, firstName: true },
   });
 
   for (const teammate of teammates) {
-    try {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: "ThreatCast <noreply@threatcast.io>",
-          to: [teammate.email],
-          subject: `⚔️ ${challengerName} challenged your team to a duel!`,
-          html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;">
-            <div style="font-size:20px;font-weight:700;margin-bottom:16px;">Threat<span style="color:#14b89a;">Cast</span></div>
-            <h2 style="color:#a855f7;">⚔️ Duel Challenge!</h2>
-            <p>Hey ${teammate.firstName || "there"}, <strong>${challengerName}</strong> has thrown down the gauntlet!</p>
-            <div style="background:#1a1a2e;padding:16px;border-radius:8px;border-left:3px solid #a855f7;margin:16px 0;">
-              <p style="color:#fff;font-size:14px;margin:0;"><strong>Theme:</strong> ${theme.replace(/-/g, " ")}</p>
-              <p style="color:#888;font-size:13px;margin:4px 0 0;">5 questions · First to join duels · 75-second timer</p>
-            </div>
-            <p style="color:#888;font-size:13px;">Be the first to accept and prove you're the better defender.</p>
-            <a href="https://threatcast.io/portal/duels" style="display:inline-block;background:#a855f7;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Accept the Duel →</a>
-            <p style="color:#555;font-size:11px;margin-top:24px;">First teammate to join gets the match. Don't wait!</p>
-          </div>`,
-        }),
-      });
-    } catch {}
+    await sendEmail({
+      to: teammate.email, type: "duel",
+      subject: `⚔️ ${challengerName} challenged your team to a duel!`,
+      html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="font-size:20px;font-weight:700;margin-bottom:16px;">Threat<span style="color:#14b89a;">Cast</span></div><h2 style="color:#a855f7;">⚔️ Duel Challenge!</h2><p>Hey ${teammate.firstName || "there"}, <strong>${challengerName}</strong> has thrown down the gauntlet!</p><div style="background:#1a1a2e;padding:16px;border-radius:8px;border-left:3px solid #a855f7;margin:16px 0;"><p style="color:#fff;font-size:14px;margin:0;"><strong>Theme:</strong> ${theme.replace(/-/g, " ")}</p><p style="color:#888;font-size:13px;margin:4px 0 0;">5 questions · First to join duels · 75-second timer</p></div><a href="https://threatcast.io/portal/duels" style="display:inline-block;background:#a855f7;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Accept the Duel →</a></div>`,
+    });
   }
 }
 
