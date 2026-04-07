@@ -6,7 +6,7 @@ export default async function BillingPage() {
     include: { _count: { select: { users: true, ttxSessions: true } } },
   });
 
-  const planPricing: Record<string, number> = { FREE: 0, STARTER: 149, GROWTH: 299, PROFESSIONAL: 599, ENTERPRISE: 1499 };
+  const planPricing: Record<string, number> = { FREE: 0, STARTER: 99, GROWTH: 249, PROFESSIONAL: 499, ENTERPRISE: 999 };
   // FREE is a trial, not a plan — exclude from revenue
   const totalMRR = orgs.reduce((a, o) => a + (planPricing[o.plan] || 0), 0);
   const totalARR = totalMRR * 12;
@@ -69,9 +69,9 @@ export default async function BillingPage() {
           <h2 className="text-white text-sm font-semibold mb-3">Plan Pricing</h2>
           <div className="space-y-2">
             {[
-              { plan: "Starter", price: "£149/mo", annual: "£1,490/yr", features: "25 users · 15 TTX/mo · Email support · Basic compliance" },
-              { plan: "Growth", price: "£299/mo", annual: "£2,990/yr", features: "50 users · 30 TTX/mo · Priority support · Custom branding · Webhooks" },
-              { plan: "Professional", price: "£599/mo", annual: "£5,990/yr", features: "100 users · Unlimited TTX · SSO · Dedicated CSM · API access" },
+              { plan: "Starter", price: "£99/mo", annual: "£990/yr", features: "10 users · 10 TTX/mo · Drills + duels · Email support" },
+              { plan: "Growth", price: "£249/mo", annual: "£2,490/yr", features: "25 users · 25 TTX/mo · SIEM integration · Custom branding · Priority support" },
+              { plan: "Professional", price: "£499/mo", annual: "£4,990/yr", features: "50 users · Unlimited TTX · SSO · API access · Slack + Teams" },
               { plan: "Enterprise", price: "£1,499/mo", annual: "£14,990/yr", features: "Unlimited · SAML · Custom integrations · SLA · On-prem option" },
             ].map(p => (
               <div key={p.plan} className="p-2 rounded bg-surface-0 border border-surface-3">

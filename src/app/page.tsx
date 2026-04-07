@@ -104,10 +104,10 @@ export default function Home() {
         <p className="text-gray-500 text-center text-sm mb-8">Start free. Scale as your team grows.</p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { plan: "Starter", price: "£149", features: ["25 users", "15 exercises/month", "Daily drills + challenges", "Playbooks + certificates", "Email support", "Basic compliance"], cta: "Start Free" },
-            { plan: "Growth", price: "£299", features: ["50 users", "30 exercises/month", "SIEM/XDR integration", "Custom branding", "Team compliance dashboard", "Priority support", "Monthly campaigns"], popular: true, cta: "Start Free" },
-            { plan: "Professional", price: "£599", features: ["100 users", "Unlimited exercises", "Custom characters", "API access", "SSO ready", "Benchmarking", "Slack + Teams bots"], cta: "Start Free" },
-            { plan: "Enterprise", price: "£1,499", features: ["Unlimited users", "Unlimited everything", "SAML SSO", "Feature flags", "Dedicated support", "Custom integrations", "SLA guarantee"], cta: "Contact Us" },
+            { plan: "Starter", price: "£99", features: ["10 users", "10 exercises/month", "Daily drills + challenges", "Duels + leaderboard", "Playbooks + certificates", "Email support"], cta: "Start Free" },
+            { plan: "Growth", price: "£249", features: ["25 users", "25 exercises/month", "SIEM/XDR integration", "Custom branding", "Team compliance dashboard", "Adaptive difficulty", "Priority support"], popular: true, cta: "Start Free" },
+            { plan: "Professional", price: "£499", features: ["50 users", "Unlimited exercises", "Custom characters", "API access", "SSO ready", "Benchmarking", "Slack + Teams bots"], cta: "Start Free" },
+            { plan: "Enterprise", price: "£999", features: ["Unlimited users", "Unlimited everything", "SAML SSO", "Feature flags", "Dedicated support", "Custom integrations", "SLA guarantee"], cta: "Contact Us" },
           ].map(p => (
             <div key={p.plan} className={`cyber-card ${(p as any).popular ? "border-cyber-600/30 relative" : ""}`}>
               {(p as any).popular && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 cyber-badge text-xs bg-cyber-600 text-white px-3">Most Popular</span>}
@@ -118,7 +118,7 @@ export default function Home() {
             </div>
           ))}
         </div>
-        <p className="text-gray-600 text-center text-xs mt-4">All plans include: AI scenario generation, answer explanations, MITRE mapping, PDF exports. Annual billing: 20% off.</p>
+        <p className="text-gray-600 text-center text-xs mt-4">All plans include: AI scenario generation, real-world incident references, MITRE mapping, PDF exports, XP + streaks. Annual billing: 20% off.</p>
       </section>
 
       {/* Social proof placeholder */}

@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import Link from "next/link";
 export const dynamic = "force-dynamic";
 
-const PLAN_PRICES: Record<string, number> = { FREE: 0, STARTER: 149, GROWTH: 299, PROFESSIONAL: 599, ENTERPRISE: 1499 };
+const PLAN_PRICES: Record<string, number> = { FREE: 0, STARTER: 99, GROWTH: 249, PROFESSIONAL: 499, ENTERPRISE: 999 };
 
 export default async function AdminDashboard() {
   const [orgCount, userCount, sessionCount, completedCount, liveCount, cancelledCount, generatingCount, pendingInvites] = await Promise.all([

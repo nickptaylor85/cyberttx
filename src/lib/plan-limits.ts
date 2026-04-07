@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
 
-export const PLAN_LIMITS: Record<string, { users: number; exercisesPerMonth: number }> = {
-  STARTER: { users: 25, exercisesPerMonth: 15 },
-  GROWTH: { users: 50, exercisesPerMonth: 30 },
-  PROFESSIONAL: { users: 100, exercisesPerMonth: 9999 },
-  ENTERPRISE: { users: 9999, exercisesPerMonth: 9999 },
-  FREE: { users: 5, exercisesPerMonth: 5 },
+export const PLAN_LIMITS: Record<string, { users: number; exercisesPerMonth: number; price: number }> = {
+  FREE: { users: 3, exercisesPerMonth: 3, price: 0 },
+  STARTER: { users: 10, exercisesPerMonth: 10, price: 99 },
+  GROWTH: { users: 25, exercisesPerMonth: 25, price: 249 },
+  PROFESSIONAL: { users: 50, exercisesPerMonth: 9999, price: 499 },
+  ENTERPRISE: { users: 9999, exercisesPerMonth: 9999, price: 999 },
 };
 
 export async function checkExerciseLimit(orgId: string): Promise<{ allowed: boolean; used: number; limit: number; plan: string }> {
@@ -15,7 +15,6 @@ export async function checkExerciseLimit(orgId: string): Promise<{ allowed: bool
   const planLimits = PLAN_LIMITS[org.plan] || PLAN_LIMITS.FREE;
   const limit = org.maxTtxPerMonth >= 9999 ? 9999 : (org.maxTtxPerMonth || planLimits.exercisesPerMonth);
 
-  // Count exercises this month
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
