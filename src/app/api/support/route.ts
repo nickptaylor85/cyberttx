@@ -29,7 +29,9 @@ async function ensureTable() {
 export async function POST(req: NextRequest) {
   await ensureTable();
   const user = await getAuthUser();
-  const { message } = await req.json();
+  const body = await req.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  const message = typeof body.message === "string" ? body.message.slice(0, 2000) : "";
   if (!message?.trim()) return NextResponse.json({ error: "Message required" }, { status: 400 });
 
   let orgName = "";

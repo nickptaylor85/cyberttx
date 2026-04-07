@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     } catch {}
   }
 
-  return NextResponse.json({ success: true, userId: existing.id, migrated: true }, { status: 201 });
+  return NextResponse.json({ success: true }, { status: 201 });
   }
 
   // Brand new user
@@ -152,5 +152,5 @@ export async function POST(req: NextRequest) {
     }).catch(() => {});
   }
 
-  return NextResponse.json({ success: true, userId: user.id }, { status: 201 });
+  return NextResponse.json({ success: true }, { status: 201 });
 }
