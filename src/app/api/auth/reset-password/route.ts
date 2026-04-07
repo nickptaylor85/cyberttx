@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "ThreatCast <noreply@threatcast.io>", to: [email.toLowerCase()],
+        from: "ThreatCast <onboarding@resend.dev>", to: [email.toLowerCase()],
         subject: "Reset your ThreatCast password",
         html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="font-size:20px;font-weight:700;margin-bottom:24px;">Threat<span style="color:#14b89a;">Cast</span></div><h2>Reset your password</h2><p>Click below to set a new password. This link expires in 1 hour.</p><a href="${resetUrl}" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Reset Password</a><p style="color:#888;font-size:12px;margin-top:24px;">If you didn't request this, you can safely ignore this email.</p></div>`,
       }),

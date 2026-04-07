@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         method: "POST",
         headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "ThreatCast <noreply@threatcast.io>", to: [emailLower],
+          from: "ThreatCast <onboarding@resend.dev>", to: [emailLower],
           subject: "Verify your ThreatCast email",
           html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><h2>Verify your email</h2><p>Click below to verify your email address:</p><a href="${verifyUrl}" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Verify Email</a></div>`,
         }),
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "ThreatCast <noreply@threatcast.io>",
+        from: "ThreatCast <onboarding@resend.dev>",
         to: [emailLower],
         subject: "Welcome to ThreatCast — Let's get started",
         html: `<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">

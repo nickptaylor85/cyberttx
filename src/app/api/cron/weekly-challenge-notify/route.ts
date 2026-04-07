@@ -43,7 +43,7 @@ export async function GET(req: Request) {
           method: "POST",
           headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "ThreatCast <noreply@threatcast.io>",
+            from: "ThreatCast <onboarding@resend.dev>",
             to: [user.email],
             subject: `🏅 New Weekly Challenge: ${challenge.title}`,
             html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;">

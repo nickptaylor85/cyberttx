@@ -57,7 +57,7 @@ export async function GET(req: Request) {
           method: "POST",
           headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "ThreatCast <reports@threatcast.io>",
+            from: "ThreatCast <onboarding@resend.dev>",
             to: adminEmails,
             subject: `ThreatCast Weekly Report — ${org.name}`,
             html: `

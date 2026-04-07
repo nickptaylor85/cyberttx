@@ -34,7 +34,7 @@ export async function GET(req: Request) {
           method: "POST",
           headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "ThreatCast <noreply@threatcast.io>", to: [user.email],
+            from: "ThreatCast <onboarding@resend.dev>", to: [user.email],
             subject: `🎯 Quick Question: ${question.q.slice(0, 50)}...`,
             html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;">
               <div style="font-size:20px;font-weight:700;margin-bottom:16px;">Threat<span style="color:#14b89a;">Cast</span> <span style="color:#888;font-size:12px;">Daily Drill</span></div>
