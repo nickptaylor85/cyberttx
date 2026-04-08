@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       const providerConfig = await getOrgAIProvider(org.id);
       const isDefault = providerConfig.provider === "anthropic" && providerConfig.apiKey === process.env.ANTHROPIC_API_KEY;
       if (!isDefault) {
-        console.log(\`[generate] Using BYOK provider: \${providerConfig.provider}\`);
+        console.log("[generate] Using BYOK provider: " + providerConfig.provider);
       }
 
       const scenario = await generateTtxScenario({
