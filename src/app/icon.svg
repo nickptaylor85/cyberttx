@@ -1,34 +1,53 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
   <defs>
-    <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#14b89a"/>
-      <stop offset="50%" style="stop-color:#0d9488"/>
-      <stop offset="100%" style="stop-color:#0a7c6e"/>
-    </linearGradient>
-    <filter id="g">
-      <feGaussianBlur stdDeviation="1.5" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <filter id="neon">
+      <feGaussianBlur stdDeviation="2.5" result="b1"/>
+      <feGaussianBlur stdDeviation="6" result="b2"/>
+      <feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
+    <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ffd5"/>
+      <stop offset="100%" style="stop-color:#14b89a"/>
+    </linearGradient>
+    <pattern id="circ" width="12" height="12" patternUnits="userSpaceOnUse">
+      <path d="M0 6h4M8 6h4M6 0v4M6 8v4" stroke="rgba(0,255,213,0.04)" stroke-width="0.4" fill="none"/>
+    </pattern>
   </defs>
-  
-  <!-- Dark rounded square -->
-  <rect width="120" height="120" rx="26" fill="#0a0a1a"/>
-  
-  <!-- Subtle grid -->
-  <pattern id="grid" width="12" height="12" patternUnits="userSpaceOnUse">
-    <path d="M 12 0 L 0 0 0 12" fill="none" stroke="rgba(20,184,154,0.04)" stroke-width="0.5"/>
-  </pattern>
-  <rect width="120" height="120" rx="26" fill="url(#grid)"/>
-  
-  <!-- Shield -->
-  <path d="M60 18C51 27 41 32 28 32c0 0-2 26 6 42s18 25 26 30c8-5 18-14 26-30s6-42 6-42c-13 0-23-5-32-14z" 
-        fill="url(#sg)" filter="url(#g)"/>
-  
+
+  <!-- Background -->
+  <rect width="120" height="120" rx="24" fill="#030712"/>
+  <rect width="120" height="120" rx="24" fill="url(#circ)"/>
+
+  <!-- Ambient glow -->
+  <ellipse cx="60" cy="60" rx="40" ry="40" fill="rgba(0,255,213,0.04)"/>
+
+  <!-- Angular shield -->
+  <path d="M60 14 L30 29 L26 74 L60 104 L94 74 L90 29 Z" 
+        fill="rgba(0,255,213,0.04)" stroke="url(#sg)" stroke-width="2" filter="url(#neon)"/>
+
+  <!-- Reticle -->
+  <circle cx="60" cy="56" r="16" fill="none" stroke="rgba(0,255,213,0.25)" stroke-width="0.7"/>
+  <circle cx="60" cy="56" r="8" fill="none" stroke="rgba(0,255,213,0.4)" stroke-width="0.7"/>
+  <line x1="60" y1="40" x2="60" y2="46" stroke="#00ffd5" stroke-width="0.8" opacity="0.5"/>
+  <line x1="60" y1="66" x2="60" y2="72" stroke="#00ffd5" stroke-width="0.8" opacity="0.5"/>
+  <line x1="44" y1="56" x2="50" y2="56" stroke="#00ffd5" stroke-width="0.8" opacity="0.5"/>
+  <line x1="70" y1="56" x2="76" y2="56" stroke="#00ffd5" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- Checkmark — sharp -->
+  <path d="M51 56 L57 63 L70 48" fill="none" stroke="#00ffd5" stroke-width="3" 
+        stroke-linecap="square" stroke-linejoin="miter" filter="url(#neon)"/>
+
   <!-- Signal arcs -->
-  <path d="M82 52 Q95 52 100 38" fill="none" stroke="#14b89a" stroke-width="2.2" opacity="0.6" stroke-linecap="round"/>
-  <path d="M84 62 Q101 62 108 44" fill="none" stroke="#14b89a" stroke-width="1.6" opacity="0.35" stroke-linecap="round"/>
-  <path d="M85 72 Q106 72 114 50" fill="none" stroke="#14b89a" stroke-width="1.1" opacity="0.18" stroke-linecap="round"/>
-  
-  <!-- Checkmark -->
-  <path d="M48 58 L56 66 L74 46" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M94 42 L104 36 L112 40" fill="none" stroke="#00ffd5" stroke-width="1.3" opacity="0.5" stroke-linecap="square"/>
+  <path d="M95 54 L108 50 L116 56" fill="none" stroke="#00ffd5" stroke-width="0.9" opacity="0.25" stroke-linecap="square"/>
+
+  <!-- Data nodes -->
+  <circle cx="104" cy="36" r="1.2" fill="#00ffd5" opacity="0.6"/>
+  <circle cx="108" cy="50" r="1" fill="#00ffd5" opacity="0.3"/>
+
+  <!-- Corner brackets -->
+  <path d="M8 8 L8 22 M8 8 L22 8" stroke="rgba(0,255,213,0.12)" stroke-width="0.8" fill="none"/>
+  <path d="M112 8 L112 22 M112 8 L98 8" stroke="rgba(0,255,213,0.12)" stroke-width="0.8" fill="none"/>
+  <path d="M8 112 L8 98 M8 112 L22 112" stroke="rgba(0,255,213,0.12)" stroke-width="0.8" fill="none"/>
+  <path d="M112 112 L112 98 M112 112 L98 112" stroke="rgba(0,255,213,0.12)" stroke-width="0.8" fill="none"/>
 </svg>
