@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 
 export default function AdminSettingsPage() {
   // MFA state
+  const [adminLog, setAdminLog] = useState<any[]>([]);
   const [mfa, setMfa] = useState<{ enabled: boolean; secret?: string; qrCode?: string }>({ enabled: false });
   const [mfaCode, setMfaCode] = useState(""); const [mfaError, setMfaError] = useState("");
   const [showMfaSetup, setShowMfaSetup] = useState(false); const [mfaLoading, setMfaLoading] = useState(true);
@@ -29,6 +30,7 @@ export default function AdminSettingsPage() {
       setSignupsDisabled(!!d.signupsDisabled);
       setSettingsLoading(false);
     }).catch(() => setSettingsLoading(false));
+    fetch("/api/admin/access-log").then(r => r.ok ? r.json() : []).then(setAdminLog).catch(() => {});
     fetch("/api/auth/mfa").then(r => r.json()).then(d => { setMfa(d); setMfaLoading(false); }).catch(() => setMfaLoading(false));
     // Check env vars
     setEnvStatus({
@@ -151,6 +153,7 @@ export default function AdminSettingsPage() {
       setSignupsDisabled(!!d.signupsDisabled);
       setSettingsLoading(false);
     }).catch(() => setSettingsLoading(false));
+    fetch("/api/admin/access-log").then(r => r.ok ? r.json() : []).then(setAdminLog).catch(() => {});
     fetch("/api/auth/mfa").then(r => r.json()).then(setMfa); }} className="cyber-btn-primary text-sm">Set Up MFA</button>
           </div>
         )}

@@ -151,8 +151,42 @@ export default function SettingsPage() {
       {/* Danger Zone */}
       <div className="cyber-card border-red-500/30">
         <h2 className="text-red-400 text-sm font-semibold mb-3">{t("settings.dangerZone")}</h2>
-        <p className="text-gray-400 text-sm mb-3">Permanently delete your organisation and all associated data.</p>
-        <button className="cyber-btn-danger text-sm">Delete Organisation</button>
+        <p className="text-gray-400 text-sm mb-3">Permanently delete your organisation and all associated data. This cannot be undone.</p>
+        <div className="flex gap-2 items-center">
+          <input id="confirmOrgName" className="cyber-input text-sm flex-1" placeholder="Type organisation name to confirm" />
+          <button onClick={() => {
+            const name = (document.getElementById("confirmOrgName") as HTMLInputElement)?.value;
+            if (!name) return alert("Type your organisation name to confirm");
+            if (!confirm("This will permanently delete the organisation, all users, exercises, playbooks, certificates, and duels. This cannot be undone. Are you sure?")) return;
+            fetch("/api/portal/delete-org", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmName: name }) })
+              .then(r => r.json()).then(d => { if (d.success) { alert("Organisation deleted."); window.location.href = "/"; } else alert(d.error || "Failed"); });
+          }} className="cyber-btn-danger text-sm whitespace-nowrap">Delete Organisation</button>
+        </div>
+      </div>
+
+      {/* GDPR */}
+      <div className="cyber-card border-surface-3">
+        <h3 className="text-white text-sm font-semibold mb-2">Your Data Rights (GDPR)</h3>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div><p className="text-gray-400 text-sm">Download all your personal data</p><p className="text-gray-600 text-xs">Article 15 — Right of Access</p></div>
+            <a href="/api/portal/gdpr-export" download className="cyber-btn-secondary text-xs">Download My Data</a>
+          </div>
+          <div className="border-t border-surface-3 pt-3">
+            <p className="text-gray-400 text-sm mb-2">Delete your account and all personal data</p>
+            <p className="text-gray-600 text-xs mb-2">Article 17 — Right to Erasure. This permanently removes your account, exercise history, playbooks, certificates, and all associated data.</p>
+            <div className="flex gap-2 items-center">
+              <input id="confirmEmail" className="cyber-input text-sm flex-1" placeholder="Type your email to confirm" />
+              <button onClick={() => {
+                const email = (document.getElementById("confirmEmail") as HTMLInputElement)?.value;
+                if (!email) return alert("Type your email to confirm");
+                if (!confirm("This will permanently delete your account and all data. This CANNOT be undone. Are you absolutely sure?")) return;
+                fetch("/api/portal/delete-account", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmEmail: email }) })
+                  .then(r => r.json()).then(d => { if (d.success) { alert("Account deleted."); window.location.href = "/"; } else alert(d.error || "Failed"); });
+              }} className="cyber-btn-danger text-xs whitespace-nowrap">Delete My Account</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

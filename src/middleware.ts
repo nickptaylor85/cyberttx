@@ -5,8 +5,32 @@ export async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const hostname = req.headers.get("host") || "";
   const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || "threatcast.io";
+  const pathname = url.pathname;
 
-  // Subdomain detection
+  // ─── ADMIN IP ALLOWLIST ─────────────────────────
+  // If ADMIN_ALLOWED_IPS is set, restrict /admin and /api/admin to those IPs
+  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+    const allowedIps = (process.env.ADMIN_ALLOWED_IPS || "").split(",").map(s => s.trim()).filter(Boolean);
+    if (allowedIps.length > 0) {
+      const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+        || req.headers.get("x-real-ip")
+        
+        || "";
+      if (!allowedIps.includes(clientIp)) {
+        // Log the blocked attempt
+        console.warn(`[ADMIN] Blocked access from IP ${clientIp} to ${pathname}`);
+        return new NextResponse(
+          JSON.stringify({ error: "Access denied — your IP is not authorised for admin access" }),
+          { status: 403, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+  }
+
+  // ─── SECURITY HEADERS ──────────────────────────
+  const response = NextResponse.next();
+
+  // ─── SUBDOMAIN DETECTION ───────────────────────
   let subdomain: string | null = null;
   if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
     subdomain = url.searchParams.get("org") || null;
@@ -25,8 +49,8 @@ export async function middleware(req: NextRequest) {
   if (subdomain) {
     const headers = new Headers(req.headers);
     headers.set("x-org-slug", subdomain);
-    if (!url.pathname.startsWith("/portal") && !url.pathname.startsWith("/api") && !url.pathname.startsWith("/sign")) {
-      url.pathname = `/portal${url.pathname === "/" ? "" : url.pathname}`;
+    if (!pathname.startsWith("/portal") && !pathname.startsWith("/api") && !pathname.startsWith("/sign")) {
+      url.pathname = `/portal${pathname === "/" ? "" : pathname}`;
       return NextResponse.rewrite(url, { headers });
     }
     return NextResponse.next({ headers });
