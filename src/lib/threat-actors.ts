@@ -24,3 +24,19 @@ export const THREAT_ACTORS: ThreatActor[] = [
 
 export function getActorById(id: string) { return THREAT_ACTORS.find(a => a.id === id); }
 export function searchActors(q: string) { const s = q.toLowerCase(); return THREAT_ACTORS.filter(a => a.name.toLowerCase().includes(s) || a.aliases.some(al => al.toLowerCase().includes(s)) || a.origin.toLowerCase().includes(s) || a.targets.some(t => t.toLowerCase().includes(s))); }
+
+export function getActorsByMotivation(m: string) { return THREAT_ACTORS.filter(a => a.motivation === m); }
+
+export function buildActorContext(actor: ThreatActor): string {
+  return `
+THREAT ACTOR PROFILE:
+Name: ${actor.name} (${actor.aliases.join(", ")})
+Origin: ${actor.origin} | Motivation: ${actor.motivation} | Active Since: ${actor.firstSeen}
+Description: ${actor.description}
+Targets: ${actor.targets.join(", ")}
+Tools: ${actor.tools.join(", ")}
+MITRE Techniques: ${actor.ttps.join(", ")}
+Notable Incidents: ${actor.notableIncidents.join("; ")}
+
+IMPORTANT: This exercise MUST simulate an attack by ${actor.name}. Use their KNOWN TTPs, tools, and patterns. Reference their real operations. The scenario should feel like this specific group is targeting the organisation.`;
+}

@@ -31,7 +31,8 @@ export async function GET(req: NextRequest) {
       const text = (response.content[0] as any).text || "";
       const match = text.match(/\[[\s\S]*\]/);
       if (match) {
-        return NextResponse.json({ actors, trending: JSON.parse(match[0]) });
+        const trendingData = JSON.parse(match[0]) as any;
+        return NextResponse.json({ actors, trending: trendingData });
       }
     } catch {}
   }
