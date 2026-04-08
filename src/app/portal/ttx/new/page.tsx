@@ -72,6 +72,13 @@ export default function NewTtxPage() {
   // fromAlert is now handled directly in the Alert Feed page
   // (calls /api/ttx/generate and redirects to the exercise)
 
+  // Load threat actors when entering step 2
+  useEffect(() => {
+    if (step === 2 && threatActors.length === 0) {
+      fetch("/api/portal/threat-actors").then(r => r.ok ? r.json() : { actors: [] }).then((d: any) => setThreatActors(d.actors || []));
+    }
+  }, [step]);
+
   useEffect(() => {
     // Fetch MITRE technique usage for this portal
     fetch("/api/portal/sessions").then(r => r.ok ? r.json() : []).then(sessions => {
@@ -242,45 +249,58 @@ export default function NewTtxPage() {
       {step === 2 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-4">Select a Threat Actor (Optional)</h2>
-          <p className="text-gray-500 text-sm mb-4">Choose a real-world threat actor to model the attack after. The AI will use their known TTPs and patterns.</p>
+          <p className="text-gray-500 text-sm mb-4">Model the attack after a real-world threat group. The AI will use their known TTPs and attack patterns.</p>
 
           <input className="cyber-input w-full mb-4" placeholder="Search threat actors..." value={actorSearch}
-            onChange={e => { setActorSearch(e.target.value); if (e.target.value.length > 1) { fetch(`/api/portal/threat-actors?search=${e.target.value}`).then(r => r.ok ? r.json() : { actors: [] }).then((d: any) => setThreatActors(d.actors || [])); } }} />
-
-          {threatActors.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-              {threatActors.map(actor => (
-                <button key={actor.id} onClick={() => { setSelectedActor(actor); setConfig({ ...config, threatActorId: actor.id }); }}
-                  className={cn("cyber-card text-left cursor-pointer transition-all", config.threatActorId === actor.id ? "border-cyber-500 bg-cyber-600/10 ring-1 ring-cyber-500/30" : "hover:border-surface-4")}>
-                  <p className="text-white text-sm font-medium">{actor.name}</p>
-                  <p className="text-gray-500 text-xs">{actor.origin} · {actor.motivation}</p>
-                  <p className="text-gray-600 text-xs mt-1 line-clamp-2">{actor.description}</p>
-                  {actor.notableAttacks?.length > 0 && <p className="text-cyber-400 text-xs mt-1">{actor.notableAttacks.slice(0, 2).join(", ")}</p>}
-                </button>
-              ))}
-            </div>
-          )}
+            onChange={e => { setActorSearch(e.target.value); if (e.target.value.length > 1) { fetch(`/api/portal/threat-actors?search=${e.target.value}`).then(r => r.ok ? r.json() : { actors: [] }).then((d: any) => setThreatActors(d.actors || [])); } else if (e.target.value === "") { fetch("/api/portal/threat-actors").then(r => r.ok ? r.json() : { actors: [] }).then((d: any) => setThreatActors(d.actors || [])); } }} />
 
           {selectedActor && (
-            <div className="cyber-card border-cyber-500/30 bg-cyber-600/5 mb-4">
-              <p className="text-white text-sm font-semibold">{selectedActor.name}</p>
-              <p className="text-gray-400 text-xs mt-1">{selectedActor.description}</p>
-              <button onClick={() => { setSelectedActor(null); setConfig({ ...config, threatActorId: "" }); }} className="text-red-400 text-xs mt-2 hover:text-red-300">Remove ×</button>
+            <div className="cyber-card border-purple-500/30 bg-purple-600/5 mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white text-sm font-semibold">{selectedActor.name}</p>
+                  <p className="text-purple-400 text-xs">{selectedActor.origin} · {selectedActor.motivation}</p>
+                </div>
+                <button onClick={() => { setSelectedActor(null); setConfig({ ...config, threatActorId: "" }); }} className="text-red-400 text-xs hover:text-red-300">Remove ×</button>
+              </div>
+              <p className="text-gray-400 text-xs mt-2">{selectedActor.description}</p>
+              {selectedActor.notableAttacks?.length > 0 && <p className="text-gray-500 text-xs mt-1">Known for: {selectedActor.notableAttacks.slice(0, 3).join(", ")}</p>}
             </div>
           )}
 
-          {!selectedActor && threatActors.length === 0 && !actorSearch && (
-            <div className="cyber-card text-center py-8 mb-4">
-              <p className="text-gray-500 text-sm">Type a name above to search, or skip this step</p>
-              <p className="text-gray-600 text-xs mt-1">e.g. "APT29", "Lazarus", "LockBit", "Scattered Spider"</p>
-            </div>
+          {!selectedActor && (
+            <>
+              {/* Top actors grid — always shown */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                {(threatActors.length > 0 ? threatActors : []).slice(0, 12).map(actor => (
+                  <button key={actor.id} onClick={() => { setSelectedActor(actor); setConfig({ ...config, threatActorId: actor.id }); }}
+                    className="cyber-card text-left cursor-pointer transition-all hover:border-surface-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-white text-sm font-medium">{actor.name}</p>
+                        <p className="text-gray-500 text-xs">{actor.origin} · {actor.motivation}</p>
+                      </div>
+                      <span className={`cyber-badge text-xs ${actor.type === "nation-state" ? "bg-red-500/20 text-red-400" : actor.type === "cybercrime" ? "bg-orange-500/20 text-orange-400" : "bg-yellow-500/20 text-yellow-400"}`}>{actor.type}</span>
+                    </div>
+                    <p className="text-gray-600 text-xs mt-1 line-clamp-1">{actor.description}</p>
+                    {actor.notableAttacks?.length > 0 && <p className="text-[#00ffd5] text-xs mt-1 line-clamp-1">{actor.notableAttacks.slice(0, 2).join(" · ")}</p>}
+                  </button>
+                ))}
+              </div>
+
+              {threatActors.length === 0 && (
+                <div className="cyber-card text-center py-6 mb-4">
+                  <p className="text-gray-500 text-sm">Loading threat actors...</p>
+                </div>
+              )}
+            </>
           )}
 
           <div className="flex justify-between mt-8">
             <button onClick={() => setStep(1)} className="cyber-btn-secondary">← Back</button>
             <div className="flex gap-2">
-              {!selectedActor && <button onClick={() => setStep(3)} className="cyber-btn-secondary">Skip</button>}
-              <button onClick={() => setStep(3)} className="cyber-btn-primary">Next: Configuration →</button>
+              {!selectedActor && <button onClick={() => setStep(3)} className="cyber-btn-secondary">Skip →</button>}
+              <button onClick={() => setStep(3)} className="cyber-btn-primary">{selectedActor ? "Next: Configuration →" : "Next →"}</button>
             </div>
           </div>
         </div>

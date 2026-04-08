@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
           })),
           questionCount: questionCount || 12,
           orgProfile: org.profile as any, characters, pastPerformance: await (async () => { try { const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx"); return analyzePastPerformance(org.id, db); } catch { return null; } })(), customIncident, recentTitles, language: language || "en",
-          threatActorContext: threatActorId ? buildActorContext(getActorById(threatActorId)!) : undefined,
+          threatActorContext: threatActorId && getActorById(threatActorId) ? buildActorContext(getActorById(threatActorId)!) : undefined,
         });
 
         await db.ttxSession.update({
