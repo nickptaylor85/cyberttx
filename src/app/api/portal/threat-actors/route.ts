@@ -92,7 +92,10 @@ export async function GET(req: NextRequest) {
         }
       }
     } catch (e: any) {
-      console.error("[threat-actors] Discover error:", e?.message);
+      const errMsg = e?.message || String(e);
+      console.error("[threat-actors] Discover error:", errMsg);
+      // Return error in response so admin page can show it
+      return NextResponse.json({ actors, trendingError: errMsg });
     }
   }
 

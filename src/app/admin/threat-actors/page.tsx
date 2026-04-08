@@ -11,6 +11,7 @@ export default function AdminThreatActorsPage() {
   const [syncResults, setSyncResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState<string | null>(null);
+  const [discoverError, setDiscoverError] = useState("");
 
   function loadActors() {
     fetch("/api/portal/threat-actors").then(r => r.ok ? r.json() : { actors: [] }).then((d: any) => {
@@ -22,12 +23,15 @@ export default function AdminThreatActorsPage() {
   useEffect(() => { loadActors(); }, []);
 
   async function syncThreatActors() {
-    setSyncing(true); setSyncResults([]);
+    setSyncing(true); setSyncResults([]); setDiscoverError("");
     try {
       const res = await fetch("/api/portal/threat-actors?trending=true");
       const data = await res.json() as any;
+      if (data.trendingError) {
+        setDiscoverError(data.trendingError);
+      }
       setSyncResults(data.trending || []);
-    } catch { setSyncResults([]); }
+    } catch (e: any) { setDiscoverError(e?.message || "Network error"); }
     setSyncing(false);
   }
 
@@ -88,6 +92,14 @@ export default function AdminThreatActorsPage() {
           {syncing ? "Searching the web..." : "🔍 Discover New Actors"}
         </button>
       </div>
+
+      {/* Error display */}
+      {discoverError && (
+        <div className="cyber-card border-red-500/20 bg-red-600/5 mb-4">
+          <p className="text-red-400 text-sm font-semibold">Discover Error</p>
+          <p className="text-red-300 text-xs mt-1 font-mono break-all">{discoverError}</p>
+        </div>
+      )}
 
       {/* Sync results — with Add buttons */}
       {syncResults.length > 0 && (
