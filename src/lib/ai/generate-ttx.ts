@@ -59,6 +59,7 @@ interface GenerateTtxParams {
   customIncident?: string;
   recentTitles?: string[];
   language?: string;
+  threatActorContext?: string;
 }
 
 const DIFFICULTY_CONFIG = {
@@ -182,7 +183,7 @@ function buildLearningContext(perf?: PastPerformance | null): string {
 export async function generateTtxScenario(params: GenerateTtxParams): Promise<TtxScenario> {
   const {
     theme, difficulty, mitreAttackIds, securityTools, questionCount,
-    orgProfile, characters, pastPerformance, customIncident, language,
+    orgProfile, characters, pastPerformance, customIncident, language, threatActorContext,
   } = params;
 
   const diffConfig = DIFFICULTY_CONFIG[difficulty];
@@ -201,6 +202,7 @@ export async function generateTtxScenario(params: GenerateTtxParams): Promise<Tt
 
 CRITICAL REALISM RULES:
 Your scenarios MUST be grounded in real-world events and threat intelligence.
+${threatActorContext || ""}
 
 After EVERY question explanation, include a "THIS REALLY HAPPENED" one-liner that references a real-world incident relevant to the question. Format it as: "📰 This Really Happened: [Brief incident description, year]". For example: "📰 This Really Happened: In the MGM Resorts breach (2023), Scattered Spider used a helpdesk impersonation call to bypass all security controls in just 10 minutes." Base scenarios on actual attack patterns from recent years:
 - Ransomware: Model after real campaigns like LockBit, BlackCat/ALPHV, Cl0p, Royal, Play — use their actual TTPs

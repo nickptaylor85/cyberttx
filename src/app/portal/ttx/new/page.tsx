@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TTX_THEMES, COMMON_MITRE_TECHNIQUES, MITRE_TACTICS } from "@/types";
 import { cn } from "@/lib/utils";
+import type { ThreatActor } from "@/lib/threat-actors";
 
 interface Tool {
   id: string;
@@ -32,7 +33,7 @@ interface AdHocCharacter {
   description: string;
 }
 
-const WIZARD_STEPS = ["Theme", "Configuration", "Characters", "MITRE ATT&CK", "Launch"];
+const WIZARD_STEPS = ["Theme", "Threat Actor", "Configuration", "Characters", "MITRE ATT&CK", "Launch"];
 
 export default function NewTtxPage() {
   const router = useRouter();
@@ -43,6 +44,11 @@ export default function NewTtxPage() {
   const [generating, setGenerating] = useState(false);
   const [mitreStats, setMitreStats] = useState<{ mostUsed: string[]; leastUsed: string[] }>({ mostUsed: [], leastUsed: [] });
   const [error, setError] = useState("");
+  const [threatActors, setThreatActors] = useState<ThreatActor[]>([]);
+  const [trendingActors, setTrendingActors] = useState<any[]>([]);
+  const [selectedActor, setSelectedActor] = useState<ThreatActor | null>(null);
+  const [actorSearch, setActorSearch] = useState("");
+  const [loadingTrending, setLoadingTrending] = useState(false);
 
   // Characters from roster
   const [rosterCharacters, setRosterCharacters] = useState<Character[]>([]);
@@ -55,6 +61,7 @@ export default function NewTtxPage() {
 
   const [config, setConfig] = useState({
     theme: "",
+    threatActorId: "" as string,
     difficulty: "INTERMEDIATE" as string,
     mode: "GROUP" as string,
     questionCount: 12,
@@ -146,6 +153,7 @@ export default function NewTtxPage() {
           toolIds: orgTools,
           selectedCharacters: [...selectedRoster, ...adHocPayload],
           language: document.cookie.match(/lang=(\w+)/)?.[1] || "en",
+          threatActorId: config.threatActorId || undefined,
           customIncident: (window as any).__alertIncident || undefined,
         }),
       });
@@ -222,7 +230,7 @@ export default function NewTtxPage() {
           </div>
           <div className="flex justify-end mt-8">
             <button onClick={() => setStep(2)} disabled={!config.theme} className="cyber-btn-primary disabled:opacity-50">
-              Next: Configuration →
+              Next: Threat Actor →
             </button>
           </div>
         </div>
@@ -231,7 +239,7 @@ export default function NewTtxPage() {
       {/* =============================== */}
       {/* STEP 2: Configuration            */}
       {/* =============================== */}
-      {step === 2 && (
+      {step === 6 && (
         <div className="space-y-6">
           <h2 className="font-display text-lg font-semibold text-white mb-4">Exercise Configuration</h2>
 
@@ -304,8 +312,8 @@ export default function NewTtxPage() {
           </div>
 
           <div className="flex justify-between mt-8">
-            <button onClick={() => setStep(1)} className="cyber-btn-secondary">← Back</button>
-            <button onClick={() => setStep(3)} className="cyber-btn-primary">Next: Characters →</button>
+            <button onClick={() => setStep(2)} className="cyber-btn-secondary">← Back</button>
+            <button onClick={() => setStep(4)} className="cyber-btn-primary">Next: Characters →</button>
           </div>
         </div>
       )}
@@ -313,7 +321,7 @@ export default function NewTtxPage() {
       {/* =============================== */}
       {/* STEP 3: Characters               */}
       {/* =============================== */}
-      {step === 3 && (
+      {step === 6 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-1">Cast Your Scenario</h2>
           <p className="text-gray-500 text-sm mb-6">
@@ -469,8 +477,8 @@ export default function NewTtxPage() {
           </div>
 
           <div className="flex justify-between mt-8">
-            <button onClick={() => setStep(2)} className="cyber-btn-secondary">← Back</button>
-            <button onClick={() => setStep(4)} className="cyber-btn-primary">Next: MITRE ATT&CK →</button>
+            <button onClick={() => setStep(3)} className="cyber-btn-secondary">← Back</button>
+            <button onClick={() => setStep(5)} className="cyber-btn-primary">Next: MITRE ATT&CK →</button>
           </div>
         </div>
       )}
@@ -478,7 +486,7 @@ export default function NewTtxPage() {
       {/* =============================== */}
       {/* STEP 4: MITRE ATT&CK             */}
       {/* =============================== */}
-      {step === 4 && (
+      {step === 6 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-1">MITRE ATT&CK Techniques</h2>
           <p className="text-gray-500 text-sm mb-3">
@@ -532,8 +540,8 @@ export default function NewTtxPage() {
           )}
 
           <div className="flex justify-between mt-8">
-            <button onClick={() => setStep(3)} className="cyber-btn-secondary">← Back</button>
-            <button onClick={() => setStep(5)} className="cyber-btn-primary">Next: Review & Launch →</button>
+            <button onClick={() => setStep(5)} className="cyber-btn-secondary">← Back</button>
+            <button onClick={() => setStep(6)} className="cyber-btn-primary">Next: Review & Launch →</button>
           </div>
         </div>
       )}
@@ -541,7 +549,7 @@ export default function NewTtxPage() {
       {/* =============================== */}
       {/* STEP 5: Review & Launch           */}
       {/* =============================== */}
-      {step === 5 && (
+      {step === 6 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-6">Review & Launch</h2>
 
@@ -620,7 +628,7 @@ export default function NewTtxPage() {
           )}
 
           <div className="flex justify-between">
-            <button onClick={() => setStep(4)} className="cyber-btn-secondary">← Back</button>
+            <button onClick={() => setStep(5)} className="cyber-btn-secondary">← Back</button>
             <button onClick={handleGenerate} disabled={generating} className="cyber-btn-primary px-8">
               {generating ? (
                 <span className="flex items-center gap-2">

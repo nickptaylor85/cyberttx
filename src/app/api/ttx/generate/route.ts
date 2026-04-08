@@ -6,6 +6,7 @@ import { waitUntil } from "@vercel/functions";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { checkExerciseLimit } from "@/lib/plan-limits";
+import { getActorById, buildActorContext } from "@/lib/threat-actors";
 import { generateTtxScenario } from "@/lib/ai/generate-ttx";
 import { generateChannelName } from "@/lib/utils";
 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { theme, difficulty, mode, questionCount, mitreAttackIds, selectedCharacters, customIncident, language } = body;
+  const { theme, difficulty, mode, questionCount, mitreAttackIds, selectedCharacters, customIncident, language, threatActorId } = body;
 
   const characters = (selectedCharacters || []).map((c: any) => ({
     name: c.name, role: c.role, department: c.department || undefined,
@@ -85,6 +86,7 @@ export async function POST(req: NextRequest) {
           })),
           questionCount: questionCount || 12,
           orgProfile: org.profile as any, characters, pastPerformance: await (async () => { try { const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx"); return analyzePastPerformance(org.id, db); } catch { return null; } })(), customIncident, recentTitles, language: language || "en",
+          threatActorContext: threatActorId ? buildActorContext(getActorById(threatActorId)!) : undefined,
         });
 
         await db.ttxSession.update({
