@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { aiComplete, type AIProviderConfig } from "@/lib/ai/providers";
 import type { TtxScenario, TtxStage } from "@/types";
 
 const anthropic = new Anthropic({
@@ -299,19 +300,29 @@ JSON structure:
   "totalPoints": 0
 }`;
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 8000,
-    system: systemPrompt,
-    messages: [{ role: "user", content: userPrompt }],
-  });
-
-  const textContent = response.content.find((c) => c.type === "text");
-  if (!textContent || textContent.type !== "text") {
-    throw new Error("No text response from AI");
+  // Use BYOK provider if configured, otherwise platform default
+  let jsonText: string;
+  if (providerConfig) {
+    console.log(`[generate] Using ${providerConfig.provider} (${providerConfig.model || "default"}) via BYOK`);
+    const result = await aiComplete(providerConfig, { systemPrompt, userPrompt, maxTokens: 8000 });
+    jsonText = result.text.trim();
+    if (result.truncated) {
+      console.warn(`[generate] Output truncated by ${result.provider} — may need JSON repair`);
+    }
+  } else {
+    // Default: use platform Anthropic key
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 8000,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userPrompt }],
+    });
+    const textContent = response.content.find((c) => c.type === "text");
+    if (!textContent || textContent.type !== "text") {
+      throw new Error("No text response from AI");
+    }
+    jsonText = textContent.text.trim();
   }
-
-  let jsonText = textContent.text.trim();
   // Strip markdown fences
   jsonText = jsonText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
   // Try to extract JSON object if there's extra text around it

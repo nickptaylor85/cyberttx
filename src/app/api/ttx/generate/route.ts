@@ -7,6 +7,7 @@ import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { checkExerciseLimit } from "@/lib/plan-limits";
 import { generateTtxScenario } from "@/lib/ai/generate-ttx";
+import { getOrgAIProvider } from "@/lib/ai/get-org-provider";
 import { generateChannelName } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
@@ -78,6 +79,13 @@ export async function POST(req: NextRequest) {
       });
       const recentTitles = recentSessions.map(s => s.title).filter(Boolean);
 
+      // Load org's AI provider (BYOK for Pro/Enterprise, platform default for others)
+      const providerConfig = await getOrgAIProvider(org.id);
+      const isDefault = providerConfig.provider === "anthropic" && providerConfig.apiKey === process.env.ANTHROPIC_API_KEY;
+      if (!isDefault) {
+        console.log(\`[generate] Using BYOK provider: \${providerConfig.provider}\`);
+      }
+
       const scenario = await generateTtxScenario({
           theme, difficulty, mitreAttackIds: mitreAttackIds || [],
           securityTools: org.securityTools.map(ost => ({
@@ -85,6 +93,7 @@ export async function POST(req: NextRequest) {
           })),
           questionCount: questionCount || 12,
           orgProfile: org.profile as any, characters, pastPerformance: await (async () => { try { const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx"); return analyzePastPerformance(org.id, db); } catch { return null; } })(), customIncident, recentTitles, language: language || "en",
+          providerConfig: isDefault ? undefined : providerConfig,
         });
 
         await db.ttxSession.update({
