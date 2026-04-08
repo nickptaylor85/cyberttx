@@ -347,15 +347,15 @@ JSON structure:
 
   while (attempts < maxAttempts) {
     attempts++;
-    const actualQuestionCount = attempts === 1 ? questionCount : Math.min(questionCount, 8);
+    const actualQuestionCount = attempts === 1 ? questionCount : Math.min(questionCount, 6);
     const actualPrompt = attempts === 1 ? userPrompt : userPrompt.replace(
       `QUESTIONS: ${questionCount}`,
       `QUESTIONS: ${actualQuestionCount} (KEEP IT SHORT — concise explanations only)`
     );
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 8192,
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 4096,
       system: systemPrompt,
       messages: [{ role: "user", content: actualPrompt }],
     });
