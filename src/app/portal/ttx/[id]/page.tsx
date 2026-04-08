@@ -12,11 +12,31 @@ interface SessionData {
   }[];
 }
 
+const LOADING_CONTENT = [
+  { icon: "🛡️", text: "The average cost of a data breach in 2024 was $4.88 million — the highest ever recorded.", source: "IBM" },
+  { icon: "⏱️", text: "It takes an average of 194 days to identify a breach and 68 days to contain it.", source: "IBM" },
+  { icon: "🕵️", text: "APT29 (Cozy Bear) — Russia's SVR. Responsible for the SolarWinds attack that compromised 18,000 organisations." },
+  { icon: "🔑", text: "80% of breaches involve compromised credentials. MFA blocks 99.9% of automated attacks.", source: "Microsoft" },
+  { icon: "⚔️", text: "Scattered Spider — teenage hackers who social-engineered MGM Resorts with a 10-minute phone call. $100M+ in losses." },
+  { icon: "📧", text: "Phishing is the initial attack vector in 36% of all breaches. It takes just one click.", source: "Verizon DBIR" },
+  { icon: "💀", text: "LockBit — the most prolific ransomware group, responsible for 1,700+ attacks before being disrupted by Operation Cronos." },
+  { icon: "🏭", text: "Ransomware attacks against critical infrastructure increased 87% in 2023.", source: "CISA" },
+  { icon: "🐉", text: "Volt Typhoon — Chinese group pre-positioning in US critical infrastructure using living-off-the-land techniques." },
+  { icon: "💰", text: "The average ransomware payment in 2024 was $2.73 million — up 500% from the previous year.", source: "Sophos" },
+  { icon: "🇰🇵", text: "Lazarus Group — North Korea's cyber unit. Stole $625M from the Ronin Bridge and funded the regime's nuclear programme." },
+  { icon: "🔒", text: "95% of cybersecurity breaches are caused by human error. Training is your strongest defence.", source: "WEF" },
+  { icon: "🌊", text: "CL0P exploited the MOVEit zero-day to steal data from 2,500+ organisations in a single campaign.", source: "" },
+  { icon: "🏥", text: "Healthcare is the most expensive industry for breaches at $10.93M per incident on average.", source: "IBM" },
+  { icon: "🔥", text: "Sandworm (Russia) — destroyed 35,000 workstations at Saudi Aramco and caused $10B+ damage with NotPetya." },
+  { icon: "☁️", text: "82% of breaches involve data stored in the cloud. Misconfiguration is the #1 cloud security risk.", source: "IBM" },
+];
+
 export default function ExercisePage() {
   const params = useParams();
   const router = useRouter();
   const sessionId = params.id as string;
 
+  const [tipIndex, setTipIndex] = useState(0);
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -76,6 +96,13 @@ export default function ExercisePage() {
   }, [sessionId]);
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
+
+  // Rotate tips while generating
+  useEffect(() => {
+    if (!session || session.status !== "GENERATING") return;
+    const tipInterval = setInterval(() => setTipIndex(i => (i + 1) % LOADING_CONTENT.length), 8000);
+    return () => clearInterval(tipInterval);
+  }, [session?.status]);
 
   // Auto-poll while GENERATING
   useEffect(() => {
@@ -334,14 +361,39 @@ export default function ExercisePage() {
   // Handle GENERATING status — poll until ready
   if (session.status === "GENERATING") {
     return (
-      <div className="max-w-lg mx-auto text-center py-20">
-        <div className="relative flex h-4 w-4 mx-auto mb-4">
-          <span className="animate-ping absolute h-full w-full rounded-full bg-cyber-400 opacity-75"></span>
-          <span className="relative rounded-full h-4 w-4 bg-cyber-500"></span>
+      <div className="flex flex-col items-center justify-center px-6 py-16 min-h-[70vh]">
+        {/* Animated shield */}
+        <div className="relative mb-8">
+          <div className="w-20 h-20 rounded-2xl bg-[#00ffd5]/5 border border-[#00ffd5]/20 flex items-center justify-center animate-pulse">
+            <svg className="w-10 h-10" viewBox="0 0 120 120" fill="none">
+              <path d="M60 14 L30 29 L26 74 L60 104 L94 74 L90 29 Z" fill="rgba(0,255,213,0.06)" stroke="#00ffd5" strokeWidth="2"/>
+              <path d="M51 56 L57 63 L70 48" fill="none" stroke="#00ffd5" strokeWidth="3" strokeLinecap="square"/>
+            </svg>
+          </div>
+          <div className="absolute -inset-4 rounded-3xl bg-[#00ffd5]/5 animate-ping" style={{ animationDuration: "2s" }} />
         </div>
-        <h2 className="font-display text-lg font-bold text-white mb-2">Building Your Scenario...</h2>
-        <p className="text-gray-500 text-sm">AI is generating your exercise. This usually takes 15-30 seconds.</p>
-        <p className="text-gray-600 text-xs mt-2">This page will update automatically when ready.</p>
+
+        <p className="font-mono text-sm font-bold tracking-wider mb-2">
+          <span className="text-gray-100">THREAT</span><span className="text-[#00ffd5]">CAST</span>
+        </p>
+        <p className="text-[#00ffd5] text-sm font-semibold mb-1">Building Your Scenario</p>
+        <p className="text-gray-500 text-xs mb-8">{session.theme} · {session.difficulty} · {(session as any).questionCount || 10} questions</p>
+
+        {/* Progress bar */}
+        <div className="w-64 h-1 bg-surface-3 rounded-full mb-10 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-[#00ffd5] to-[#14b89a] rounded-full" style={{ animation: "loading-bar 40s ease-in-out forwards" }} />
+        </div>
+
+        {/* Rotating tips */}
+        <div className="max-w-md text-center min-h-[100px] flex flex-col items-center justify-center">
+          <p className="text-2xl mb-3">{LOADING_CONTENT[tipIndex].icon}</p>
+          <p className="text-gray-300 text-sm leading-relaxed">{LOADING_CONTENT[tipIndex].text}</p>
+          {LOADING_CONTENT[tipIndex].source && (
+            <p className="text-gray-600 text-xs mt-2">— {LOADING_CONTENT[tipIndex].source}</p>
+          )}
+        </div>
+
+        <p className="text-gray-600 text-xs mt-8">This page updates automatically when ready</p>
       </div>
     );
   }

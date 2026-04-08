@@ -54,13 +54,11 @@ interface GenerateTtxParams {
   securityTools: { name: string; vendor: string; category: string }[];
   questionCount: number;
   orgProfile?: OrgProfile | null;
-  orgName?: string;
   characters?: Character[];
   pastPerformance?: PastPerformance | null;
   customIncident?: string;
   recentTitles?: string[];
   language?: string;
-  threatActorContext?: string;
 }
 
 const DIFFICULTY_CONFIG = {
@@ -86,11 +84,10 @@ const DIFFICULTY_CONFIG = {
   },
 };
 
-function buildCompanyContext(profile?: OrgProfile | null, orgName?: string): string {
-  if (!profile || !profile.industry) return orgName ? `Company: ${orgName}. No detailed profile available — invent realistic details for a company called ${orgName} and make the scenario feel specific to them.` : "No company profile provided — invent a realistic UK-based company and make the scenario specific to them.";
+function buildCompanyContext(profile?: OrgProfile | null): string {
+  if (!profile || !profile.industry) return "No company profile provided — use a generic mid-sized enterprise.";
 
   const parts: string[] = [];
-  if (orgName) parts.push(`Company Name: ${orgName}`);
   if (profile.industry) parts.push(`Industry: ${profile.industry}`);
   if (profile.companySize) parts.push(`Size: ${profile.companySize} employees`);
   if (profile.headquarters) parts.push(`HQ: ${profile.headquarters}`);
@@ -182,60 +179,10 @@ function buildLearningContext(perf?: PastPerformance | null): string {
   return parts.join("\n");
 }
 
-function repairJson(text: string): string {
-  let s = text;
-  
-  // Remove trailing commas before } or ]
-  s = s.replace(/,\s*([\]\}])/g, "$1");
-  
-  // Fix unescaped newlines inside strings
-  s = s.replace(/(?<=": "(?:[^"\\]|\\.)*)\n(?=(?:[^"\\]|\\.)*")/g, "\\n");
-  
-  // Fix common escape issues
-  s = s.replace(/\\'/g, "'");
-  
-  // If JSON is truncated, try to close it properly
-  // Find the last complete question and truncate there
-  const lastCompleteQ = s.lastIndexOf('"isCorrect"');
-  if (lastCompleteQ > 0) {
-    // Find the end of the question object after the last isCorrect
-    let searchFrom = lastCompleteQ;
-    let depth = 0;
-    let foundEnd = false;
-    // Look for the closing of the options array and question object
-    for (let i = searchFrom; i < Math.min(searchFrom + 500, s.length); i++) {
-      if (s[i] === '{') depth++;
-      if (s[i] === '}') {
-        depth--;
-        if (depth <= -2) {
-          // We've closed the option and question objects
-          s = s.substring(0, i + 1);
-          foundEnd = true;
-          break;
-        }
-      }
-    }
-  }
-
-  // Remove any trailing comma after truncation
-  s = s.replace(/,\s*$/, "");
-  
-  // Count and close brackets
-  let openBraces = (s.match(/\{/g) || []).length;
-  let closeBraces = (s.match(/\}/g) || []).length;
-  let openBrackets = (s.match(/\[/g) || []).length;
-  let closeBrackets = (s.match(/\]/g) || []).length;
-  
-  while (openBrackets > closeBrackets) { s += "]"; closeBrackets++; }
-  while (openBraces > closeBraces) { s += "}"; closeBraces++; }
-  
-  return s;
-}
-
 export async function generateTtxScenario(params: GenerateTtxParams): Promise<TtxScenario> {
   const {
     theme, difficulty, mitreAttackIds, securityTools, questionCount,
-    orgProfile, characters, pastPerformance, customIncident, language, threatActorContext, orgName,
+    orgProfile, characters, pastPerformance, customIncident, language,
   } = params;
 
   const diffConfig = DIFFICULTY_CONFIG[difficulty];
@@ -246,7 +193,7 @@ export async function generateTtxScenario(params: GenerateTtxParams): Promise<Tt
   const stageCount = Math.min(5, Math.max(3, Math.ceil(questionCount / 3)));
   const questionsPerStage = Math.ceil(questionCount / stageCount);
 
-  const companyContext = buildCompanyContext(orgProfile, orgName);
+  const companyContext = buildCompanyContext(orgProfile);
   const characterContext = buildCharacterContext(characters);
   const learningContext = buildLearningContext(pastPerformance);
 
@@ -255,15 +202,25 @@ export async function generateTtxScenario(params: GenerateTtxParams): Promise<Tt
 CRITICAL REALISM RULES:
 Your scenarios MUST be grounded in real-world events and threat intelligence.
 
+After EVERY question explanation, include a "THIS REALLY HAPPENED" one-liner that references a real-world incident relevant to the question. Format it as: "📰 This Really Happened: [Brief incident description, year]". For example: "📰 This Really Happened: In the MGM Resorts breach (2023), Scattered Spider used a helpdesk impersonation call to bypass all security controls in just 10 minutes." Base scenarios on actual attack patterns from recent years:
+- Ransomware: Model after real campaigns like LockBit, BlackCat/ALPHV, Cl0p, Royal, Play — use their actual TTPs
+- APT: Model after real threat groups — APT29 (Cozy Bear), APT28, Lazarus Group, Volt Typhoon, Scattered Spider
+- Supply Chain: Reference real patterns like SolarWinds, MOVEit, 3CX, Codecov, Kaseya
+- BEC: Use realistic social engineering tactics seen in actual FBI IC3 reports
+- Cloud: Base on real misconfiguration patterns from actual cloud breaches
+- Zero-Day: Reference real vulnerability patterns (Log4Shell, ProxyShell, Citrix Bleed style)
 
-Base scenarios on real attack patterns. In each explanation, add ONE brief real-world reference like "📰 This happened at [Company] ([Year])." Keep it to one line.
+RELATABILITY:
+- Use realistic company names, employee names, department structures
+- Include realistic timestamps (e.g., "Friday 17:42 GMT" — attacks often start before weekends)
+- Show realistic human reactions — panic, miscommunication, finger-pointing, key people being unavailable
+- Include business pressure — CEO asking for updates, regulators calling, media interest, customer complaints
+- Show the fog of war — incomplete information, false leads, conflicting alerts
+- Reference realistic third parties — managed service providers, IR firms, law enforcement, insurance carriers
+- Include realistic bureaucratic obstacles — change management processes, approval chains, vendor SLAs
 
-RELATABILITY: Use realistic timestamps, show human reactions (panic, miscommunication), include business pressure. Make it feel real.
-
-TARGET ORGANIZATION (USE THIS DATA — the scenario MUST be set at this specific company):
+TARGET ORGANIZATION:
   ${companyContext}
-
-CRITICAL: The scenario narrative MUST reference this company by name, use their actual industry context, mention their specific security tools, and reflect their team size and infrastructure. Do NOT use generic placeholder companies.
 ${characterContext}
 ${learningContext}
 
@@ -275,22 +232,24 @@ Generate ALL content in the following language: ${language}.
 This includes: scenario title, narrative text, stage descriptions, question text, answer options, explanations, and all other written content.
 Technical terms (MITRE ATT&CK, CVE numbers, tool names) should remain in English.
 ` : ""}
-RULES:
-- Explanations: 1 sentence MAX. Be extremely concise.
-- Exactly 4 options per question (A-D), exactly ONE correct
-- Wrong options must be plausible
-- Reference the org's security tools by name
-- Include realistic timestamps and log excerpts
-- Narrative escalates progressively
-- If characters defined, use them by name
-- Output ONLY valid JSON. No markdown. No trailing commas.
+CRITICAL RULES:
+1. Exactly 4 options per question (A-D), exactly ONE correct
+2. Wrong options must be plausible — never obviously absurd
+3. Reference the organization's SPECIFIC security tools by name
+4. Include realistic timestamps, IPs, hashes, log excerpts
+5. Narrative must unfold progressively with escalating severity
+6. Reference the org's infrastructure, industry, and regulatory context
+7. Characters (if defined) MUST appear by name — this is non-negotiable
+8. Show tool alerts formatted as they'd actually appear in the real product
+9. Include inter-team communications (Slack, email, phone) with named characters
+10. Show business impact through the lens of their specific critical assets
 
 SCORING: Easy=${diffConfig.pointsEasy}, Medium=${diffConfig.pointsMedium}, Hard=${diffConfig.pointsHard} pts. Wrong=0.
 AUDIENCE: ${diffConfig.description}
 
 RESPONSE FORMAT: Return ONLY valid JSON. No markdown fences, no explanation.`;
 
-  const userPrompt = `Create a cybersecurity TTX for ${orgName || "the target organisation"}:
+  const userPrompt = `Create a cybersecurity TTX:
 
 THEME: ${theme}
 DIFFICULTY: ${difficulty}  
@@ -340,50 +299,24 @@ JSON structure:
   "totalPoints": 0
 }`;
 
-  // Use Sonnet for reliable JSON generation
-  let jsonText = "";
-  let attempts = 0;
-  const maxAttempts = 2;
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 8000,
+    system: systemPrompt,
+    messages: [{ role: "user", content: userPrompt }],
+  });
 
-  while (attempts < maxAttempts) {
-    attempts++;
-    const actualQuestionCount = attempts === 1 ? questionCount : Math.min(questionCount, 6);
-    const actualPrompt = attempts === 1 ? userPrompt : userPrompt.replace(
-      `QUESTIONS: ${questionCount}`,
-      `QUESTIONS: ${actualQuestionCount} (KEEP IT SHORT — concise explanations only)`
-    );
-
-    const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
-      system: systemPrompt,
-      messages: [{ role: "user", content: actualPrompt }],
-    });
-
-    const textContent = response.content.find((c) => c.type === "text");
-    if (!textContent || textContent.type !== "text") {
-      throw new Error("No text response from AI");
-    }
-
-    jsonText = textContent.text.trim();
-
-    // Check if output was truncated
-    if (response.stop_reason === "end_turn") {
-      console.log(`[generate] AI completed cleanly on attempt ${attempts} (${jsonText.length} chars)`);
-      break;
-    } else {
-      console.warn(`[generate] AI output truncated on attempt ${attempts} (stop_reason: ${response.stop_reason}, ${jsonText.length} chars). ${attempts < maxAttempts ? "Retrying with fewer questions..." : "Using truncated output."}`);
-      if (attempts >= maxAttempts) break;
-    }
+  const textContent = response.content.find((c) => c.type === "text");
+  if (!textContent || textContent.type !== "text") {
+    throw new Error("No text response from AI");
   }
+
+  let jsonText = textContent.text.trim();
   // Strip markdown fences
   jsonText = jsonText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
   // Try to extract JSON object if there's extra text around it
   const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
   if (jsonMatch) jsonText = jsonMatch[0];
-
-  // Repair common JSON issues from AI output
-  jsonText = repairJson(jsonText);
 
   try {
     const scenario: TtxScenario = JSON.parse(jsonText);
@@ -413,32 +346,8 @@ JSON structure:
 
     return scenario;
   } catch (e) {
-    console.error("Failed to parse AI response (first 500 chars):", jsonText.substring(0, 500));
-    console.error("Failed to parse AI response (last 500 chars):", jsonText.substring(jsonText.length - 500));
-    
-    // Second attempt: try to extract partial valid JSON
-    try {
-      // Find the last valid stage boundary
-      const stageMatches = [...jsonText.matchAll(/"stageNumber"\s*:\s*(\d+)/g)];
-      if (stageMatches.length >= 2) {
-        // Try truncating to the second-to-last stage
-        const lastStageStart = stageMatches[stageMatches.length - 1].index!;
-        const truncated = repairJson(jsonText.substring(0, lastStageStart - 1));
-        const scenario: TtxScenario = JSON.parse(truncated);
-        console.log("Recovered partial scenario with", scenario.stages?.length, "stages");
-        let calculatedTotal = 0;
-        scenario.stages?.forEach((stage: TtxStage) => {
-          stage.questions?.forEach((q) => {
-            const correctOption = q.options?.find((o) => o.isCorrect);
-            if (correctOption) calculatedTotal += correctOption.points || 0;
-          });
-        });
-        scenario.totalPoints = calculatedTotal;
-        return scenario;
-      }
-    } catch {}
-    
-    throw new Error("Failed to parse TTX scenario — try with fewer questions or a simpler theme");
+    console.error("Failed to parse AI response:", jsonText.substring(0, 500));
+    throw new Error(`Failed to parse TTX scenario: ${e}`);
   }
 }
 
