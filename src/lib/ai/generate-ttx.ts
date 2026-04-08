@@ -184,21 +184,51 @@ function buildLearningContext(perf?: PastPerformance | null): string {
 
 function repairJson(text: string): string {
   let s = text;
+  
   // Remove trailing commas before } or ]
   s = s.replace(/,\s*([\]\}])/g, "$1");
-  // If JSON is truncated, try to close it
-  if (s.includes('"stages"')) {
-    // Count open/close brackets
-    let openBraces = (s.match(/\{/g) || []).length;
-    let closeBraces = (s.match(/\}/g) || []).length;
-    let openBrackets = (s.match(/\[/g) || []).length;
-    let closeBrackets = (s.match(/\]/g) || []).length;
-    // Close any unclosed arrays and objects
-    while (openBrackets > closeBrackets) { s += "]"; closeBrackets++; }
-    while (openBraces > closeBraces) { s += "}"; closeBraces++; }
-  }
+  
+  // Fix unescaped newlines inside strings
+  s = s.replace(/(?<=": "(?:[^"\\]|\\.)*)\n(?=(?:[^"\\]|\\.)*")/g, "\\n");
+  
   // Fix common escape issues
   s = s.replace(/\\'/g, "'");
+  
+  // If JSON is truncated, try to close it properly
+  // Find the last complete question and truncate there
+  const lastCompleteQ = s.lastIndexOf('"isCorrect"');
+  if (lastCompleteQ > 0) {
+    // Find the end of the question object after the last isCorrect
+    let searchFrom = lastCompleteQ;
+    let depth = 0;
+    let foundEnd = false;
+    // Look for the closing of the options array and question object
+    for (let i = searchFrom; i < Math.min(searchFrom + 500, s.length); i++) {
+      if (s[i] === '{') depth++;
+      if (s[i] === '}') {
+        depth--;
+        if (depth <= -2) {
+          // We've closed the option and question objects
+          s = s.substring(0, i + 1);
+          foundEnd = true;
+          break;
+        }
+      }
+    }
+  }
+
+  // Remove any trailing comma after truncation
+  s = s.replace(/,\s*$/, "");
+  
+  // Count and close brackets
+  let openBraces = (s.match(/\{/g) || []).length;
+  let closeBraces = (s.match(/\}/g) || []).length;
+  let openBrackets = (s.match(/\[/g) || []).length;
+  let closeBrackets = (s.match(/\]/g) || []).length;
+  
+  while (openBrackets > closeBrackets) { s += "]"; closeBrackets++; }
+  while (openBraces > closeBraces) { s += "}"; closeBraces++; }
+  
   return s;
 }
 
@@ -259,6 +289,7 @@ This includes: scenario title, narrative text, stage descriptions, question text
 Technical terms (MITRE ATT&CK, CVE numbers, tool names) should remain in English.
 ` : ""}
 CRITICAL RULES:
+0. Keep explanations to 1-2 sentences MAX. Be concise. No essays.
 1. Exactly 4 options per question (A-D), exactly ONE correct
 2. Wrong options must be plausible — never obviously absurd
 3. Reference the organization's SPECIFIC security tools by name
@@ -327,7 +358,7 @@ JSON structure:
 
   const response = await anthropic.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 6000,
+    max_tokens: 8000,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
   });
@@ -375,8 +406,32 @@ JSON structure:
 
     return scenario;
   } catch (e) {
-    console.error("Failed to parse AI response:", jsonText.substring(0, 500));
-    throw new Error(`Failed to parse TTX scenario: ${e}`);
+    console.error("Failed to parse AI response (first 500 chars):", jsonText.substring(0, 500));
+    console.error("Failed to parse AI response (last 500 chars):", jsonText.substring(jsonText.length - 500));
+    
+    // Second attempt: try to extract partial valid JSON
+    try {
+      // Find the last valid stage boundary
+      const stageMatches = [...jsonText.matchAll(/"stageNumber"\s*:\s*(\d+)/g)];
+      if (stageMatches.length >= 2) {
+        // Try truncating to the second-to-last stage
+        const lastStageStart = stageMatches[stageMatches.length - 1].index!;
+        const truncated = repairJson(jsonText.substring(0, lastStageStart - 1));
+        const scenario: TtxScenario = JSON.parse(truncated);
+        console.log("Recovered partial scenario with", scenario.stages?.length, "stages");
+        let calculatedTotal = 0;
+        scenario.stages?.forEach((stage: TtxStage) => {
+          stage.questions?.forEach((q) => {
+            const correctOption = q.options?.find((o) => o.isCorrect);
+            if (correctOption) calculatedTotal += correctOption.points || 0;
+          });
+        });
+        scenario.totalPoints = calculatedTotal;
+        return scenario;
+      }
+    } catch {}
+    
+    throw new Error("Failed to parse TTX scenario — try with fewer questions or a simpler theme");
   }
 }
 

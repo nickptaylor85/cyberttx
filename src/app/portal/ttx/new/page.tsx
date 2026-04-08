@@ -95,7 +95,7 @@ export default function NewTtxPage() {
   // Rotate tips while generating
   useEffect(() => {
     if (!generating) return;
-    const interval = setInterval(() => setTipIndex(i => (i + 1) % LOADING_CONTENT.length), 5000);
+    const interval = setInterval(() => setTipIndex(i => (i + 1) % LOADING_CONTENT.length), 8000);
     return () => clearInterval(interval);
   }, [generating]);
 
@@ -257,7 +257,7 @@ export default function NewTtxPage() {
 
           {/* Progress bar */}
           <div className="w-64 h-1 bg-surface-3 rounded-full mb-10 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-[#00ffd5] to-[#14b89a] rounded-full animate-loading-bar" style={{ animation: "loading-bar 30s ease-in-out forwards" }} />
+            <div className="h-full bg-gradient-to-r from-[#00ffd5] to-[#14b89a] rounded-full animate-loading-bar" style={{ animation: "loading-bar 40s ease-in-out forwards" }} />
           </div>
 
           {/* Rotating tips */}
@@ -279,7 +279,7 @@ export default function NewTtxPage() {
             ))}
           </div>
 
-          <p className="text-gray-600 text-xs mt-8">Typically takes 20-40 seconds</p>
+          <p className="text-gray-600 text-xs mt-8">Typically takes 30-50 seconds</p>
         </div>
       )}
 
