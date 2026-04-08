@@ -70,25 +70,33 @@ export async function GET(req: NextRequest) {
   if (type) actors = actors.filter(a => a.type === type);
 
   if (trending === "true") {
-    // Curated list of additional threat actors not in the built-in database
-    const DISCOVER_ACTORS = [
-      { name: "Storm-0558", aliases: ["Storm-0558"], origin: "China (MSS)", type: "nation-state", motivation: "Espionage", targets: ["Government", "Diplomacy"], activeSince: "2023", description: "Forged Azure AD signing keys to access US government email accounts including State Department and Commerce.", notableAttacks: ["Microsoft cloud email breach (2023)", "US government email access"] },
-      { name: "Black Basta", aliases: ["Black Basta"], origin: "Russia", type: "cybercrime", motivation: "RaaS", targets: ["Healthcare", "Manufacturing", "Finance", "Technology"], activeSince: "2022", description: "Prolific ransomware group linked to former Conti operators. Known for double extortion.", notableAttacks: ["Ascension Health (2024)", "ABB Ltd (2023)", "Capita (2023)"] },
-      { name: "Akira", aliases: ["Akira"], origin: "Unknown", type: "cybercrime", motivation: "RaaS", targets: ["Education", "Healthcare", "Manufacturing", "Finance"], activeSince: "2023", description: "Fast-growing ransomware group exploiting VPN vulnerabilities, particularly Cisco ASA/FTD.", notableAttacks: ["Stanford University (2023)", "Nissan Oceania (2023)"] },
-      { name: "Midnight Blizzard", aliases: ["APT29", "Cozy Bear", "Nobelium"], origin: "Russia (SVR)", type: "nation-state", motivation: "Espionage", targets: ["Technology", "Government", "Defence"], activeSince: "2008", description: "Breached Microsoft corporate email in 2024 via password spray attack on legacy test tenant.", notableAttacks: ["Microsoft corporate breach (2024)", "TeamViewer breach (2024)"] },
-      { name: "Medusa", aliases: ["MedusaLocker", "Medusa Team"], origin: "Unknown", type: "cybercrime", motivation: "RaaS", targets: ["Education", "Healthcare", "Government"], activeSince: "2022", description: "Ransomware group that posts victim data on a dedicated leak site and demands multi-million dollar ransoms.", notableAttacks: ["Minneapolis Public Schools (2023)", "Toyota Financial Services (2023)"] },
-      { name: "NoName057(16)", aliases: ["NoName"], origin: "Russia", type: "hacktivist", motivation: "Pro-Russia hacktivism", targets: ["Government", "Finance", "Transport", "Media"], activeSince: "2022", description: "Pro-Russian DDoS group targeting NATO countries with Project DDoSia crowdsourced attack tool.", notableAttacks: ["Czech government (2023)", "Swiss government (2024)", "NATO websites"] },
-      { name: "Play Ransomware", aliases: ["PlayCrypt", "Play"], origin: "Unknown", type: "cybercrime", motivation: "RaaS", targets: ["Government", "Manufacturing", "Technology", "Telecoms"], activeSince: "2022", description: "Ransomware group known for exploiting FortiOS and Microsoft Exchange vulnerabilities.", notableAttacks: ["City of Oakland (2023)", "Rackspace (2022)", "Arnold Clark (2022)"] },
-      { name: "Hunters International", aliases: ["Hunters"], origin: "Unknown", type: "cybercrime", motivation: "RaaS", targets: ["Healthcare", "Manufacturing", "Government"], activeSince: "2023", description: "Successor to Hive ransomware. Focuses on data exfiltration over encryption.", notableAttacks: ["US Navy contractor (2024)", "Fred Hutchinson Cancer Center (2023)"] },
-      { name: "CyberAv3ngers", aliases: ["IRGC-CEC"], origin: "Iran (IRGC)", type: "hacktivist", motivation: "Anti-Israel hacktivism", targets: ["Water", "Energy", "Critical Infrastructure"], activeSince: "2023", description: "Iranian group targeting Israeli-made Unitronics PLCs in US and UK water treatment facilities.", notableAttacks: ["Aliquippa PA water (2023)", "UK water facilities (2024)"] },
-      { name: "Qilin", aliases: ["Agenda"], origin: "Russia", type: "cybercrime", motivation: "RaaS", targets: ["Healthcare", "Manufacturing", "Technology"], activeSince: "2022", description: "Ransomware group that attacked NHS pathology provider Synnovis, causing major London hospital disruption.", notableAttacks: ["Synnovis/NHS (2024)", "Yanfeng Automotive (2023)"] },
-    ];
+    try {
+      const { default: Anthropic } = await import("@anthropic-ai/sdk");
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const knownNames = actors.map(a => a.name).join(", ");
+      const response = await client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1500,
+        messages: [{
+          role: "user",
+          content: "List 5 real cyber threat actors or ransomware groups active in 2024-2025 that are NOT in this list: " + knownNames + ". Return ONLY a JSON array, no markdown: [{" + '"name":"string","aliases":[],"origin":"string","type":"nation-state"|"cybercrime"|"hacktivist","motivation":"string","targets":["string"],"activeSince":"string","description":"1 sentence","notableAttacks":["string"]}]'
+        }],
+      });
 
-    // Filter out actors already in the database
-    const existingNames = new Set(actors.map(a => a.name.toLowerCase()));
-    const newActors = DISCOVER_ACTORS.filter(a => !existingNames.has(a.name.toLowerCase()));
-
-    return NextResponse.json({ actors, trending: newActors });
+      const text = response.content.find((b: any) => b.type === "text");
+      if (text && text.type === "text") {
+        let raw = text.text.trim();
+        raw = raw.replace(/^```json?\s*/i, "").replace(/\s*```$/i, "");
+        const match = raw.match(/\[[\s\S]*\]/);
+        if (match) {
+          const discovered = JSON.parse(match[0]) as any[];
+          return NextResponse.json({ actors, trending: discovered });
+        }
+      }
+    } catch (e: any) {
+      console.error("[threat-actors] Discover error:", e?.message);
+      return NextResponse.json({ actors, trendingError: e?.message || "AI search failed" });
+    }
   }
 
   return NextResponse.json({ actors });

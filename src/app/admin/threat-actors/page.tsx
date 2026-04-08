@@ -40,8 +40,12 @@ export default function AdminThreatActorsPage() {
     try {
       const res = await fetch("/api/portal/threat-actors?trending=true");
       const data = await res.json() as any;
-      setDiscovered(data.trending || []);
-    } catch {}
+      if (data.trendingError) {
+        alert("Discover error: " + data.trendingError);
+      } else {
+        setDiscovered(data.trending || []);
+      }
+    } catch (e: any) { alert("Network error: " + (e?.message || "")); }
     setSyncing(false);
   }
 
