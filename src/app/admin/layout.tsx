@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { LogoMark, LogoWordmark } from "@/components/Logo";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import UserMenu from "@/components/UserMenu";
@@ -89,8 +90,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className={cn("w-60 bg-surface-1 border-r border-surface-3 p-4 flex flex-col fixed inset-y-0 left-0 z-40 transition-transform lg:translate-x-0", mobileOpen ? "translate-x-0" : "-translate-x-full")}>
         <div className="flex items-center justify-between mb-6">
           <Link href="/admin" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center"><span className="text-white text-xs font-bold">TC</span></div>
-            <div><span className="text-white text-sm font-bold">ThreatCast</span><span className="text-red-400 text-xs ml-1">Admin</span></div>
+            <LogoMark size={34} />
+            <div><LogoWordmark size="sm" /><span className="text-red-400 text-xs ml-1">Admin</span></div>
           </Link>
         </div>
 

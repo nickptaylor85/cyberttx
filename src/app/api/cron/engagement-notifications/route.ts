@@ -37,7 +37,7 @@ export async function GET(req: Request) {
           body: JSON.stringify({
             from: "ThreatCast <noreply@threatcast.io>", to: [user.email],
             subject: "🔥 Your streak is about to expire!",
-            html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="font-size:20px;font-weight:700;margin-bottom:16px;">Threat<span style="color:#14b89a;">Cast</span></div><h2 style="color:#f97316;">🔥 Your streak expires today!</h2><p>Hey ${user.firstName || "there"}, you've been on a roll. Don't break your streak — it only takes 2 minutes.</p><a href="https://threatcast.io/portal/daily-drill" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Do Today's Drill →</a><p style="color:#888;font-size:12px;margin-top:24px;">Or try the <a href="https://threatcast.io/portal/challenge" style="color:#14b89a;">weekly challenge</a>.</p></div>`,
+            html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:16px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div><h2 style="color:#f97316;">🔥 Your streak expires today!</h2><p>Hey ${user.firstName || "there"}, you've been on a roll. Don't break your streak — it only takes 2 minutes.</p><a href="https://threatcast.io/portal/daily-drill" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Do Today's Drill →</a><p style="color:#888;font-size:12px;margin-top:24px;">Or try the <a href="https://threatcast.io/portal/challenge" style="color:#14b89a;">weekly challenge</a>.</p></div>`,
           }),
         });
         sent++;
@@ -60,7 +60,7 @@ export async function GET(req: Request) {
           body: JSON.stringify({
             from: "ThreatCast <noreply@threatcast.io>", to: [user.email],
             subject: "New exercises waiting for you",
-            html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="font-size:20px;font-weight:700;margin-bottom:16px;">Threat<span style="color:#14b89a;">Cast</span></div><h2>Your team has been training without you 👀</h2><p>Hey ${user.firstName || "there"}, this week's challenge is live and your colleagues are climbing the leaderboard.</p><a href="https://threatcast.io/portal/challenge" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Jump Back In →</a></div>`,
+            html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:16px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div><h2>Your team has been training without you 👀</h2><p>Hey ${user.firstName || "there"}, this week's challenge is live and your colleagues are climbing the leaderboard.</p><a href="https://threatcast.io/portal/challenge" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Jump Back In →</a></div>`,
           }),
         });
         sent++;

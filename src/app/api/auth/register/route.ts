@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
         to: [emailLower],
         subject: "Welcome to ThreatCast — Let's get started",
         html: `<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
-          <div style="font-size:20px;font-weight:700;margin-bottom:24px;">Threat<span style="color:#14b89a;">Cast</span></div>
+          <div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:24px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div>
           <h1 style="font-size:22px;margin-bottom:16px;">Welcome, ${firstName || "there"}!</h1>
           <p style="color:#333;line-height:1.6;">Your account is ready. Here's how to get the most out of ThreatCast:</p>
           <div style="margin:24px 0;">

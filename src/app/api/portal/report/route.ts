@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 <style>
 @page{margin:2cm;size:A4}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a2e;line-height:1.6;max-width:800px;margin:0 auto;padding:40px}
 .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #14b89a;padding-bottom:20px;margin-bottom:30px}
-.logo{font-size:24px;font-weight:700}.logo span{color:#14b89a}.badge{background:#14b89a;color:white;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
+.logo{font-size:22px;font-weight:800;font-family:monospace;letter-spacing:3px}.logo span{color:#00ffd5}.badge{background:#14b89a;color:white;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
 h1{font-size:20px;margin:0 0 8px}h2{font-size:16px;color:#14b89a;margin-top:30px;border-bottom:1px solid #eee;padding-bottom:8px}h3{font-size:14px;margin-top:20px}
 .meta{color:#666;font-size:13px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:20px 0}
 .stat{background:#f8f9fa;border-radius:12px;padding:20px;text-align:center}.stat-value{font-size:32px;font-weight:700;color:#14b89a}.stat-label{font-size:11px;color:#666;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
@@ -48,7 +48,7 @@ table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}th,td{pad
 .benchmark-value{font-size:24px;font-weight:700}.benchmark-label{font-size:10px;color:#666;text-transform:uppercase}
 .page-break{page-break-before:always}
 </style></head><body>
-<div class="header"><div><div class="logo">Threat<span>Cast</span></div><div class="meta">${session.organization.name}${session.organization.profile?.industry ? ` · ${session.organization.profile.industry}` : ''}</div></div><div><div class="badge">EXECUTIVE REPORT</div><div class="meta" style="text-align:right;margin-top:8px">${session.completedAt ? new Date(session.completedAt).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'In Progress'}</div></div></div>
+<div class="header"><div><div class="logo" style="font-family:monospace;letter-spacing:3px;">THREAT<span>CAST</span></div><div class="meta">${session.organization.name}${session.organization.profile?.industry ? ` · ${session.organization.profile.industry}` : ''}</div></div><div><div class="badge">EXECUTIVE REPORT</div><div class="meta" style="text-align:right;margin-top:8px">${session.completedAt ? new Date(session.completedAt).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'In Progress'}</div></div></div>
 
 <h1>${session.title}</h1>
 <div class="meta">${session.difficulty} · ${session.theme || 'General'} · ${session.mode} · ${totalQ} questions</div>

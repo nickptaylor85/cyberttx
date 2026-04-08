@@ -48,7 +48,7 @@ export async function GET(req: Request) {
             to: [user.email],
             subject: `🏅 New Weekly Challenge: ${challenge.title}`,
             html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;">
-              <div style="font-size:20px;font-weight:700;margin-bottom:16px;">Threat<span style="color:#14b89a;">Cast</span></div>
+              <div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:16px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div>
               <h2 style="color:#14b89a;">🏅 This Week's Challenge</h2>
               <p>Hey ${user.firstName || "there"}, the new weekly challenge just dropped!</p>
               <div style="background:#1a1a2e;padding:20px;border-radius:8px;text-align:center;margin:16px 0;">

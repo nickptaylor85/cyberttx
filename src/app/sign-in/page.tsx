@@ -1,4 +1,5 @@
 "use client";
+import { LogoMark, LogoWordmark } from "@/components/Logo";
 import { signIn } from "next-auth/react";
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -91,7 +92,8 @@ export default function SignInPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex"><div className="w-10 h-10 rounded-xl bg-cyber-600 flex items-center justify-center"><svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg></div></Link>
-          <h1 className="font-display text-2xl font-bold text-white mt-4">Sign in to ThreatCast</h1>
+          <div className="flex items-center gap-3 mt-4"><LogoMark size={40} /><LogoWordmark size="lg" /></div>
+          <h1 className="font-display text-xl font-bold text-white mt-4">Sign in to your account</h1>
         </div>
         <Suspense fallback={<div className="cyber-card text-center py-8"><p className="text-gray-500">Loading...</p></div>}><SignInForm /></Suspense>
         <p className="text-center text-gray-500 text-sm mt-4"><a href="/forgot-password" className="text-gray-500 hover:text-gray-300">Forgot password?</a> · Don&apos;t have an account? <Link href="/sign-up" className="text-cyber-400 hover:text-cyber-300">Create one</Link></p>

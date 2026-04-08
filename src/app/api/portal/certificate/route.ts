@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
 .corner{position:absolute;width:30px;height:30px;border-color:#14b89a;border-style:solid}
 .tl{top:14mm;left:14mm;border-width:3px 0 0 3px}.tr{top:14mm;right:14mm;border-width:3px 3px 0 0}
 .bl{bottom:14mm;left:14mm;border-width:0 0 3px 3px}.br{bottom:14mm;right:14mm;border-width:0 3px 3px 0}
-.logo{font-size:16px;font-weight:700;letter-spacing:2px;margin-bottom:8px;font-family:system-ui}.logo span{color:#14b89a}
+.logo{font-size:16px;font-weight:700;letter-spacing:2px;margin-bottom:8px;font-family:system-ui}.logo span{color:#00ffd5}
 .title{font-size:42px;font-weight:300;letter-spacing:8px;text-transform:uppercase;color:#14b89a;margin:16px 0 8px}
 .subtitle{font-size:14px;color:#888;letter-spacing:4px;text-transform:uppercase;margin-bottom:32px}
 .name{font-size:36px;font-weight:700;margin:8px 0;background:linear-gradient(90deg,#14b89a,#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 <div class="cert">
 <div class="border"></div><div class="inner-border"></div>
 <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-<div class="logo">THREAT<span>CAST</span></div>
+<div class="logo" style="font-family:monospace;letter-spacing:3px;">THREAT<span>CAST</span></div>
 <div class="title">Certificate</div>
 <div class="subtitle">of completion</div>
 <p class="details">This certifies that</p>

@@ -76,7 +76,7 @@ export async function POST(
             to: [admin.email],
             subject: `Exercise completed: ${session.title} (${accuracy}%)`,
             html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;">
-              <div style="font-size:20px;font-weight:700;margin-bottom:24px;">Threat<span style="color:#14b89a;">Cast</span></div>
+              <div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:24px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div>
               <h2 style="font-size:18px;">Exercise Completed</h2>
               <p><strong>${playerName}</strong> completed <strong>${session.title}</strong></p>
               <div style="background:#f5f5f5;padding:16px;border-radius:8px;margin:16px 0;">

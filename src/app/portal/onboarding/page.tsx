@@ -1,4 +1,5 @@
 "use client";
+import { LogoMark, LogoWordmark } from "@/components/Logo";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -37,7 +38,8 @@ export default function OnboardingPage() {
         {step === 1 && (
           <div className="cyber-card text-center py-8">
             <p className="text-4xl mb-4">🛡️</p>
-            <h1 className="font-display text-2xl font-bold text-white mb-2">Welcome to ThreatCast</h1>
+            <div className="flex items-center gap-3 mb-4"><LogoMark size={44} /><LogoWordmark size="lg" /></div>
+            <h1 className="font-display text-xl font-bold text-white mb-2">Welcome aboard</h1>
             <p className="text-gray-400 text-sm mb-6">Let&apos;s set up your portal in 60 seconds.</p>
             <button onClick={() => setStep(2)} className="cyber-btn-primary px-8 py-3">Let&apos;s Go →</button>
           </div>

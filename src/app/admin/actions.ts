@@ -114,7 +114,7 @@ export async function sendInvites(orgId: string, emailList: string[]) {
             to: [trimmed],
             subject: `You've been invited to ${org.name} on ThreatCast`,
             html: `<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
-              <div style="font-size:20px;font-weight:700;margin-bottom:24px;">Threat<span style="color:#14b89a;">Cast</span></div>
+              <div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:24px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div>
               <h1 style="font-size:20px;margin-bottom:16px;">You've been invited to ${org.name}</h1>
               <p style="color:#333;line-height:1.6;">Your organisation is using ThreatCast for AI-powered cybersecurity tabletop exercises. Click below to create your account.</p>
               <a href="${signUpUrl}" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Create Account →</a>

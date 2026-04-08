@@ -1,4 +1,5 @@
 "use client";
+import { LogoMark, LogoWordmark } from "@/components/Logo";
 import { signIn } from "next-auth/react";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";

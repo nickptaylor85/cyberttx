@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       subject,
       type: "broadcast",
       from: "ThreatCast <hello@threatcast.io>",
-      html: `<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;"><div style="font-size:20px;font-weight:700;margin-bottom:24px;">Threat<span style="color:#14b89a;">Cast</span></div>${personalised}<div style="margin-top:32px;padding-top:16px;border-top:1px solid #333;"><a href="https://threatcast.io/portal" style="display:inline-block;background:#14b89a;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Open ThreatCast →</a></div><p style="color:#555;font-size:11px;margin-top:24px;">You're receiving this because you have a ThreatCast account. <a href="https://threatcast.io/portal/notifications" style="color:#14b89a;">Manage preferences</a></p></div>`,
+      html: `<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;"><div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:24px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div>${personalised}<div style="margin-top:32px;padding-top:16px;border-top:1px solid #333;"><a href="https://threatcast.io/portal" style="display:inline-block;background:#14b89a;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Open ThreatCast →</a></div><p style="color:#555;font-size:11px;margin-top:24px;">You're receiving this because you have a ThreatCast account. <a href="https://threatcast.io/portal/notifications" style="color:#14b89a;">Manage preferences</a></p></div>`,
     });
 
     if (result.success) sent++;

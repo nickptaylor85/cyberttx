@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoMark, LogoWordmark } from "@/components/Logo";
 
 export default function Home() {
   return (
@@ -173,7 +174,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-surface-3 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2"><div className="w-6 h-6 rounded bg-cyber-600 flex items-center justify-center"><svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg></div><span className="text-gray-500 text-sm">ThreatCast</span></div>
+          <div className="flex items-center gap-2"><LogoMark size={24} /><LogoWordmark size="sm" /></div>
           <div className="flex gap-4 text-gray-600 text-xs"><Link href="/terms" className="hover:text-gray-400">Terms</Link><Link href="/privacy" className="hover:text-gray-400">Privacy</Link><a href="mailto:hello@threatcast.io" className="hover:text-gray-400">Contact</a></div>
           <p className="text-gray-700 text-xs">© 2026 ThreatCast. Glasgow, Scotland.</p>
         </div>

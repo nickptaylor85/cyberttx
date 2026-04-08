@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
         to: [email.toLowerCase()],
         subject: "Reset your ThreatCast password",
         html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;">
-          <div style="font-size:20px;font-weight:700;margin-bottom:24px;">Threat<span style="color:#14b89a;">Cast</span></div>
+          <div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:24px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div>
           <h2 style="font-size:18px;">Reset your password</h2>
           <p style="color:#666;">Click the button below to set a new password. This link expires in 1 hour.</p>
           <a href="${resetUrl}" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0;">Reset Password →</a>

@@ -9,6 +9,7 @@ import { t as translate, LangCode } from "@/lib/i18n/translations";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogoMark, LogoWordmark } from "@/components/Logo";
 import UserMenu from "@/components/UserMenu";
 import { cn } from "@/lib/utils";
 
@@ -252,7 +253,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg hover:bg-surface-2 text-gray-400">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
-          <span className="font-display text-sm font-bold text-white">Threat<span className="text-cyber-400">Cast</span></span>
+          <LogoWordmark size="sm" />
           <UserMenu />
           <a href="/api/auth/signout" className="text-red-400/60 hover:text-red-400 text-xs mt-1">Sign Out</a>
         </div>
