@@ -22,19 +22,25 @@ export async function GET(req: NextRequest) {
       const client = new Anthropic();
       const response = await client.messages.create({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
+        max_tokens: 1500,
+        tools: [{ type: "web_search_20250305" as any, name: "web_search" } as any],
         messages: [{
           role: "user",
-          content: "What are the 5 most active cyber threat actors or ransomware groups in the news right now (2025-2026)? Return ONLY a JSON array with objects: {name, description, targets: [], ttps: []}. No markdown, just JSON."
+          content: `Search the web for the most active cyber threat actors and ransomware groups in the news RIGHT NOW in 2025-2026. Look for recent attacks, new campaigns, and emerging groups. Then return ONLY a JSON array of the top 5 most newsworthy threat actors with: {name: string, description: string (1 sentence about their latest activity), targets: string[], ttps: string[] (MITRE technique descriptions not IDs)}. No markdown, no explanation, ONLY the JSON array.`
         }],
       });
-      const text = (response.content[0] as any).text || "";
-      const match = text.match(/\[[\s\S]*\]/);
+
+      // Extract text from response (may have multiple content blocks due to tool use)
+      const textBlocks = response.content.filter((b: any) => b.type === "text").map((b: any) => b.text);
+      const fullText = textBlocks.join("\n");
+      const match = fullText.match(/\[[\s\S]*\]/);
       if (match) {
         const trendingData = JSON.parse(match[0]) as any;
         return NextResponse.json({ actors, trending: trendingData });
       }
-    } catch {}
+    } catch (e: any) {
+      console.error("[threat-actors] Trending search error:", e?.message);
+    }
   }
 
   return NextResponse.json({ actors });
