@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
+export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { THREAT_ACTORS, searchActors } from "@/lib/threat-actors";
@@ -74,12 +74,12 @@ export async function GET(req: NextRequest) {
     try {
       const client = new Anthropic();
       const response = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1500,
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1000,
         tools: [{ type: "web_search_20250305" as any, name: "web_search" } as any],
         messages: [{
           role: "user",
-          content: `Search the web for the most active cyber threat actors and ransomware groups in the news RIGHT NOW in 2025-2026. Return ONLY a JSON array of 5 actors: [{name, aliases: [], origin, type: "nation-state"|"cybercrime"|"hacktivist", motivation, targets: [], activeSince, description (1 sentence), notableAttacks: []}]. No markdown, ONLY JSON array.`
+          content: `Search the web for 5 cyber threat actors currently in the news in 2026. Return ONLY a JSON array: [{name, origin, type, motivation, targets: [], description, notableAttacks: []}]. No markdown.`
         }],
       });
 
@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
 // POST — add a discovered actor to the database
 export async function POST(req: NextRequest) {
   const user = await getAuthUser();
-  if (!user || user.role !== "SUPER_ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!user || (user.role !== "SUPER_ADMIN" && user.role !== "CLIENT_ADMIN")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   await ensureTable();
   const actor = await req.json();
