@@ -39,7 +39,7 @@ export default function CustomScenarioPage() {
   useEffect(() => {
     if (step === 2 && actors.length === 0) {
       setLoadingActors(true);
-      fetch("/api/portal/threat-actors").then(r => r.ok ? r.json() : { actors: [] }).then(d => {
+      fetch("/api/portal/threat-actors").then(r => r.ok ? r.json() : { actors: [] }).then((d: any) => {
         setActors(d.actors || []);
         setLoadingActors(false);
       }).catch(() => setLoadingActors(false));
@@ -48,7 +48,7 @@ export default function CustomScenarioPage() {
 
   function loadTrending() {
     setLoadingTrending(true);
-    fetch("/api/portal/threat-actors?trending=true").then(r => r.ok ? r.json() : {}).then(d => {
+    fetch("/api/portal/threat-actors?trending=true").then(r => r.ok ? r.json() : {}).then((d: any) => {
       setTrending(d.trending || []);
       setLoadingTrending(false);
     }).catch(() => setLoadingTrending(false));

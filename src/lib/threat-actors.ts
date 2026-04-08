@@ -31,12 +31,12 @@ export function buildActorContext(actor: ThreatActor): string {
   return `
 THREAT ACTOR PROFILE:
 Name: ${actor.name} (${actor.aliases.join(", ")})
-Origin: ${actor.origin} | Motivation: ${actor.motivation} | Active Since: ${actor.firstSeen}
+Origin: ${actor.origin} | Motivation: ${actor.motivation} | Active Since: ${actor.activeSince}
 Description: ${actor.description}
 Targets: ${actor.targets.join(", ")}
-Tools: ${actor.tools.join(", ")}
+TTPs: ${actor.ttpDescriptions.join(", ")}
 MITRE Techniques: ${actor.ttps.join(", ")}
-Notable Incidents: ${actor.notableIncidents.join("; ")}
+Notable Incidents: ${actor.notableAttacks.join("; ")}
 
 IMPORTANT: This exercise MUST simulate an attack by ${actor.name}. Use their KNOWN TTPs, tools, and patterns. Reference their real operations. The scenario should feel like this specific group is targeting the organisation.`;
 }
