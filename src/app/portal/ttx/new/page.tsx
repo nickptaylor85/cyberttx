@@ -159,26 +159,20 @@ export default function NewTtxPage() {
     setGenerating(true);
     setError("");
 
-    // Build selected characters payload
     const selectedRoster = rosterCharacters
       .filter((c) => selectedCharacterIds.has(c.id))
       .map((c) => ({
-        name: c.name,
-        role: c.role,
-        department: c.department || "",
-        description: c.description || "",
-        expertise: c.expertise || [],
+        name: c.name, role: c.role, department: c.department || "",
+        description: c.description || "", expertise: c.expertise || [],
       }));
 
     const adHocPayload = adHocCharacters.map((c) => ({
-      name: c.name,
-      role: c.role,
-      department: c.department || "",
-      description: c.description || "",
-      expertise: [],
+      name: c.name, role: c.role, department: c.department || "",
+      description: c.description || "", expertise: [],
     }));
 
     try {
+      // Step 1: Create session (returns immediately)
       const res = await fetch("/api/ttx/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -195,8 +189,30 @@ export default function NewTtxPage() {
         const data = await res.json();
         throw new Error(data.error || "Generation failed");
       }
-      const session = await res.json();
-      router.push(`/portal/ttx/${session.id}`);
+      const { id: sessionId } = await res.json();
+
+      // Step 2: Poll for completion every 3 seconds
+      const maxPolls = 40; // 40 * 3s = 2 minutes max
+      for (let i = 0; i < maxPolls; i++) {
+        await new Promise(r => setTimeout(r, 3000));
+        try {
+          const poll = await fetch(`/api/ttx/session/${sessionId}`);
+          if (poll.ok) {
+            const data = await poll.json();
+            if (data.status === "LOBBY" || data.status === "IN_PROGRESS" || data.status === "COMPLETED") {
+              router.push(`/portal/ttx/${sessionId}`);
+              return;
+            }
+            if (data.status === "CANCELLED") {
+              throw new Error("Generation failed — the AI couldn't produce a valid scenario. Try again with fewer questions or a different theme.");
+            }
+          }
+        } catch (pollErr: any) {
+          if (pollErr?.message?.includes("Generation failed")) throw pollErr;
+          // Network blip — keep polling
+        }
+      }
+      throw new Error("Generation timed out. Try again with fewer questions.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to generate");
       setGenerating(false);
