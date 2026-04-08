@@ -75,23 +75,24 @@ export async function GET(req: NextRequest) {
       const client = new Anthropic();
       const response = await client.messages.create({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 1000,
-        tools: [{ type: "web_search_20250305" as any, name: "web_search" } as any],
+        max_tokens: 1500,
         messages: [{
           role: "user",
-          content: `Search the web for 5 cyber threat actors currently in the news in 2026. Return ONLY a JSON array: [{name, origin, type, motivation, targets: [], description, notableAttacks: []}]. No markdown.`
+          content: `You are a cyber threat intelligence analyst. List 5 threat actors or ransomware groups that were most active and newsworthy in 2024-2025. For each, provide details that are NOT already in this list of known actors: ${actors.map(a => a.name).join(", ")}. Return ONLY a JSON array: [{"name": "string", "aliases": [], "origin": "string", "type": "nation-state"|"cybercrime"|"hacktivist", "motivation": "string", "targets": ["string"], "activeSince": "string", "description": "1 sentence about recent activity", "notableAttacks": ["string"]}]. No markdown, no explanation, ONLY the JSON array.`
         }],
       });
 
-      const textBlocks = response.content.filter((b: any) => b.type === "text").map((b: any) => b.text);
-      const fullText = textBlocks.join("\n");
-      const match = fullText.match(/\[[\s\S]*\]/);
-      if (match) {
-        const trendingData = JSON.parse(match[0]) as any[];
-        return NextResponse.json({ actors, trending: trendingData });
+      const text = response.content.find((b: any) => b.type === "text");
+      if (text && text.type === "text") {
+        let jsonStr = text.text.trim().replace(/^\`\`\`json?\s*/i, "").replace(/\s*\`\`\`$/i, "");
+        const match = jsonStr.match(/\[[\s\S]*\]/);
+        if (match) {
+          const trendingData = JSON.parse(match[0]) as any[];
+          return NextResponse.json({ actors, trending: trendingData });
+        }
       }
     } catch (e: any) {
-      console.error("[threat-actors] Trending search error:", e?.message);
+      console.error("[threat-actors] Discover error:", e?.message);
     }
   }
 
