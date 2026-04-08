@@ -33,6 +33,25 @@ interface AdHocCharacter {
   description: string;
 }
 
+const LOADING_CONTENT = [
+  { type: "tip", icon: "🛡️", text: "The average cost of a data breach in 2024 was $4.88 million — the highest ever recorded.", source: "IBM" },
+  { type: "tip", icon: "⏱️", text: "It takes an average of 194 days to identify a breach and 68 days to contain it.", source: "IBM" },
+  { type: "actor", icon: "🕵️", text: "APT29 (Cozy Bear) — Russia's SVR. Responsible for the SolarWinds attack that compromised 18,000 organisations.", source: "" },
+  { type: "tip", icon: "🔑", text: "80% of breaches involve compromised credentials. MFA blocks 99.9% of automated attacks.", source: "Microsoft" },
+  { type: "actor", icon: "⚔️", text: "Scattered Spider — teenage hackers who social-engineered MGM Resorts with a 10-minute phone call. $100M+ in losses.", source: "" },
+  { type: "tip", icon: "📧", text: "Phishing is the initial attack vector in 36% of all breaches. It takes just one click.", source: "Verizon DBIR" },
+  { type: "actor", icon: "💀", text: "LockBit — the most prolific ransomware group, responsible for 1,700+ attacks before being disrupted by Operation Cronos.", source: "" },
+  { type: "tip", icon: "🏭", text: "Ransomware attacks against critical infrastructure increased 87% in 2023.", source: "CISA" },
+  { type: "actor", icon: "🐉", text: "Volt Typhoon — Chinese group pre-positioning in US critical infrastructure using living-off-the-land techniques. Almost undetectable.", source: "" },
+  { type: "tip", icon: "💰", text: "The average ransomware payment in 2024 was $2.73 million — up 500% from the previous year.", source: "Sophos" },
+  { type: "actor", icon: "🇰🇵", text: "Lazarus Group — North Korea's cyber unit. Stole $625M from the Ronin Bridge and funded the regime's nuclear programme.", source: "" },
+  { type: "tip", icon: "🔒", text: "95% of cybersecurity breaches are caused by human error. Training is your strongest defence.", source: "WEF" },
+  { type: "actor", icon: "🌊", text: "CL0P exploited the MOVEit zero-day to steal data from 2,500+ organisations in a single campaign — Shell, BBC, US government.", source: "" },
+  { type: "tip", icon: "🏥", text: "Healthcare is the most expensive industry for breaches at $10.93M per incident on average.", source: "IBM" },
+  { type: "actor", icon: "🔥", text: "Sandworm (Russia) — destroyed 35,000 workstations at Saudi Aramco and caused $10B+ damage with NotPetya.", source: "" },
+  { type: "tip", icon: "☁️", text: "82% of breaches involve data stored in the cloud. Misconfiguration is the #1 cloud security risk.", source: "IBM" },
+];
+
 const WIZARD_STEPS = ["Theme", "Threat Actor", "Configuration", "Characters", "MITRE ATT&CK", "Launch"];
 
 export default function NewTtxPage() {
@@ -42,6 +61,7 @@ export default function NewTtxPage() {
   const [orgTools, setOrgTools] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [tipIndex, setTipIndex] = useState(0);
   const [mitreStats, setMitreStats] = useState<{ mostUsed: string[]; leastUsed: string[] }>({ mostUsed: [], leastUsed: [] });
   const [error, setError] = useState("");
   const [threatActors, setThreatActors] = useState<ThreatActor[]>([]);
@@ -71,6 +91,13 @@ export default function NewTtxPage() {
 
   // fromAlert is now handled directly in the Alert Feed page
   // (calls /api/ttx/generate and redirects to the exercise)
+
+  // Rotate tips while generating
+  useEffect(() => {
+    if (!generating) return;
+    const interval = setInterval(() => setTipIndex(i => (i + 1) % LOADING_CONTENT.length), 5000);
+    return () => clearInterval(interval);
+  }, [generating]);
 
   // Load threat actors when entering step 2
   useEffect(() => {
@@ -190,6 +217,56 @@ export default function NewTtxPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Full-screen generating overlay */}
+      {generating && (
+        <div className="fixed inset-0 z-50 bg-[#030712] flex flex-col items-center justify-center px-6">
+          {/* Animated shield */}
+          <div className="relative mb-8">
+            <div className="w-20 h-20 rounded-2xl bg-[#00ffd5]/5 border border-[#00ffd5]/20 flex items-center justify-center animate-pulse">
+              <svg className="w-10 h-10" viewBox="0 0 120 120" fill="none">
+                <path d="M60 14 L30 29 L26 74 L60 104 L94 74 L90 29 Z" fill="rgba(0,255,213,0.06)" stroke="#00ffd5" strokeWidth="2"/>
+                <path d="M51 56 L57 63 L70 48" fill="none" stroke="#00ffd5" strokeWidth="3" strokeLinecap="square"/>
+              </svg>
+            </div>
+            <div className="absolute -inset-4 rounded-3xl bg-[#00ffd5]/5 animate-ping" style={{ animationDuration: "2s" }} />
+          </div>
+
+          <p className="font-mono text-sm font-bold tracking-wider mb-2">
+            <span className="text-gray-100">THREAT</span><span className="text-[#00ffd5]">CAST</span>
+          </p>
+          <p className="text-[#00ffd5] text-sm font-semibold mb-1">Generating Your Scenario</p>
+          <p className="text-gray-500 text-xs mb-8">
+            {selectedTheme?.icon} {selectedTheme?.name} · {config.difficulty} · {config.questionCount} questions
+          </p>
+
+          {/* Progress bar */}
+          <div className="w-64 h-1 bg-surface-3 rounded-full mb-10 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-[#00ffd5] to-[#14b89a] rounded-full animate-loading-bar" style={{ animation: "loading-bar 30s ease-in-out forwards" }} />
+          </div>
+
+          {/* Rotating tips */}
+          <div className="max-w-md text-center min-h-[100px] flex flex-col items-center justify-center">
+            <p className="text-2xl mb-3">{LOADING_CONTENT[tipIndex].icon}</p>
+            <p className="text-gray-300 text-sm leading-relaxed">{LOADING_CONTENT[tipIndex].text}</p>
+            {LOADING_CONTENT[tipIndex].source && (
+              <p className="text-gray-600 text-xs mt-2">— {LOADING_CONTENT[tipIndex].source}</p>
+            )}
+            <p className="text-gray-700 text-xs mt-1 uppercase tracking-wider">
+              {LOADING_CONTENT[tipIndex].type === "actor" ? "Threat Actor Intel" : "Cyber Security Fact"}
+            </p>
+          </div>
+
+          {/* Dots indicator */}
+          <div className="flex gap-1.5 mt-6">
+            {LOADING_CONTENT.map((_, i) => (
+              <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === tipIndex ? "bg-[#00ffd5] w-4" : "bg-surface-3"}`} />
+            ))}
+          </div>
+
+          <p className="text-gray-600 text-xs mt-8">Typically takes 20-40 seconds</p>
+        </div>
+      )}
+
       <h1 className="font-display text-2xl font-bold text-white mb-2">Create New Exercise</h1>
       <p className="text-gray-500 text-sm mb-8">Configure your tabletop exercise and let AI generate the scenario.</p>
 
@@ -714,24 +791,7 @@ export default function NewTtxPage() {
             </button>
           </div>
 
-          {generating && (
-            <div className="mt-6 cyber-card bg-surface-0 border-cyber-600/30">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute h-full w-full rounded-full bg-cyber-400 opacity-75"></span>
-                  <span className="relative rounded-full h-3 w-3 bg-cyber-500"></span>
-                </div>
-                <p className="text-cyber-400 font-medium text-sm">AI is generating your scenario...</p>
-              </div>
-              <p className="text-gray-500 text-sm">
-                Creating a realistic {selectedTheme?.name?.toLowerCase()} incident with {config.questionCount} questions
-                {totalCharacters > 0 ? `, featuring ${totalCharacters} named character${totalCharacters > 1 ? "s" : ""}` : ""}
-                . This usually takes 15-30 seconds.
-              </p>
-              <p className="text-gray-500 text-xs mt-3">You can navigate away — we&apos;ll email you when it&apos;s ready.</p>
-              <a href="/portal/ttx" className="text-cyber-400 text-sm hover:text-cyber-300 mt-2 inline-block">← Back to exercises</a>
-            </div>
-          )}
+          {generating && <div />}
         </div>
       )}
     </div>
