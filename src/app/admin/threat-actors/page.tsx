@@ -22,6 +22,8 @@ export default function AdminThreatActorsPage() {
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [discovered, setDiscovered] = useState<any[]>([]);
   const [addedNames, setAddedNames] = useState<Set<string>>(new Set());
 
   function loadActors() {
@@ -32,6 +34,16 @@ export default function AdminThreatActorsPage() {
   }
 
   useEffect(() => { loadActors(); }, []);
+
+  async function discoverActors() {
+    setSyncing(true); setDiscovered([]);
+    try {
+      const res = await fetch("/api/portal/threat-actors?trending=true");
+      const data = await res.json() as any;
+      setDiscovered(data.trending || []);
+    } catch {}
+    setSyncing(false);
+  }
 
   async function addActor(actor: any) {
     setAdding(actor.name);
@@ -68,10 +80,47 @@ export default function AdminThreatActorsPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-display text-xl font-bold text-white">Threat Actors</h1>
-        <p className="text-gray-500 text-xs mt-1">{actors.length} actors available for exercises</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-display text-xl font-bold text-white">Threat Actors</h1>
+          <p className="text-gray-500 text-xs mt-1">{actors.length} actors available for exercises</p>
+        </div>
+        <button onClick={discoverActors} disabled={syncing} className="cyber-btn-primary text-sm disabled:opacity-50">
+          {syncing ? "Searching..." : "🔍 Discover New Actors"}
+        </button>
       </div>
+
+      {/* AI-discovered actors */}
+      {discovered.length > 0 && (
+        <div className="cyber-card border-purple-500/20 bg-purple-600/5 mb-4">
+          <h2 className="text-purple-400 text-sm font-semibold mb-3">🔍 Discovered via AI Search</h2>
+          <div className="space-y-2">
+            {discovered.map((actor: any, i: number) => {
+              const exists = actorNames.has((actor.name || "").toLowerCase()) || addedNames.has((actor.name || "").toLowerCase());
+              return (
+                <div key={i} className="p-3 bg-surface-2 rounded-lg border border-surface-3 flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-white text-sm font-medium">{actor.name}</p>
+                      {actor.type && <span className={"cyber-badge text-xs " + (tc[actor.type] || "bg-gray-500/20 text-gray-400")}>{actor.type}</span>}
+                    </div>
+                    <p className="text-gray-400 text-xs mt-1">{actor.description || ""}</p>
+                    {actor.notableAttacks?.length > 0 && <p className="text-[#00ffd5] text-xs mt-0.5">{actor.notableAttacks.join(" · ")}</p>}
+                  </div>
+                  {exists ? (
+                    <span className="text-gray-500 text-xs flex-shrink-0 mt-1">Already added</span>
+                  ) : (
+                    <button onClick={() => addActor(actor)} disabled={adding === actor.name}
+                      className="cyber-btn-primary text-xs py-1.5 px-4 flex-shrink-0">
+                      {adding === actor.name ? "Adding..." : "+ Add"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Add new actors section — always visible if extras available */}
       {availableExtras.length > 0 && (
