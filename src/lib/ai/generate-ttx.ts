@@ -54,6 +54,7 @@ interface GenerateTtxParams {
   securityTools: { name: string; vendor: string; category: string }[];
   questionCount: number;
   orgProfile?: OrgProfile | null;
+  orgName?: string;
   characters?: Character[];
   pastPerformance?: PastPerformance | null;
   customIncident?: string;
@@ -85,10 +86,11 @@ const DIFFICULTY_CONFIG = {
   },
 };
 
-function buildCompanyContext(profile?: OrgProfile | null): string {
-  if (!profile || !profile.industry) return "No company profile provided — use a generic mid-sized enterprise.";
+function buildCompanyContext(profile?: OrgProfile | null, orgName?: string): string {
+  if (!profile || !profile.industry) return orgName ? `Company: ${orgName}. No detailed profile available — invent realistic details for a company called ${orgName} and make the scenario feel specific to them.` : "No company profile provided — invent a realistic UK-based company and make the scenario specific to them.";
 
   const parts: string[] = [];
+  if (orgName) parts.push(`Company Name: ${orgName}`);
   if (profile.industry) parts.push(`Industry: ${profile.industry}`);
   if (profile.companySize) parts.push(`Size: ${profile.companySize} employees`);
   if (profile.headquarters) parts.push(`HQ: ${profile.headquarters}`);
@@ -183,7 +185,7 @@ function buildLearningContext(perf?: PastPerformance | null): string {
 export async function generateTtxScenario(params: GenerateTtxParams): Promise<TtxScenario> {
   const {
     theme, difficulty, mitreAttackIds, securityTools, questionCount,
-    orgProfile, characters, pastPerformance, customIncident, language, threatActorContext,
+    orgProfile, characters, pastPerformance, customIncident, language, threatActorContext, orgName,
   } = params;
 
   const diffConfig = DIFFICULTY_CONFIG[difficulty];
@@ -194,7 +196,7 @@ export async function generateTtxScenario(params: GenerateTtxParams): Promise<Tt
   const stageCount = Math.min(5, Math.max(3, Math.ceil(questionCount / 3)));
   const questionsPerStage = Math.ceil(questionCount / stageCount);
 
-  const companyContext = buildCompanyContext(orgProfile);
+  const companyContext = buildCompanyContext(orgProfile, orgName);
   const characterContext = buildCharacterContext(characters);
   const learningContext = buildLearningContext(pastPerformance);
 
@@ -221,8 +223,10 @@ RELATABILITY:
 - Reference realistic third parties — managed service providers, IR firms, law enforcement, insurance carriers
 - Include realistic bureaucratic obstacles — change management processes, approval chains, vendor SLAs
 
-TARGET ORGANIZATION:
+TARGET ORGANIZATION (USE THIS DATA — the scenario MUST be set at this specific company):
   ${companyContext}
+
+CRITICAL: The scenario narrative MUST reference this company by name, use their actual industry context, mention their specific security tools, and reflect their team size and infrastructure. Do NOT use generic placeholder companies.
 ${characterContext}
 ${learningContext}
 
@@ -251,7 +255,7 @@ AUDIENCE: ${diffConfig.description}
 
 RESPONSE FORMAT: Return ONLY valid JSON. No markdown fences, no explanation.`;
 
-  const userPrompt = `Create a cybersecurity TTX:
+  const userPrompt = `Create a cybersecurity TTX for ${orgName || "the target organisation"}:
 
 THEME: ${theme}
 DIFFICULTY: ${difficulty}  
@@ -302,8 +306,8 @@ JSON structure:
 }`;
 
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 8000,
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 4096,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
   });

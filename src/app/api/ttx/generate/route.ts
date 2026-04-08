@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
             name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
           })),
           questionCount: questionCount || 12,
-          orgProfile: org.profile as any, characters, pastPerformance: await (async () => { try { const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx"); return analyzePastPerformance(org.id, db); } catch { return null; } })(), customIncident, recentTitles, language: language || "en",
+          orgProfile: org.profile as any, orgName: org.name, characters, pastPerformance: await (async () => { try { const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx"); return analyzePastPerformance(org.id, db); } catch { return null; } })(), customIncident, recentTitles, language: language || "en",
           threatActorContext: threatActorId && getActorById(threatActorId) ? buildActorContext(getActorById(threatActorId)!) : undefined,
         });
 
