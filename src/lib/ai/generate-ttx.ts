@@ -182,6 +182,26 @@ function buildLearningContext(perf?: PastPerformance | null): string {
   return parts.join("\n");
 }
 
+function repairJson(text: string): string {
+  let s = text;
+  // Remove trailing commas before } or ]
+  s = s.replace(/,\s*([\]\}])/g, "$1");
+  // If JSON is truncated, try to close it
+  if (s.includes('"stages"')) {
+    // Count open/close brackets
+    let openBraces = (s.match(/\{/g) || []).length;
+    let closeBraces = (s.match(/\}/g) || []).length;
+    let openBrackets = (s.match(/\[/g) || []).length;
+    let closeBrackets = (s.match(/\]/g) || []).length;
+    // Close any unclosed arrays and objects
+    while (openBrackets > closeBrackets) { s += "]"; closeBrackets++; }
+    while (openBraces > closeBraces) { s += "}"; closeBraces++; }
+  }
+  // Fix common escape issues
+  s = s.replace(/\\'/g, "'");
+  return s;
+}
+
 export async function generateTtxScenario(params: GenerateTtxParams): Promise<TtxScenario> {
   const {
     theme, difficulty, mitreAttackIds, securityTools, questionCount,
@@ -307,7 +327,7 @@ JSON structure:
 
   const response = await anthropic.messages.create({
     model: "claude-haiku-4-5-20251001",
-    max_tokens: 4096,
+    max_tokens: 6000,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
   });
@@ -323,6 +343,9 @@ JSON structure:
   // Try to extract JSON object if there's extra text around it
   const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
   if (jsonMatch) jsonText = jsonMatch[0];
+
+  // Repair common JSON issues from AI output
+  jsonText = repairJson(jsonText);
 
   try {
     const scenario: TtxScenario = JSON.parse(jsonText);
