@@ -356,19 +356,42 @@ JSON structure:
   "totalPoints": 0
 }`;
 
-  const response = await anthropic.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 8000,
-    system: systemPrompt,
-    messages: [{ role: "user", content: userPrompt }],
-  });
+  // Use Sonnet for reliable JSON generation
+  let jsonText = "";
+  let attempts = 0;
+  const maxAttempts = 2;
 
-  const textContent = response.content.find((c) => c.type === "text");
-  if (!textContent || textContent.type !== "text") {
-    throw new Error("No text response from AI");
+  while (attempts < maxAttempts) {
+    attempts++;
+    const actualQuestionCount = attempts === 1 ? questionCount : Math.min(questionCount, 8);
+    const actualPrompt = attempts === 1 ? userPrompt : userPrompt.replace(
+      `QUESTIONS: ${questionCount}`,
+      `QUESTIONS: ${actualQuestionCount} (KEEP IT SHORT — concise explanations only)`
+    );
+
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 8192,
+      system: systemPrompt,
+      messages: [{ role: "user", content: actualPrompt }],
+    });
+
+    const textContent = response.content.find((c) => c.type === "text");
+    if (!textContent || textContent.type !== "text") {
+      throw new Error("No text response from AI");
+    }
+
+    jsonText = textContent.text.trim();
+
+    // Check if output was truncated
+    if (response.stop_reason === "end_turn") {
+      console.log(`[generate] AI completed cleanly on attempt ${attempts} (${jsonText.length} chars)`);
+      break;
+    } else {
+      console.warn(`[generate] AI output truncated on attempt ${attempts} (stop_reason: ${response.stop_reason}, ${jsonText.length} chars). ${attempts < maxAttempts ? "Retrying with fewer questions..." : "Using truncated output."}`);
+      if (attempts >= maxAttempts) break;
+    }
   }
-
-  let jsonText = textContent.text.trim();
   // Strip markdown fences
   jsonText = jsonText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
   // Try to extract JSON object if there's extra text around it

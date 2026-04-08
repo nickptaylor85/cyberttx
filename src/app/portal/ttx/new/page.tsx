@@ -84,7 +84,7 @@ export default function NewTtxPage() {
     threatActorId: "" as string,
     difficulty: "INTERMEDIATE" as string,
     mode: "GROUP" as string,
-    questionCount: 12,
+    questionCount: 10,
     mitreAttackIds: [] as string[],
     timeLimitSecs: null as number | null,
   });
