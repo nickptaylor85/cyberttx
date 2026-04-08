@@ -60,6 +60,9 @@ interface GenerateTtxParams {
   customIncident?: string;
   recentTitles?: string[];
   language?: string;
+  threatActorContext?: string;
+  orgName?: string;
+  providerConfig?: import("@/lib/ai/providers").AIProviderConfig;
 }
 
 const DIFFICULTY_CONFIG = {
@@ -183,7 +186,7 @@ function buildLearningContext(perf?: PastPerformance | null): string {
 export async function generateTtxScenario(params: GenerateTtxParams): Promise<TtxScenario> {
   const {
     theme, difficulty, mitreAttackIds, securityTools, questionCount,
-    orgProfile, characters, pastPerformance, customIncident, language,
+    orgProfile, characters, pastPerformance, customIncident, language, threatActorContext, orgName, providerConfig,
   } = params;
 
   const diffConfig = DIFFICULTY_CONFIG[difficulty];
