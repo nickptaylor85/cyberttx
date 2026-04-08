@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
 
       const text = response.content.find((b: any) => b.type === "text");
       if (text && text.type === "text") {
-        let jsonStr = text.text.trim().replace(/^\`\`\`json?\s*/i, "").replace(/\s*\`\`\`$/i, "");
+        let jsonStr = text.text.trim().replace(/^```json?\s*/i, "").replace(/\s*```$/i, "");
         const match = jsonStr.match(/\[[\s\S]*\]/);
         if (match) {
           const trendingData = JSON.parse(match[0]) as any[];
