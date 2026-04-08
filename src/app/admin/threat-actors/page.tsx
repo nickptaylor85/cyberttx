@@ -89,7 +89,7 @@ export default function AdminThreatActorsPage() {
           <p className="text-gray-500 text-xs mt-1">{hardcoded.length} built-in · {custom.length} discovered</p>
         </div>
         <button onClick={syncThreatActors} disabled={syncing} className="cyber-btn-primary text-sm disabled:opacity-50">
-          {syncing ? "Searching the web..." : "🔍 Discover New Actors"}
+          {syncing ? "Loading..." : "🔍 Discover New Actors"}
         </button>
       </div>
 
