@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
       })),
       orgProfile: org.profile || null,
-      customIncident, language, threatActorId,
+      customIncident, language,
     }),
   }).catch(() => {}); // Fire and forget
 

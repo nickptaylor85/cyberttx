@@ -254,24 +254,11 @@ export async function generateTtxScenario(params: GenerateTtxParams): Promise<Tt
 
 CRITICAL REALISM RULES:
 Your scenarios MUST be grounded in real-world events and threat intelligence.
-${threatActorContext || ""}
 
-After EVERY question explanation, include a "THIS REALLY HAPPENED" one-liner that references a real-world incident relevant to the question. Format it as: "📰 This Really Happened: [Brief incident description, year]". For example: "📰 This Really Happened: In the MGM Resorts breach (2023), Scattered Spider used a helpdesk impersonation call to bypass all security controls in just 10 minutes." Base scenarios on actual attack patterns from recent years:
-- Ransomware: Model after real campaigns like LockBit, BlackCat/ALPHV, Cl0p, Royal, Play — use their actual TTPs
-- APT: Model after real threat groups — APT29 (Cozy Bear), APT28, Lazarus Group, Volt Typhoon, Scattered Spider
-- Supply Chain: Reference real patterns like SolarWinds, MOVEit, 3CX, Codecov, Kaseya
-- BEC: Use realistic social engineering tactics seen in actual FBI IC3 reports
-- Cloud: Base on real misconfiguration patterns from actual cloud breaches
-- Zero-Day: Reference real vulnerability patterns (Log4Shell, ProxyShell, Citrix Bleed style)
 
-RELATABILITY:
-- Use realistic company names, employee names, department structures
-- Include realistic timestamps (e.g., "Friday 17:42 GMT" — attacks often start before weekends)
-- Show realistic human reactions — panic, miscommunication, finger-pointing, key people being unavailable
-- Include business pressure — CEO asking for updates, regulators calling, media interest, customer complaints
-- Show the fog of war — incomplete information, false leads, conflicting alerts
-- Reference realistic third parties — managed service providers, IR firms, law enforcement, insurance carriers
-- Include realistic bureaucratic obstacles — change management processes, approval chains, vendor SLAs
+Base scenarios on real attack patterns. In each explanation, add ONE brief real-world reference like "📰 This happened at [Company] ([Year])." Keep it to one line.
+
+RELATABILITY: Use realistic timestamps, show human reactions (panic, miscommunication), include business pressure. Make it feel real.
 
 TARGET ORGANIZATION (USE THIS DATA — the scenario MUST be set at this specific company):
   ${companyContext}
@@ -288,18 +275,15 @@ Generate ALL content in the following language: ${language}.
 This includes: scenario title, narrative text, stage descriptions, question text, answer options, explanations, and all other written content.
 Technical terms (MITRE ATT&CK, CVE numbers, tool names) should remain in English.
 ` : ""}
-CRITICAL RULES:
-0. Keep explanations to 1-2 sentences MAX. Be concise. No essays.
-1. Exactly 4 options per question (A-D), exactly ONE correct
-2. Wrong options must be plausible — never obviously absurd
-3. Reference the organization's SPECIFIC security tools by name
-4. Include realistic timestamps, IPs, hashes, log excerpts
-5. Narrative must unfold progressively with escalating severity
-6. Reference the org's infrastructure, industry, and regulatory context
-7. Characters (if defined) MUST appear by name — this is non-negotiable
-8. Show tool alerts formatted as they'd actually appear in the real product
-9. Include inter-team communications (Slack, email, phone) with named characters
-10. Show business impact through the lens of their specific critical assets
+RULES:
+- Explanations: 1 sentence MAX. Be extremely concise.
+- Exactly 4 options per question (A-D), exactly ONE correct
+- Wrong options must be plausible
+- Reference the org's security tools by name
+- Include realistic timestamps and log excerpts
+- Narrative escalates progressively
+- If characters defined, use them by name
+- Output ONLY valid JSON. No markdown. No trailing commas.
 
 SCORING: Easy=${diffConfig.pointsEasy}, Medium=${diffConfig.pointsMedium}, Hard=${diffConfig.pointsHard} pts. Wrong=0.
 AUDIENCE: ${diffConfig.description}

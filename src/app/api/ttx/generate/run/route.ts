@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getActorById, buildActorContext } from "@/lib/threat-actors";
 import { generateTtxScenario } from "@/lib/ai/generate-ttx";
 import { generateChannelName } from "@/lib/utils";
 
@@ -41,12 +40,6 @@ export async function POST(req: NextRequest) {
       pastPerformance = await analyzePastPerformance(orgId, db);
     } catch {}
 
-    // Threat actor context
-    let threatActorContext: string | undefined;
-    if (threatActorId) {
-      const actor = getActorById(threatActorId);
-      if (actor) threatActorContext = buildActorContext(actor);
-    }
 
     // Generate scenario
     const scenario = await generateTtxScenario({
@@ -61,7 +54,6 @@ export async function POST(req: NextRequest) {
       customIncident,
       recentTitles,
       language: language || "en",
-      threatActorContext,
     });
 
     // Update session
