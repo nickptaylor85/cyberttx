@@ -7,7 +7,6 @@ import { rateLimit } from "@/lib/rate-limit";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { checkExerciseLimit } from "@/lib/plan-limits";
-import { generateTtxScenario, analyzePastPerformance } from "@/lib/ai/generate-ttx";
 import { generateChannelName } from "@/lib/utils";
 import { getOrgAIProvider } from "@/lib/ai/get-org-provider";
 
@@ -47,7 +46,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Capture everything needed before handler returns
+  // Capture all values before the handler returns
   const sessionId = session.id;
   const userId = user.id;
   const userEmail = user.email;
@@ -66,13 +65,16 @@ export async function POST(req: NextRequest) {
     try { await db.ttxSession.update({ where: { id: sessionId }, data: { title: msg } }); } catch {}
   }
 
-  // after() runs the generation AFTER the response is sent — the correct
-  // pattern for Next.js 15 on Vercel. Avoids the unreliable fire-and-forget
-  // HTTP self-call to /run that gets dropped when the handler returns.
+  // after() runs the generation AFTER the response is sent.
+  // Lazy-import generate-ttx inside the callback to avoid the Anthropic SDK
+  // being instantiated at module load time (causes build issues on Vercel).
   after(async () => {
     try {
       console.log("[generate] Starting generation for", sessionId);
       const startTime = Date.now();
+
+      // Lazy import — keeps Anthropic client init out of module scope
+      const { generateTtxScenario, analyzePastPerformance } = await import("@/lib/ai/generate-ttx");
 
       await setStatus("Connecting to AI engine...");
 
