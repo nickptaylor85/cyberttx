@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     data: {
       orgId: org.id, title: "Generating...", difficulty, theme,
       mitreAttackIds: mitreAttackIds || [], mode: mode || "GROUP",
-      status: "GENERATING", questionCount: questionCount || 12,
+      status: "GENERATING", questionCount: Math.min(questionCount || 10, 10),
       createdById: user.id, channelName: null,
     },
   });
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       userEmail: user.email,
       theme, difficulty, mode,
-      questionCount: questionCount || 12,
+      questionCount: Math.min(questionCount || 10, 10),
       mitreAttackIds: mitreAttackIds || [],
       characters: (selectedCharacters || []).map((c: any) => ({
         name: c.name, role: c.role, department: c.department || undefined,

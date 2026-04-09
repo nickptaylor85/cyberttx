@@ -37,6 +37,8 @@ export default function ExercisePage() {
   const sessionId = params.id as string;
 
   const [tipIndex, setTipIndex] = useState(0);
+  const [progressStep, setProgressStep] = useState(0);
+  const [elapsedSecs, setElapsedSecs] = useState(0);
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -96,6 +98,15 @@ export default function ExercisePage() {
   }, [sessionId]);
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
+
+  // Progress steps while generating
+  useEffect(() => {
+    if (!session || session.status !== "GENERATING") return;
+    const timer = setInterval(() => setElapsedSecs(s => s + 1), 1000);
+    const steps = [0, 3000, 8000, 15000, 25000, 35000];
+    const timeouts = steps.map((ms, i) => setTimeout(() => setProgressStep(i), ms));
+    return () => { clearInterval(timer); timeouts.forEach(clearTimeout); };
+  }, [session?.status]);
 
   // Rotate tips while generating
   useEffect(() => {
@@ -377,12 +388,37 @@ export default function ExercisePage() {
           <span className="text-gray-100">THREAT</span><span className="text-[#00ffd5]">CAST</span>
         </p>
         <p className="text-[#00ffd5] text-sm font-semibold mb-1">Building Your Scenario</p>
-        <p className="text-gray-500 text-xs mb-8">{session.theme} · {session.difficulty} · {(session as any).questionCount || 10} questions</p>
+        <p className="text-gray-500 text-xs mb-6">{session.theme} · {session.difficulty} · {(session as any).questionCount || 10} questions</p>
+
+        {/* Live status log */}
+        <div className="w-72 mb-8 space-y-1.5">
+          {[
+            "Connecting to AI engine...",
+            "Analysing your security profile...",
+            "Crafting incident narrative...",
+            "Generating questions & answers...",
+            "Building scoring model...",
+            "Finalising scenario...",
+          ].map((step, i) => (
+            <div key={i} className={"flex items-center gap-2 text-xs transition-all duration-500 " + (i < progressStep ? "text-[#00ffd5]" : i === progressStep ? "text-gray-300" : "text-gray-700")}>
+              {i < progressStep ? (
+                <span className="text-[#00ffd5]">✓</span>
+              ) : i === progressStep ? (
+                <span className="w-3 h-3 flex items-center justify-center"><span className="w-1.5 h-1.5 rounded-full bg-[#00ffd5] animate-pulse" /></span>
+              ) : (
+                <span className="w-3 h-3 flex items-center justify-center"><span className="w-1 h-1 rounded-full bg-gray-700" /></span>
+              )}
+              <span className="font-mono">{step}</span>
+            </div>
+          ))}
+        </div>
 
         {/* Progress bar */}
-        <div className="w-64 h-1 bg-surface-3 rounded-full mb-10 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-[#00ffd5] to-[#14b89a] rounded-full" style={{ animation: "loading-bar 40s ease-in-out forwards" }} />
+        <div className="w-64 h-1 bg-surface-3 rounded-full mb-6 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-[#00ffd5] to-[#14b89a] rounded-full" style={{ animation: "loading-bar 50s ease-in-out forwards" }} />
         </div>
+
+        <p className="text-gray-600 text-xs font-mono mb-6">{elapsedSecs}s elapsed</p>
 
         {/* Rotating tips */}
         <div className="max-w-md text-center min-h-[100px] flex flex-col items-center justify-center">
@@ -393,7 +429,7 @@ export default function ExercisePage() {
           )}
         </div>
 
-        <p className="text-gray-600 text-xs mt-8">This page updates automatically when ready</p>
+        <p className="text-gray-600 text-xs mt-4">This page updates automatically when ready</p>
       </div>
     );
   }

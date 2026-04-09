@@ -192,7 +192,7 @@ export async function generateTtxScenario(params: GenerateTtxParams): Promise<Tt
     ? securityTools.map((t) => `${t.name} (${t.vendor} - ${t.category})`).join("\n  - ")
     : "No specific tools configured — use generic security tooling";
   const mitreList = mitreAttackIds.length > 0 ? mitreAttackIds.join(", ") : "Choose appropriate techniques for the theme";
-  const stageCount = Math.min(5, Math.max(3, Math.ceil(questionCount / 3)));
+  const stageCount = 3;
   const questionsPerStage = Math.ceil(questionCount / stageCount);
 
   const companyContext = buildCompanyContext(orgProfile);
@@ -235,6 +235,7 @@ This includes: scenario title, narrative text, stage descriptions, question text
 Technical terms (MITRE ATT&CK, CVE numbers, tool names) should remain in English.
 ` : ""}
 CRITICAL RULES:
+0. Keep ALL explanations to 2 sentences maximum. No essays.
 1. Exactly 4 options per question (A-D), exactly ONE correct
 2. Wrong options must be plausible — never obviously absurd
 3. Reference the organization's SPECIFIC security tools by name
@@ -246,10 +247,9 @@ CRITICAL RULES:
 9. Include inter-team communications (Slack, email, phone) with named characters
 10. Show business impact through the lens of their specific critical assets
 
-SCORING: Easy=${diffConfig.pointsEasy}, Medium=${diffConfig.pointsMedium}, Hard=${diffConfig.pointsHard} pts. Wrong=0.
+SCORING: Easy=${diffConfig.pointsEasy}, Medium=${diffConfig.pointsMedium}, Hard=${diffConfig.pointsHard}. Wrong=0.
 AUDIENCE: ${diffConfig.description}
-
-RESPONSE FORMAT: Return ONLY valid JSON. No markdown fences, no explanation.`;
+RESPONSE FORMAT: Return ONLY valid JSON. No markdown. No trailing commas.`;
 
   const userPrompt = `Create a cybersecurity TTX:
 
@@ -304,12 +304,12 @@ JSON structure:
   let jsonText: string;
   if (providerConfig) {
     const { aiComplete } = await import("@/lib/ai/providers");
-    const result = await aiComplete(providerConfig, { systemPrompt, userPrompt, maxTokens: 8000 });
+    const result = await aiComplete(providerConfig, { systemPrompt, userPrompt, maxTokens: 4096 });
     jsonText = result.text.trim();
   } else {
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 8000,
+      max_tokens: 4096,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     });

@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       theme, difficulty,
       mitreAttackIds: mitreAttackIds || [],
       securityTools: securityTools || [],
-      questionCount: questionCount || 12,
+      questionCount: Math.min(questionCount || 10, 10),
       orgProfile: orgProfile || null,
       orgName,
       characters: characters || [],
