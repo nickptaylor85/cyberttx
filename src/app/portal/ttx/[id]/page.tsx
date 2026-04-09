@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import CyberTrivia from "@/components/CyberTrivia";
+import { fireCelebration } from "@/lib/confetti";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -111,6 +113,11 @@ export default function ExercisePage() {
     if (!session || session.status !== "GENERATING") return;
     const tipInterval = setInterval(() => setTipIndex(i => (i + 1) % LOADING_CONTENT.length), 8000);
     return () => clearInterval(tipInterval);
+  }, [session?.status]);
+
+  // Celebrate on completion
+  useEffect(() => {
+    if (session?.status === "COMPLETED") fireCelebration("complete");
   }, [session?.status]);
 
   // Auto-poll while GENERATING
@@ -441,14 +448,8 @@ export default function ExercisePage() {
           <div className="h-full bg-gradient-to-r from-[#00ffd5] to-[#14b89a] rounded-full" style={{ animation: "loading-bar 120s ease-in-out forwards" }} />
         </div>
 
-        {/* Rotating tips */}
-        <div className="max-w-sm text-center min-h-[80px] flex flex-col items-center justify-center">
-          <p className="text-xl mb-2">{LOADING_CONTENT[tipIndex].icon}</p>
-          <p className="text-gray-400 text-xs leading-relaxed">{LOADING_CONTENT[tipIndex].text}</p>
-          {LOADING_CONTENT[tipIndex].source && (
-            <p className="text-gray-600 text-[10px] mt-1">— {LOADING_CONTENT[tipIndex].source}</p>
-          )}
-        </div>
+        {/* Mini-game: Cyber Trivia */}
+        <CyberTrivia onScore={(correct) => correct && fireCelebration("correct")} />
       </div>
     );
   }

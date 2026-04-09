@@ -34,7 +34,7 @@ const SLIDES = [
             { stat: "2 hrs", label: "of board time wasted on generic, recycled scenarios" },
           ].map((p, i) => (
             <div key={i} className="bg-[#0f1729] border border-white/5 rounded-xl p-5 flex items-center gap-4" style={{ animationDelay: `${i * 0.15}s` }}>
-              <span className="text-[#00ffd5] font-mono text-2xl sm:text-3xl font-bold whitespace-nowrap">{p.stat}</span>
+              <span className="text-[#00ffd5] font-mono text-2xl sm:text-3xl font-bold whitespace-nowrap"><AnimatedStat value={p.stat} /></span>
               <span className="text-gray-400 text-sm">{p.label}</span>
             </div>
           ))}
@@ -156,7 +156,7 @@ const SLIDES = [
             { stat: "$4.88M", label: "average data breach cost", sub: "One prevented incident pays for 40 years of ThreatCast — IBM 2024" },
           ].map((r, i) => (
             <div key={i} className="bg-[#0f1729] border border-white/5 rounded-xl p-6 flex items-center gap-6">
-              <span className="text-[#00ffd5] font-mono text-4xl sm:text-5xl font-bold whitespace-nowrap">{r.stat}</span>
+              <span className="text-[#00ffd5] font-mono text-4xl sm:text-5xl font-bold whitespace-nowrap"><AnimatedStat value={r.stat} /></span>
               <div>
                 <p className="text-white text-base font-semibold">{r.label}</p>
                 <p className="text-gray-500 text-xs mt-1">{r.sub}</p>
@@ -187,6 +187,58 @@ const SLIDES = [
     ),
   },
 ];
+
+function AnimatedStat({ value, suffix = "" }: { value: string; suffix?: string }) {
+  const [display, setDisplay] = useState("0");
+  const num = parseInt(value.replace(/[^0-9]/g, ""));
+  const prefix = value.match(/^[^0-9]*/)?.[0] || "";
+
+  useEffect(() => {
+    if (isNaN(num)) { setDisplay(value); return; }
+    let start = 0;
+    const duration = 1200;
+    const startTime = Date.now();
+    function tick() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      start = Math.round(num * eased);
+      setDisplay(prefix + start.toLocaleString() + suffix);
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    const timer = setTimeout(tick, 300);
+    return () => clearTimeout(timer);
+  }, [num, prefix, suffix, value]);
+
+  return <>{display}</>;
+}
+
+function Particles() {
+  const [dots, setDots] = useState<{x: number; y: number; size: number; speed: number; opacity: number}[]>([]);
+  useEffect(() => {
+    setDots(Array.from({ length: 30 }, () => ({
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 2 + 1,
+      speed: Math.random() * 20 + 10,
+      opacity: Math.random() * 0.3 + 0.1,
+    })));
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {dots.map((d, i) => (
+        <div key={i} className="absolute rounded-full bg-[#00ffd5]" style={{
+          left: d.x + "%", top: d.y + "%",
+          width: d.size + "px", height: d.size + "px",
+          opacity: d.opacity,
+          animation: `float ${d.speed}s linear infinite`,
+        }} />
+      ))}
+      <style>{`@keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0); } }`}</style>
+    </div>
+  );
+}
 
 export default function PitchPage() {
   const [current, setCurrent] = useState(0);
@@ -237,6 +289,9 @@ export default function PitchPage() {
 
   return (
     <div className="fixed inset-0 bg-[#030712] overflow-hidden">
+      {/* Particles */}
+      <Particles />
+
       {/* Subtle grid background */}
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(#00ffd5 1px, transparent 1px), linear-gradient(90deg, #00ffd5 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
 
