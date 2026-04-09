@@ -1,17 +1,20 @@
-export const maxDuration = 10;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
+import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { checkExerciseLimit } from "@/lib/plan-limits";
+import { generateTtxScenario, analyzePastPerformance } from "@/lib/ai/generate-ttx";
+import { generateChannelName } from "@/lib/utils";
+import { getOrgAIProvider } from "@/lib/ai/get-org-provider";
 
 export async function POST(req: NextRequest) {
   const user = await getAuthUser();
   if (!user?.orgId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Rate limit: 10 generations per hour per user
   const rl = rateLimit("generate:" + user.id, 10, 60 * 60 * 1000);
   if (!rl.allowed) return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
 
@@ -21,7 +24,6 @@ export async function POST(req: NextRequest) {
   });
   if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
 
-  // Plan enforcement
   const planCheck = await checkExerciseLimit(org.id);
   if (!planCheck.allowed) {
     return NextResponse.json({ error: `Monthly exercise limit reached (${planCheck.used}/${planCheck.limit}).` }, { status: 429 });
@@ -36,7 +38,6 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { theme, difficulty, mode, questionCount, mitreAttackIds, selectedCharacters, customIncident, language } = body;
 
-  // Create session immediately
   const session = await db.ttxSession.create({
     data: {
       orgId: org.id, title: "Generating...", difficulty, theme,
@@ -46,36 +47,103 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const host = req.headers.get("host") || "threatcast.io";
-  const protocol = host.includes("localhost") ? "http" : "https";
-  const runUrl = `${protocol}://${host}/api/ttx/generate/run`;
-  const secret = process.env.CRON_SECRET || "";
-  console.log(`[generate] Firing /run at ${runUrl}, secret present: ${!!secret}`);
+  // Capture everything needed before handler returns
+  const sessionId = session.id;
+  const userId = user.id;
+  const userEmail = user.email;
+  const orgId = org.id;
+  const orgName = org.name;
+  const securityTools = org.securityTools.map((ost: any) => ({
+    name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
+  }));
+  const orgProfile = org.profile || null;
+  const characters = (selectedCharacters || []).map((c: any) => ({
+    name: c.name, role: c.role, department: c.department || undefined,
+    description: c.description || undefined, expertise: c.expertise || [],
+  }));
 
-  fetch(runUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-cron-secret": secret },
-    body: JSON.stringify({
-      sessionId: session.id,
-      orgId: org.id,
-      orgName: org.name,
-      userId: user.id,
-      userEmail: user.email,
-      theme, difficulty, mode,
-      questionCount: questionCount || 12,
-      mitreAttackIds: mitreAttackIds || [],
-      characters: (selectedCharacters || []).map((c: any) => ({
-        name: c.name, role: c.role, department: c.department || undefined,
-        description: c.description || undefined, expertise: c.expertise || [],
-      })),
-      securityTools: org.securityTools.map(ost => ({
-        name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
-      })),
-      orgProfile: org.profile || null,
-      customIncident, language,
-    }),
-  }).catch(e => console.error("[generate] Failed to fire /run:", e?.message));
+  async function setStatus(msg: string) {
+    try { await db.ttxSession.update({ where: { id: sessionId }, data: { title: msg } }); } catch {}
+  }
 
-  // Return immediately — client redirects to session page which polls
+  // after() runs the generation AFTER the response is sent — the correct
+  // pattern for Next.js 15 on Vercel. Avoids the unreliable fire-and-forget
+  // HTTP self-call to /run that gets dropped when the handler returns.
+  after(async () => {
+    try {
+      console.log("[generate] Starting generation for", sessionId);
+      const startTime = Date.now();
+
+      await setStatus("Connecting to AI engine...");
+
+      const recentSessions = await db.ttxSession.findMany({
+        where: { orgId, status: "COMPLETED" },
+        select: { title: true },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      });
+      const recentTitles = recentSessions.map((s: any) => s.title).filter(Boolean);
+
+      let pastPerformance = null;
+      try { pastPerformance = await analyzePastPerformance(orgId, db); } catch {}
+
+      await setStatus("Analysing your security profile...");
+
+      const providerConfig = await getOrgAIProvider(orgId);
+      const isDefault = providerConfig.provider === "anthropic" && providerConfig.apiKey === process.env.ANTHROPIC_API_KEY;
+
+      await setStatus("Generating incident scenario with AI...");
+
+      const scenario = await generateTtxScenario({
+        theme, difficulty,
+        mitreAttackIds: mitreAttackIds || [],
+        securityTools,
+        questionCount: questionCount || 12,
+        orgProfile,
+        orgName,
+        characters,
+        pastPerformance,
+        customIncident,
+        recentTitles,
+        language: language || "en",
+        providerConfig: isDefault ? undefined : providerConfig,
+      });
+
+      await setStatus("Finalising exercise...");
+
+      await db.ttxSession.update({
+        where: { id: sessionId },
+        data: {
+          title: scenario.title,
+          scenario: scenario as any,
+          status: mode === "INDIVIDUAL" ? "IN_PROGRESS" : "LOBBY",
+          channelName: generateChannelName(sessionId),
+        },
+      });
+
+      await db.ttxParticipant.create({ data: { sessionId, userId } });
+      await db.organization.update({ where: { id: orgId }, data: { ttxUsedThisMonth: { increment: 1 } } });
+
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`[generate] Session ${sessionId} completed in ${elapsed}s: ${scenario.title}`);
+
+      if (process.env.RESEND_API_KEY && userEmail) {
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "ThreatCast <noreply@threatcast.io>",
+            to: [userEmail],
+            subject: `Your "${scenario.title}" exercise is ready`,
+            html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:24px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div><h2>Your exercise is ready!</h2><p>Your <strong>${scenario.title}</strong> tabletop exercise has been generated.</p><a href="https://threatcast.io/portal/ttx/${sessionId}" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Launch Exercise →</a></div>`,
+          }),
+        }).catch(() => {});
+      }
+    } catch (error: any) {
+      console.error(`[generate] FAILED for session ${sessionId}:`, error?.message || error);
+      try { await db.ttxSession.update({ where: { id: sessionId }, data: { status: "CANCELLED" } }); } catch {}
+    }
+  });
+
   return NextResponse.json({ id: session.id, status: "GENERATING" });
 }
