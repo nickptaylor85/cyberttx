@@ -6,6 +6,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { checkExerciseLimit } from "@/lib/plan-limits";
+import { waitUntil } from "@vercel/functions";
 
 
 export async function POST(req: NextRequest) {
@@ -48,8 +49,10 @@ export async function POST(req: NextRequest) {
   const host = req.headers.get("host") || "threatcast.io";
   const protocol = host.includes("localhost") ? "http" : "https";
 
-  // Fire-and-forget — NO await, NO after(). This fires a separate serverless function.
-  fetch(protocol + "://" + host + "/api/ttx/generate/run", {
+  // waitUntil keeps the function alive AFTER response to complete the outgoing fetch.
+  // The AI work happens in /run (its own 300s function). This just sends the request.
+  waitUntil(
+    fetch(protocol + "://" + host + "/api/ttx/generate/run", {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-cron-secret": process.env.CRON_SECRET || "" },
     body: JSON.stringify({
@@ -72,7 +75,8 @@ export async function POST(req: NextRequest) {
       customIncident,
       language,
     }),
-  }).catch(e => console.error("[generate] /run fire failed:", e?.message));
+  }).then(() => console.log("[generate] /run request sent")).catch(e => console.error("[generate] /run fire failed:", e?.message))
+  );
 
   return NextResponse.json({ id: session.id, status: "GENERATING" });
 }
