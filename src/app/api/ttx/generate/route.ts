@@ -46,14 +46,15 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Fire-and-forget: trigger /run endpoint as a SEPARATE serverless function
-  // This gives the AI call its own 60-second window
   const host = req.headers.get("host") || "threatcast.io";
   const protocol = host.includes("localhost") ? "http" : "https";
+  const runUrl = `${protocol}://${host}/api/ttx/generate/run`;
+  const secret = process.env.CRON_SECRET || "";
+  console.log(`[generate] Firing /run at ${runUrl}, secret present: ${!!secret}`);
 
-  fetch(`${protocol}://${host}/api/ttx/generate/run`, {
+  fetch(runUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-cron-secret": process.env.CRON_SECRET || "" },
+    headers: { "Content-Type": "application/json", "x-cron-secret": secret },
     body: JSON.stringify({
       sessionId: session.id,
       orgId: org.id,

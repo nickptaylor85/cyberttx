@@ -10,7 +10,10 @@ import { getOrgAIProvider } from "@/lib/ai/get-org-provider";
 export async function POST(req: NextRequest) {
   // Verify internal call
   const secret = req.headers.get("x-cron-secret");
-  if (secret !== process.env.CRON_SECRET) {
+  const expected = process.env.CRON_SECRET;
+  console.log(`[run] secret present: ${!!secret}, expected present: ${!!expected}, match: ${secret === expected}`);
+  if (secret !== expected) {
+    console.error(`[run] Auth failed — secret="${secret?.slice(0,4)}..." expected="${expected?.slice(0,4)}..."`);
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
