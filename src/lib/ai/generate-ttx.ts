@@ -192,7 +192,7 @@ export async function generateTtxScenario(params: GenerateTtxParams): Promise<Tt
     ? securityTools.map((t) => `${t.name} (${t.vendor} - ${t.category})`).join("\n  - ")
     : "No specific tools configured — use generic security tooling";
   const mitreList = mitreAttackIds.length > 0 ? mitreAttackIds.join(", ") : "Choose appropriate techniques for the theme";
-  const stageCount = 3;
+  const stageCount = Math.min(5, Math.max(3, Math.ceil(questionCount / 3)));
   const questionsPerStage = Math.ceil(questionCount / stageCount);
 
   const companyContext = buildCompanyContext(orgProfile);
@@ -304,12 +304,12 @@ JSON structure:
   let jsonText: string;
   if (providerConfig) {
     const { aiComplete } = await import("@/lib/ai/providers");
-    const result = await aiComplete(providerConfig, { systemPrompt, userPrompt, maxTokens: 4096 });
+    const result = await aiComplete(providerConfig, { systemPrompt, userPrompt, maxTokens: 8000 });
     jsonText = result.text.trim();
   } else {
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
+      max_tokens: 8000,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     });

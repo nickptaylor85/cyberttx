@@ -77,7 +77,7 @@ export default function NewTtxPage() {
     theme: "",
     difficulty: "INTERMEDIATE" as string,
     mode: "GROUP" as string,
-    questionCount: 10,
+    questionCount: 12,
     mitreAttackIds: [] as string[],
     timeLimitSecs: null as number | null,
   });
@@ -368,12 +368,12 @@ export default function NewTtxPage() {
           <div>
             <label className="cyber-label">Number of Questions: {config.questionCount}</label>
             <input
-              type="range" min={6} max={10} value={config.questionCount}
+              type="range" min={8} max={20} value={config.questionCount}
               onChange={(e) => setConfig({ ...config, questionCount: parseInt(e.target.value) })}
               className="w-full accent-cyber-500"
             />
             <div className="flex justify-between text-xs text-gray-500">
-              <span>6 (Quick)</span><span>10 (Full)</span>
+              <span>8 (Quick)</span><span>20 (Deep Dive)</span>
             </div>
           </div>
 

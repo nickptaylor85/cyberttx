@@ -1,4 +1,4 @@
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       theme, difficulty,
       mitreAttackIds: mitreAttackIds || [],
       securityTools: securityTools || [],
-      questionCount: Math.min(questionCount || 10, 10),
+      questionCount: questionCount || 12,
       orgProfile: orgProfile || null,
       orgName,
       characters: characters || [],
