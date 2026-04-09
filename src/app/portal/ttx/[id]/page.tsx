@@ -37,7 +37,7 @@ export default function ExercisePage() {
   const sessionId = params.id as string;
 
   const [tipIndex, setTipIndex] = useState(0);
-    const [elapsedSecs, setElapsedSecs] = useState(0);
+  const [elapsedSecs, setElapsedSecs] = useState(0);
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -97,6 +97,14 @@ export default function ExercisePage() {
   }, [sessionId]);
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
+
+  // Elapsed timer while generating
+  useEffect(() => {
+    if (!session || session.status !== "GENERATING") return;
+    setElapsedSecs(0);
+    const timer = setInterval(() => setElapsedSecs(s => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, [session?.status]);
 
   // Rotate tips while generating
   useEffect(() => {
@@ -362,19 +370,18 @@ export default function ExercisePage() {
   // Handle GENERATING status — poll until ready
   if (session.status === "GENERATING") {
     const statusMsg = session.title || "Starting...";
-    const statusHistory = (() => {
-      const steps = [
-        "Connecting to AI engine...",
-        "Analysing your security profile...",
-        "Generating scenario with Claude Sonnet...",
-      ];
-      const currentIdx = steps.findIndex(s => statusMsg.includes(s.replace("...", "")));
-      return steps.map((s, i) => ({
-        text: i <= currentIdx ? s.replace("...", "") : s,
-        done: i < currentIdx || (i === currentIdx && statusMsg !== s),
-        active: statusMsg.includes(s.replace("...", "")) || (currentIdx === -1 && i === 0),
-      }));
-    })();
+    const STEPS = [
+      "Connecting to AI engine",
+      "Analysing your security profile",
+      "Generating incident scenario",
+      "Finalising exercise",
+    ];
+    const currentIdx = STEPS.findIndex(s => statusMsg.toLowerCase().includes(s.toLowerCase().split(" ").slice(0, 2).join(" ")));
+    const statusHistory = STEPS.map((s, i) => ({
+      text: s,
+      done: currentIdx > i,
+      active: currentIdx === i,
+    }));
 
     return (
       <div className="flex flex-col items-center justify-center px-6 py-12 min-h-[70vh]">
