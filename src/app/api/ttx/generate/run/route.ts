@@ -21,14 +21,9 @@ export async function POST(req: NextRequest) {
     characters, securityTools, orgProfile, customIncident, language,
   } = body;
 
-  async function setStatus(msg: string) {
-    try { await db.ttxSession.update({ where: { id: sessionId }, data: { title: msg } }); } catch {}
-  }
-
   try {
+    console.log(`[generate/run] Starting for session ${sessionId}, org: ${orgName}`);
     const startTime = Date.now();
-    console.log("[generate/run] Starting for " + sessionId);
-    await setStatus("Connecting to AI engine...");
 
     // Get recent titles to avoid duplicates
     const recentSessions = await db.ttxSession.findMany({
@@ -46,15 +41,11 @@ export async function POST(req: NextRequest) {
       pastPerformance = await analyzePastPerformance(orgId, db);
     } catch {}
 
-    await setStatus("Analysing your security profile...");
-
     // BYOK provider check
     const providerConfig = await getOrgAIProvider(orgId);
     const isDefault = providerConfig.provider === "anthropic" && providerConfig.apiKey === process.env.ANTHROPIC_API_KEY;
 
-    await setStatus("Generating incident scenario with AI...");
-
-    // Generate scenario
+    // Generate scenario with Sonnet (original working config)
     const scenario = await generateTtxScenario({
       theme, difficulty,
       mitreAttackIds: mitreAttackIds || [],
@@ -70,8 +61,7 @@ export async function POST(req: NextRequest) {
       providerConfig: isDefault ? undefined : providerConfig,
     });
 
-    await setStatus("Finalising exercise...");
-
+    // Update session
     await db.ttxSession.update({
       where: { id: sessionId },
       data: {
@@ -86,7 +76,7 @@ export async function POST(req: NextRequest) {
     await db.organization.update({ where: { id: orgId }, data: { ttxUsedThisMonth: { increment: 1 } } });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log("[generate/run] Completed in " + elapsed + "s: " + scenario.title);
+    console.log(`[generate/run] Session ${sessionId} completed in ${elapsed}s: ${scenario.title}`);
 
     // Email notification (fire and forget)
     if (process.env.RESEND_API_KEY && userEmail) {
@@ -105,7 +95,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, elapsed });
 
   } catch (error: any) {
-    console.error("[generate/run] FAILED:", error?.message, error?.stack?.slice(0, 300));
+    console.error(`[generate/run] FAILED for session ${sessionId}:`, error?.message || error);
     await db.ttxSession.update({ where: { id: sessionId }, data: { status: "CANCELLED" } });
     return NextResponse.json({ error: error?.message || "Generation failed" }, { status: 500 });
   }
