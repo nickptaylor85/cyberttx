@@ -37,8 +37,7 @@ export default function ExercisePage() {
   const sessionId = params.id as string;
 
   const [tipIndex, setTipIndex] = useState(0);
-  const [progressStep, setProgressStep] = useState(0);
-  const [elapsedSecs, setElapsedSecs] = useState(0);
+    const [elapsedSecs, setElapsedSecs] = useState(0);
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -98,15 +97,6 @@ export default function ExercisePage() {
   }, [sessionId]);
 
   useEffect(() => { fetchSession(); }, [fetchSession]);
-
-  // Progress steps while generating
-  useEffect(() => {
-    if (!session || session.status !== "GENERATING") return;
-    const timer = setInterval(() => setElapsedSecs(s => s + 1), 1000);
-    const steps = [0, 3000, 8000, 15000, 25000, 35000];
-    const timeouts = steps.map((ms, i) => setTimeout(() => setProgressStep(i), ms));
-    return () => { clearInterval(timer); timeouts.forEach(clearTimeout); };
-  }, [session?.status]);
 
   // Rotate tips while generating
   useEffect(() => {
@@ -371,65 +361,87 @@ export default function ExercisePage() {
   // ═══ IN PROGRESS — GAMEPLAY ═══
   // Handle GENERATING status — poll until ready
   if (session.status === "GENERATING") {
+    const statusMsg = session.title || "Starting...";
+    const statusHistory = (() => {
+      const steps = [
+        "Connecting to AI engine...",
+        "Analysing your security profile...",
+        "Generating scenario with Claude Sonnet...",
+      ];
+      const currentIdx = steps.findIndex(s => statusMsg.includes(s.replace("...", "")));
+      return steps.map((s, i) => ({
+        text: i <= currentIdx ? s.replace("...", "") : s,
+        done: i < currentIdx || (i === currentIdx && statusMsg !== s),
+        active: statusMsg.includes(s.replace("...", "")) || (currentIdx === -1 && i === 0),
+      }));
+    })();
+
     return (
-      <div className="flex flex-col items-center justify-center px-6 py-16 min-h-[70vh]">
+      <div className="flex flex-col items-center justify-center px-6 py-12 min-h-[70vh]">
         {/* Animated shield */}
-        <div className="relative mb-8">
-          <div className="w-20 h-20 rounded-2xl bg-[#00ffd5]/5 border border-[#00ffd5]/20 flex items-center justify-center animate-pulse">
-            <svg className="w-10 h-10" viewBox="0 0 120 120" fill="none">
+        <div className="relative mb-6">
+          <div className="w-16 h-16 rounded-2xl bg-[#00ffd5]/5 border border-[#00ffd5]/20 flex items-center justify-center animate-pulse">
+            <svg className="w-8 h-8" viewBox="0 0 120 120" fill="none">
               <path d="M60 14 L30 29 L26 74 L60 104 L94 74 L90 29 Z" fill="rgba(0,255,213,0.06)" stroke="#00ffd5" strokeWidth="2"/>
               <path d="M51 56 L57 63 L70 48" fill="none" stroke="#00ffd5" strokeWidth="3" strokeLinecap="square"/>
             </svg>
           </div>
-          <div className="absolute -inset-4 rounded-3xl bg-[#00ffd5]/5 animate-ping" style={{ animationDuration: "2s" }} />
+          <div className="absolute -inset-3 rounded-2xl bg-[#00ffd5]/5 animate-ping" style={{ animationDuration: "2s" }} />
         </div>
 
-        <p className="font-mono text-sm font-bold tracking-wider mb-2">
+        <p className="font-mono text-sm font-bold tracking-wider mb-1">
           <span className="text-gray-100">THREAT</span><span className="text-[#00ffd5]">CAST</span>
         </p>
-        <p className="text-[#00ffd5] text-sm font-semibold mb-1">Building Your Scenario</p>
-        <p className="text-gray-500 text-xs mb-6">{session.theme} · {session.difficulty} · {(session as any).questionCount || 10} questions</p>
+        <p className="text-gray-500 text-xs mb-6">{session.theme} · {session.difficulty}</p>
 
-        {/* Live status log */}
-        <div className="w-72 mb-8 space-y-1.5">
-          {[
-            "Connecting to AI engine...",
-            "Analysing your security profile...",
-            "Crafting incident narrative...",
-            "Generating questions & answers...",
-            "Building scoring model...",
-            "Finalising scenario...",
-          ].map((step, i) => (
-            <div key={i} className={"flex items-center gap-2 text-xs transition-all duration-500 " + (i < progressStep ? "text-[#00ffd5]" : i === progressStep ? "text-gray-300" : "text-gray-700")}>
-              {i < progressStep ? (
-                <span className="text-[#00ffd5]">✓</span>
-              ) : i === progressStep ? (
-                <span className="w-3 h-3 flex items-center justify-center"><span className="w-1.5 h-1.5 rounded-full bg-[#00ffd5] animate-pulse" /></span>
-              ) : (
-                <span className="w-3 h-3 flex items-center justify-center"><span className="w-1 h-1 rounded-full bg-gray-700" /></span>
-              )}
-              <span className="font-mono">{step}</span>
+        {/* Terminal-style live log */}
+        <div className="w-80 bg-[#0a0a1a] border border-surface-3 rounded-lg p-4 mb-6 font-mono text-xs">
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-surface-3">
+            <span className="w-2 h-2 rounded-full bg-red-500/60" />
+            <span className="w-2 h-2 rounded-full bg-yellow-500/60" />
+            <span className="w-2 h-2 rounded-full bg-green-500/60" />
+            <span className="text-gray-600 text-[10px] ml-1">threatcast — scenario generator</span>
+          </div>
+
+          {statusHistory.map((step, i) => (
+            <div key={i} className={"flex items-center gap-2 py-0.5 " + (step.done ? "text-[#00ffd5]" : step.active ? "text-gray-200" : "text-gray-700")}>
+              <span className="w-4 text-right text-gray-700">{step.done ? "✓" : step.active ? "›" : " "}</span>
+              <span>{step.done ? step.text : step.text}</span>
+              {step.active && !step.done && <span className="w-1.5 h-3 bg-[#00ffd5] animate-pulse ml-0.5" />}
             </div>
           ))}
+
+          {/* Show real status from server */}
+          {!statusHistory.some(s => s.active) && statusMsg !== "Generating..." && (
+            <div className="flex items-center gap-2 py-0.5 text-gray-200">
+              <span className="w-4 text-right text-gray-700">›</span>
+              <span>{statusMsg}</span>
+              <span className="w-1.5 h-3 bg-[#00ffd5] animate-pulse ml-0.5" />
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 py-0.5 text-gray-700 mt-1">
+            <span className="w-4 text-right">$</span>
+            <span className="w-1.5 h-3 bg-gray-600 animate-pulse" />
+          </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="w-64 h-1 bg-surface-3 rounded-full mb-6 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-[#00ffd5] to-[#14b89a] rounded-full" style={{ animation: "loading-bar 50s ease-in-out forwards" }} />
-        </div>
-
+        {/* Elapsed time */}
         <p className="text-gray-600 text-xs font-mono mb-6">{elapsedSecs}s elapsed</p>
 
-        {/* Rotating tips */}
-        <div className="max-w-md text-center min-h-[100px] flex flex-col items-center justify-center">
-          <p className="text-2xl mb-3">{LOADING_CONTENT[tipIndex].icon}</p>
-          <p className="text-gray-300 text-sm leading-relaxed">{LOADING_CONTENT[tipIndex].text}</p>
-          {LOADING_CONTENT[tipIndex].source && (
-            <p className="text-gray-600 text-xs mt-2">— {LOADING_CONTENT[tipIndex].source}</p>
-          )}
+        {/* Progress bar */}
+        <div className="w-64 h-0.5 bg-surface-3 rounded-full mb-8 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-[#00ffd5] to-[#14b89a] rounded-full" style={{ animation: "loading-bar 120s ease-in-out forwards" }} />
         </div>
 
-        <p className="text-gray-600 text-xs mt-4">This page updates automatically when ready</p>
+        {/* Rotating tips */}
+        <div className="max-w-sm text-center min-h-[80px] flex flex-col items-center justify-center">
+          <p className="text-xl mb-2">{LOADING_CONTENT[tipIndex].icon}</p>
+          <p className="text-gray-400 text-xs leading-relaxed">{LOADING_CONTENT[tipIndex].text}</p>
+          {LOADING_CONTENT[tipIndex].source && (
+            <p className="text-gray-600 text-[10px] mt-1">— {LOADING_CONTENT[tipIndex].source}</p>
+          )}
+        </div>
       </div>
     );
   }

@@ -21,9 +21,16 @@ export async function POST(req: NextRequest) {
     characters, securityTools, orgProfile, customIncident, language,
   } = body;
 
+  async function updateProgress(msg: string) {
+    try { await db.ttxSession.update({ where: { id: sessionId }, data: { title: msg } }); } catch {}
+  }
+
   try {
     console.log(`[generate/run] Starting for session ${sessionId}, org: ${orgName}`);
+    await updateProgress("Connecting to AI engine...");
     const startTime = Date.now();
+
+    await updateProgress("Analysing your security profile...");
 
     // Get recent titles to avoid duplicates
     const recentSessions = await db.ttxSession.findMany({
@@ -34,9 +41,15 @@ export async function POST(req: NextRequest) {
     });
     const recentTitles = recentSessions.map(s => s.title).filter(Boolean);
 
+    await updateStatus("Analysing your security profile...");
+
     // Past performance (fast query)
     let pastPerformance = null;
-    try {
+    async function updateProgress(msg: string) {
+    try { await db.ttxSession.update({ where: { id: sessionId }, data: { title: msg } }); } catch {}
+  }
+
+  try {
       const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx");
       pastPerformance = await analyzePastPerformance(orgId, db);
     } catch {}
@@ -45,7 +58,11 @@ export async function POST(req: NextRequest) {
     const providerConfig = await getOrgAIProvider(orgId);
     const isDefault = providerConfig.provider === "anthropic" && providerConfig.apiKey === process.env.ANTHROPIC_API_KEY;
 
-    // Generate scenario with Sonnet (original working config)
+    await updateProgress("Generating scenario with Claude Sonnet...");
+
+    await updateStatus("Generating incident scenario...");
+
+    // Generate scenario with Sonnet
     const scenario = await generateTtxScenario({
       theme, difficulty,
       mitreAttackIds: mitreAttackIds || [],
@@ -60,6 +77,10 @@ export async function POST(req: NextRequest) {
       language: language || "en",
       providerConfig: isDefault ? undefined : providerConfig,
     });
+
+    await updateProgress("Building " + (scenario.stages?.length || 0) + " stages with " + (scenario.stages?.reduce((n: number, s: any) => n + (s.questions?.length || 0), 0) || 0) + " questions...");
+
+    await updateStatus("Finalising exercise...");
 
     // Update session
     await db.ttxSession.update({
