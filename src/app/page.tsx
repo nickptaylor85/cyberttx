@@ -134,6 +134,34 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Product Tour */}
+      <section className="max-w-4xl mx-auto px-6 pb-20">
+        <h2 className="font-display text-2xl font-bold text-white text-center mb-2">See It In Action</h2>
+        <p className="text-gray-500 text-center text-sm mb-8">From daily drills to full crisis simulations in 60 seconds</p>
+        <div className="space-y-6">
+          {[
+            { step: "01", title: "AI generates a unique scenario", desc: "Pick a theme — ransomware, phishing, APT, insider threat. The AI builds a multi-stage incident narrative using your security tools, your industry, and real-world attack patterns. Every exercise references actual incidents like MOVEit, SolarWinds, and MGM.", tag: "Generation", color: "00ffd5" },
+            { step: "02", title: "Your team plays through it live", desc: "Multiple-choice questions with realistic tool alerts, log excerpts, and timestamps. Multiplayer mode lets your whole SOC play simultaneously with live scoring. Solo mode works too — 2-minute daily drills build muscle memory.", tag: "Gameplay", color: "a78bfa" },
+            { step: "03", title: "AI explains what you got wrong", desc: "Every answer includes a detailed explanation and a 'This Really Happened' reference linking to the real-world breach that used that exact technique. Your weak spots are tracked and tomorrow's drill targets them.", tag: "Learning", color: "f59e0b" },
+            { step: "04", title: "Compliance evidence generates automatically", desc: "PDF certificates with 1-year expiry. MITRE ATT&CK coverage heatmap. Team compliance dashboard showing who trained, who's overdue. Mapped to ISO 27001, NIST CSF, SOC 2, NIS2, DORA, PCI DSS 4.0.", tag: "Compliance", color: "10b981" },
+          ].map(t => (
+            <div key={t.step} className="cyber-card hover:border-cyber-600/20 transition-colors flex gap-5 items-start">
+              <span className="font-mono text-2xl font-bold text-[#00ffd5]/20 shrink-0">{t.step}</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-white text-sm font-semibold">{t.title}</h3>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full" style={{ background: `#${t.color}15`, color: `#${t.color}` }}>{t.tag}</span>
+                </div>
+                <p className="text-gray-500 text-xs leading-relaxed">{t.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center mt-8">
+          <Link href="/pitch" className="cyber-btn-secondary text-sm px-6 py-2 inline-block">View Full Pitch Deck →</Link>
+        </div>
+      </section>
+
       <section className="max-w-5xl mx-auto px-6 pb-20" id="pricing">
         <h2 className="font-display text-2xl font-bold text-white text-center mb-2">Pricing</h2>
         <p className="text-gray-500 text-center text-sm mb-8">Start free. Scale as your team grows.</p>
