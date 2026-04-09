@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     data: {
       orgId: org.id, title: "Generating...", difficulty, theme,
       mitreAttackIds: mitreAttackIds || [], mode: mode || "GROUP",
-      status: "GENERATING", questionCount: questionCount || 12,
+      status: "GENERATING", questionCount: Math.min(questionCount || 10, 10),
       createdById: user.id, channelName: null,
     },
   });
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
           securityTools: org.securityTools.map(ost => ({
             name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
           })),
-          questionCount: questionCount || 12,
+          questionCount: Math.min(questionCount || 10, 10),
           orgProfile: org.profile as any, characters, pastPerformance: await (async () => { try { const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx"); return analyzePastPerformance(org.id, db); } catch { return null; } })(), customIncident, recentTitles, language: language || "en",
           providerConfig: isDefault ? undefined : providerConfig,
         });
