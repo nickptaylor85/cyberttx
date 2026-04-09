@@ -10,6 +10,7 @@ import { generateTtxScenario } from "@/lib/ai/generate-ttx";
 import { generateChannelName } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
+  try {
   const user = await getAuthUser();
   if (!user?.orgId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -94,5 +95,9 @@ export async function POST(req: NextRequest) {
     console.error("[generate] FAILED:", error?.message);
     await db.ttxSession.update({ where: { id: session.id }, data: { status: "CANCELLED" } });
     return NextResponse.json({ error: error?.message || "Generation failed" }, { status: 500 });
+  }
+  } catch (outerError: any) {
+    console.error("[generate] OUTER CRASH:", outerError?.message, outerError?.stack?.slice(0, 300));
+    return NextResponse.json({ error: "Server error: " + (outerError?.message || "unknown") }, { status: 500 });
   }
 }
