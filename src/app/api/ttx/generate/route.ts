@@ -1,14 +1,12 @@
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
-import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import { rateLimit } from "@/lib/rate-limit";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { checkExerciseLimit } from "@/lib/plan-limits";
-import { generateChannelName } from "@/lib/utils";
-import { getOrgAIProvider } from "@/lib/ai/get-org-provider";
 
 export async function POST(req: NextRequest) {
   const user = await getAuthUser();
@@ -46,7 +44,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Capture all values before the handler returns
+  // Capture all values needed in the background task before returning
   const sessionId = session.id;
   const userId = user.id;
   const userEmail = user.email;
@@ -65,18 +63,20 @@ export async function POST(req: NextRequest) {
     try { await db.ttxSession.update({ where: { id: sessionId }, data: { title: msg } }); } catch {}
   }
 
-  // after() runs the generation AFTER the response is sent.
-  // Lazy-import generate-ttx inside the callback to avoid the Anthropic SDK
-  // being instantiated at module load time (causes build issues on Vercel).
-  after(async () => {
+  // waitUntil() keeps the Vercel function alive until the promise resolves,
+  // even after the response has been sent. This is the correct pattern for
+  // long-running background work on Vercel serverless.
+  waitUntil((async () => {
     try {
       console.log("[generate] Starting generation for", sessionId);
       const startTime = Date.now();
 
-      // Lazy import — keeps Anthropic client init out of module scope
-      const { generateTtxScenario, analyzePastPerformance } = await import("@/lib/ai/generate-ttx");
-
       await setStatus("Connecting to AI engine...");
+
+      // Dynamic imports inside callback — avoids module-level init issues
+      const { generateTtxScenario, analyzePastPerformance } = await import("@/lib/ai/generate-ttx");
+      const { generateChannelName } = await import("@/lib/utils");
+      const { getOrgAIProvider } = await import("@/lib/ai/get-org-provider");
 
       const recentSessions = await db.ttxSession.findMany({
         where: { orgId, status: "COMPLETED" },
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
       console.error(`[generate] FAILED for session ${sessionId}:`, error?.message || error);
       try { await db.ttxSession.update({ where: { id: sessionId }, data: { status: "CANCELLED" } }); } catch {}
     }
-  });
+  })());
 
   return NextResponse.json({ id: session.id, status: "GENERATING" });
 }
