@@ -66,6 +66,22 @@ export default function GuidePage() {
       { q: "How is my data protected?", a: "TLS 1.3 in transit, encrypted at rest, bcrypt password hashing (12 rounds), security headers (CSP, HSTS, X-Frame-Options). Hosted on SOC 2-certified infrastructure (Vercel + Neon)." },
       { q: "Can I customise my portal?", a: "Enterprise plans can set a custom portal name, logo, and brand colour. Go to Configure → Custom Branding." },
     ]},
+    { title: "Threat Actors", icon: "🕵️", items: [
+      { q: "What are threat actors in ThreatCast?", a: "A database of 27+ real-world threat groups (APT29, Lazarus, Scattered Spider, LockBit, etc.) with their TTPs, targets, and notable attacks. You can select one when creating an exercise to model the attack after that group's patterns." },
+      { q: "How do I use them?", a: "When creating a new exercise, Step 2 shows all available threat actors. Select one to make the AI generate a scenario based on that group's known techniques. Or skip to let the AI choose." },
+      { q: "Can I add new threat actors?", a: "Admins can add actors via Admin → Threat Actors. There are 10 curated actors available to add with one click, or use 'Discover New Actors' to find more via AI search." },
+    ]},
+    { title: "AI Provider (BYOK)", icon: "🤖", items: [
+      { q: "What is BYOK?", a: "Bring Your Own Key — use your own API key from Anthropic, OpenAI, or Google to power exercise generation instead of the ThreatCast default. Available on Professional and Enterprise plans." },
+      { q: "Which providers are supported?", a: "Anthropic Claude (Sonnet 4, Haiku 4.5), OpenAI (GPT-4o, GPT-4o Mini, o3 Mini), and Google Gemini (2.5 Flash, 2.5 Pro). OpenAI's JSON mode eliminates generation errors." },
+      { q: "How do I set it up?", a: "Go to Organisation → AI Provider → select your provider → paste your API key → choose a model → enable the toggle. The key is validated before saving and encrypted at rest." },
+      { q: "Can I switch back?", a: "Yes — disable the toggle or click 'Remove Key' to revert to the ThreatCast default at any time." },
+    ]},
+    { title: "Privacy & Data", icon: "🔐", items: [
+      { q: "How do I download my data?", a: "Go to Settings → 'Download My Data'. This generates a JSON export of all your personal data, exercise history, playbooks, certificates, and duels — as required by GDPR Article 15." },
+      { q: "How do I delete my account?", a: "Settings → 'Delete My Account'. Requires email confirmation. Deletes all your data including participations, answers, playbooks, certificates, and duels. A hashed record is kept for 30 days for compliance." },
+      { q: "Can an admin delete the whole organisation?", a: "Yes — Settings → 'Delete Organisation' (admin only). Requires typing the org name to confirm. Deletes all users, exercises, and data permanently." },
+    ]},
   ];
 
   return (

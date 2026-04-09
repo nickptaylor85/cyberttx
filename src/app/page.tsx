@@ -180,7 +180,9 @@ export default function Home() {
       <footer role="contentinfo" className="border-t border-surface-3 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2"><LogoMark size={24} /><LogoWordmark size="sm" /></div>
-          <div className="flex gap-4 text-gray-600 text-xs"><Link href="/terms" className="hover:text-gray-400">Terms</Link><Link href="/privacy" className="hover:text-gray-400">Privacy</Link><a href="mailto:hello@threatcast.io" className="hover:text-gray-400">Contact</a></div>
+          <div className="flex gap-4 text-gray-600 text-xs"><Link href="/terms" className="hover:text-gray-400">Terms</Link><Link href="/privacy" className="hover:text-gray-400">Privacy</Link>
+          <Link href="/changelog" className="hover:text-gray-400">Changelog</Link>
+          <Link href="/docs" className="hover:text-gray-400">API Docs</Link><a href="mailto:hello@threatcast.io" className="hover:text-gray-400">Contact</a></div>
           <p className="text-gray-700 text-xs">© 2026 ThreatCast. Glasgow, Scotland.</p>
         </div>
       </footer>

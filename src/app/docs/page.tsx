@@ -11,6 +11,15 @@ export default function ApiDocsPage() {
     { method: "POST", path: "/api/threat-intel", desc: "Trigger threat intel scan", auth: "Bearer token", body: null },
     { method: "POST", path: "/api/portal/invite", desc: "Send team invitations", auth: "Bearer token", body: '{ "emails": ["user@company.com"] }' },
     { method: "POST", path: "/api/auth/register", desc: "Register new user", auth: "None", body: '{ "email": "...", "password": "...", "firstName": "...", "lastName": "..." }' },
+    { method: "GET", path: "/api/portal/threat-actors", desc: "List all threat actors (built-in + custom)", auth: "Bearer token", body: null },
+    { method: "POST", path: "/api/portal/threat-actors", desc: "Add a custom threat actor to the database", auth: "Bearer token (Admin)", body: '{ "name": "...", "origin": "...", "type": "nation-state|cybercrime|hacktivist", "description": "..." }' },
+    { method: "GET", path: "/api/portal/ai-provider", desc: "Get BYOK AI provider config", auth: "Bearer token (Admin)", body: null },
+    { method: "POST", path: "/api/portal/ai-provider", desc: "Save BYOK provider settings (Pro/Enterprise)", auth: "Bearer token (Admin)", body: '{ "provider": "openai", "apiKey": "sk-...", "model": "gpt-4o", "enabled": true }' },
+    { method: "GET", path: "/api/portal/gdpr-export", desc: "Download all personal data (GDPR Article 15)", auth: "Bearer token", body: null },
+    { method: "POST", path: "/api/portal/delete-account", desc: "Delete your account and all data (GDPR Article 17)", auth: "Bearer token", body: '{ "confirmEmail": "user@company.com" }' },
+    { method: "GET", path: "/api/portal/daily-drill", desc: "Get today's adaptive daily drill", auth: "Bearer token", body: null },
+    { method: "GET", path: "/api/portal/duels", desc: "List duels for your organisation", auth: "Bearer token", body: null },
+    { method: "POST", path: "/api/portal/duels", desc: "Create a new duel challenge", auth: "Bearer token", body: '{ "theme": "ransomware" }' },
   ];
   const mc: Record<string, string> = { GET: "bg-green-500/20 text-green-400", POST: "bg-blue-500/20 text-blue-400", PUT: "bg-yellow-500/20 text-yellow-400", DELETE: "bg-red-500/20 text-red-400" };
   return (
