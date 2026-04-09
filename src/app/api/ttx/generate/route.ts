@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   const securityTools = org.securityTools.map((ost: any) => ({
     name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
   }));
-  const orgProfile = org.profile || null;
+  const orgProfile = (org.profile || null) as any;
   const characters = (selectedCharacters || []).map((c: any) => ({
     name: c.name, role: c.role, department: c.department || undefined,
     description: c.description || undefined, expertise: c.expertise || [],
