@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { getDefaultProvider, type AIProviderConfig } from "@/lib/ai/providers";
+import { decrypt } from "@/lib/crypto";
 
 /**
  * Get the AI provider config for an organization.
@@ -15,7 +16,7 @@ export async function getOrgAIProvider(orgId: string): Promise<AIProviderConfig>
     if (rows.length > 0 && rows[0].api_key_encrypted) {
       return {
         provider: rows[0].provider,
-        apiKey: rows[0].api_key_encrypted,
+        apiKey: decrypt(rows[0].api_key_encrypted),
         model: rows[0].model || undefined,
       };
     }

@@ -26,7 +26,13 @@ export async function POST(req: NextRequest) {
     try { await db.orgProfile.deleteMany({ where: { orgId: org.id } }); } catch {}
 
     const tables = ["saved_playbooks", "user_certificates", "duels", "scheduled_exercises", "support_tickets", "exercise_feedback"];
-    for (const t of tables) { try { await db.$executeRawUnsafe(`DELETE FROM ${t} WHERE org_id = $1`, org.id); } catch {} }
+    try { await db.$executeRawUnsafe("DELETE FROM saved_playbooks WHERE org_id = $1", org.id); } catch {}
+    try { await db.$executeRawUnsafe("DELETE FROM user_certificates WHERE org_id = $1", org.id); } catch {}
+    try { await db.$executeRawUnsafe("DELETE FROM duels WHERE org_id = $1", org.id); } catch {}
+    try { await db.$executeRawUnsafe("DELETE FROM scheduled_exercises WHERE org_id = $1", org.id); } catch {}
+    try { await db.$executeRawUnsafe("DELETE FROM support_tickets WHERE org_id = $1", org.id); } catch {}
+    try { await db.$executeRawUnsafe("DELETE FROM custom_threat_actors WHERE added_by IN (SELECT id FROM \"User\" WHERE org_id = $1)", org.id); } catch {}
+    try { await db.$executeRawUnsafe("DELETE FROM org_ai_provider WHERE org_id = $1", org.id); } catch {}
 
     await db.user.deleteMany({ where: { orgId: org.id } });
     await db.organization.delete({ where: { id: org.id } });

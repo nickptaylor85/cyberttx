@@ -17,6 +17,7 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
+      <main id="main-content">
       <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
         <div className="flex gap-2 justify-center mb-6">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyber-600/10 border border-cyber-600/20 text-cyber-400 text-xs"><span className="w-1.5 h-1.5 rounded-full bg-cyber-400 animate-pulse" /> Live SIEM/XDR Integration</span>
@@ -138,8 +139,8 @@ export default function Home() {
           {[
             { plan: "Starter", price: "£99", features: ["10 users", "10 exercises/month", "Daily drills + challenges", "Duels + leaderboard", "Playbooks + certificates", "Email support"], cta: "Start Free" },
             { plan: "Growth", price: "£249", features: ["25 users", "25 exercises/month", "SIEM/XDR integration", "Custom branding", "Team compliance dashboard", "Adaptive difficulty", "Priority support"], popular: true, cta: "Start Free" },
-            { plan: "Professional", price: "£499", features: ["50 users", "Unlimited exercises", "Custom characters", "API access", "SSO ready", "Benchmarking", "Slack + Teams bots"], cta: "Start Free" },
-            { plan: "Enterprise", price: "£999", features: ["Unlimited users", "Unlimited everything", "SAML SSO", "Feature flags", "Dedicated support", "Custom integrations", "SLA guarantee"], cta: "Contact Us" },
+            { plan: "Professional", price: "£499", features: ["50 users", "Unlimited exercises", "Custom characters", "API access", "SSO ready", "Benchmarking", "Slack + Teams bots", "BYOK AI (own API key)"], cta: "Start Free" },
+            { plan: "Enterprise", price: "£999", features: ["Unlimited users", "Unlimited everything", "SAML SSO", "Feature flags", "Dedicated support", "Custom integrations", "SLA guarantee", "BYOK AI (multi-provider)"], cta: "Contact Us" },
           ].map(p => (
             <div key={p.plan} className={`cyber-card ${(p as any).popular ? "border-cyber-600/30 relative" : ""}`}>
               {(p as any).popular && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 cyber-badge text-xs bg-cyber-600 text-white px-3">Most Popular</span>}
@@ -172,6 +173,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
+      </main>
       <footer className="border-t border-surface-3 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2"><LogoMark size={24} /><LogoWordmark size="sm" /></div>

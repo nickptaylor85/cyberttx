@@ -174,3 +174,54 @@
   95% { width: 90%; }
   100% { width: 95%; }
 }
+
+/* ═══ ACCESSIBILITY ═══ */
+
+/* Skip to content link */
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: #00ffd5;
+  color: #030712;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* Visible focus ring for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #00ffd5;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-pulse, .animate-ping, .animate-spin {
+    animation: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .cyber-card {
+    border-color: #ffffff40;
+  }
+  .text-gray-500, .text-gray-600 {
+    color: #d1d5db;
+  }
+}

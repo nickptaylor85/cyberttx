@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { waitUntil } from "@vercel/functions";
 import { getAuthUser } from "@/lib/auth-helpers";
+import { rateLimit } from "@/lib/rate-limit";
 import { db } from "@/lib/db";
 import { checkExerciseLimit } from "@/lib/plan-limits";
 import { generateTtxScenario } from "@/lib/ai/generate-ttx";
@@ -13,6 +14,10 @@ import { generateChannelName } from "@/lib/utils";
 export async function POST(req: NextRequest) {
   const user = await getAuthUser();
   if (!user?.orgId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Rate limit: 10 exercises per user per hour
+  const rl = rateLimit("generate:" + user.id, 10, 60 * 60 * 1000);
+  if (!rl.allowed) return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
 
   const org = await db.organization.findUnique({
     where: { id: user.orgId },

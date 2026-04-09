@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { validateApiKey, type AIProvider } from "@/lib/ai/providers";
+import { rateLimit } from "@/lib/rate-limit";
+import { encrypt, decrypt } from "@/lib/crypto";
 
 async function ensureTable() {
   await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS org_ai_provider (
@@ -35,7 +37,10 @@ export async function GET(req: NextRequest) {
   }
 
   const row = rows[0];
-  const maskedKey = row.api_key_encrypted ? maskKey(row.api_key_encrypted) : null;
+  let maskedKey = null;
+  if (row.api_key_encrypted) {
+    try { maskedKey = maskKey(decrypt(row.api_key_encrypted)); } catch { maskedKey = "••••••••(encrypted)"; }
+  }
 
   return NextResponse.json({
     provider: row.provider,
@@ -68,6 +73,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid provider" }, { status: 400 });
   }
 
+  // Rate limit key validation: 3 per hour
+  const rl = rateLimit("byok:" + user.id, 3, 60 * 60 * 1000);
+  if (!rl.allowed) return NextResponse.json({ error: "Too many key validation attempts. Try again later." }, { status: 429 });
+
   // Validate the API key if provided
   if (apiKey && apiKey !== "unchanged") {
     const validation = await validateApiKey(provider as AIProvider, apiKey);
@@ -77,7 +86,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Upsert
-  const keyToStore = apiKey === "unchanged" ? undefined : apiKey;
+  const keyToStore = apiKey === "unchanged" ? undefined : (apiKey ? encrypt(apiKey) : undefined);
 
   const existing = await db.$queryRawUnsafe(
     `SELECT id FROM org_ai_provider WHERE org_id = $1`, user.orgId

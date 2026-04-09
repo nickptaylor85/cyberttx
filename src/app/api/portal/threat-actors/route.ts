@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
+import { rateLimit } from "@/lib/rate-limit";
 import { THREAT_ACTORS, searchActors } from "@/lib/threat-actors";
 import { db } from "@/lib/db";
 
@@ -70,6 +71,8 @@ export async function GET(req: NextRequest) {
   if (type) actors = actors.filter(a => a.type === type);
 
   if (trending === "true") {
+    const rl = rateLimit("discover:" + user.id, 5, 60 * 60 * 1000);
+    if (!rl.allowed) return NextResponse.json({ actors, trendingError: "Rate limit: 5 discovers per hour" });
     try {
       const { default: Anthropic } = await import("@anthropic-ai/sdk");
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });

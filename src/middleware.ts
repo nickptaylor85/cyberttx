@@ -27,9 +27,6 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // ─── SECURITY HEADERS ──────────────────────────
-  const response = NextResponse.next();
-
   // ─── SUBDOMAIN DETECTION ───────────────────────
   let subdomain: string | null = null;
   if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
@@ -53,10 +50,21 @@ export async function middleware(req: NextRequest) {
       url.pathname = `/portal${pathname === "/" ? "" : pathname}`;
       return NextResponse.rewrite(url, { headers });
     }
-    return NextResponse.next({ headers });
+    const subRes = NextResponse.next({ headers });
+    subRes.headers.set('X-Frame-Options', 'DENY');
+    subRes.headers.set('X-Content-Type-Options', 'nosniff');
+    return subRes;
   }
 
-  return NextResponse.next();
+  // ─── SECURITY HEADERS ──────────────────────────
+  const response = NextResponse.next();
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  response.headers.set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+  response.headers.set("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com wss://*.pusher.com https://api.resend.com; frame-src 'self'; frame-ancestors 'none'");
+  return response;
 }
 
 export const config = {
