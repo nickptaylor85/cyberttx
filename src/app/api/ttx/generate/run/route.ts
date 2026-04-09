@@ -41,11 +41,10 @@ export async function POST(req: NextRequest) {
     });
     const recentTitles = recentSessions.map(s => s.title).filter(Boolean);
 
-    await updateStatus("Analysing your security profile...");
+    await updateProgress("Analysing your security profile...");
 
     // Past performance (fast query)
     let pastPerformance = null;
-    async function updateProgress(msg: string) {
     try { await db.ttxSession.update({ where: { id: sessionId }, data: { title: msg } }); } catch {}
   }
 
@@ -60,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     await updateProgress("Generating scenario with Claude Sonnet...");
 
-    await updateStatus("Generating incident scenario...");
+    await updateProgress("Generating incident scenario...");
 
     // Generate scenario with Sonnet
     const scenario = await generateTtxScenario({
@@ -80,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     await updateProgress("Building " + (scenario.stages?.length || 0) + " stages with " + (scenario.stages?.reduce((n: number, s: any) => n + (s.questions?.length || 0), 0) || 0) + " questions...");
 
-    await updateStatus("Finalising exercise...");
+    await updateProgress("Finalising exercise...");
 
     // Update session
     await db.ttxSession.update({
