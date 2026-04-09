@@ -1,9 +1,8 @@
 import Link from "next/link";
 
 const highlights: { ver: string; date?: string; title: string; desc: string }[] = [
-  { ver: "1.4", date: "Apr 2026", title: "Security & Accessibility Audit", desc: "BYOK key encryption (AES-256-GCM), rate limiting on AI endpoints, security headers on all middleware paths, WCAG accessibility: skip-to-content, landmarks, ARIA labels, reduced motion support, focus-visible outlines." },
-  { ver: "1.3", date: "Apr 2026", title: "BYOK Multi-Provider AI", desc: "Bring Your Own Key for Pro & Enterprise. Support for Anthropic Claude, OpenAI GPT-4o (native JSON mode), and Google Gemini. API key validation, encrypted storage, model selection per provider." },
-  { ver: "1.2", date: "Apr 2026", title: "Threat Actor Database", desc: "27 built-in threat actors (APT29, Lazarus, Scattered Spider, LockBit, etc.) + 10 discoverable actors. Admin can add new actors via AI search. Actors available in exercise wizard." },
+  { ver: "1.3", date: "Apr 2026", title: "Security & Accessibility Audit", desc: "BYOK key encryption (AES-256-GCM), rate limiting on AI endpoints, security headers on all middleware paths, WCAG accessibility: skip-to-content, landmarks, ARIA labels, reduced motion support, focus-visible outlines." },
+  { ver: "1.2", date: "Apr 2026", title: "BYOK Multi-Provider AI", desc: "Bring Your Own Key for Pro & Enterprise. Support for Anthropic Claude, OpenAI GPT-4o (native JSON mode), and Google Gemini. API key validation, encrypted storage, model selection per provider." },
   { ver: "1.1", date: "Apr 2026", title: "Cyberpunk Rebrand", desc: "New angular shield logo with targeting reticle, neon cyan (#00ffd5) colour, monospace THREATCAST wordmark. Updated across landing, portal, admin, emails, certificates, and OG image." },
   { ver: "1.0", date: "Apr 2026", title: "Launch Ready", desc: "GDPR compliance (data export, account deletion, org deletion). Admin IP allowlist + access logging. Loading screen with rotating cyber tips during exercise generation. Broadcast email system. 5 cron jobs for engagement." },
   { ver: "0.9", date: "Apr 2026", title: "Engagement Engine", desc: "Head-to-head duels with email notifications, adaptive difficulty targeting weak spots, 22 real-world incident references, weekly challenge emails, daily drills, XP/streaks, campaigns." },

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TTX_THEMES, COMMON_MITRE_TECHNIQUES, MITRE_TACTICS } from "@/types";
 import { cn } from "@/lib/utils";
-import type { ThreatActor } from "@/lib/threat-actors";
 
 interface Tool {
   id: string;
@@ -52,7 +51,7 @@ const LOADING_CONTENT = [
   { type: "tip", icon: "☁️", text: "82% of breaches involve data stored in the cloud. Misconfiguration is the #1 cloud security risk.", source: "IBM" },
 ];
 
-const WIZARD_STEPS = ["Theme", "Threat Actor", "Configuration", "Characters", "MITRE ATT&CK", "Launch"];
+const WIZARD_STEPS = ["Theme", "Configuration", "Characters", "MITRE ATT&CK", "Launch"];
 
 export default function NewTtxPage() {
   const router = useRouter();
@@ -64,11 +63,6 @@ export default function NewTtxPage() {
   const [tipIndex, setTipIndex] = useState(0);
   const [mitreStats, setMitreStats] = useState<{ mostUsed: string[]; leastUsed: string[] }>({ mostUsed: [], leastUsed: [] });
   const [error, setError] = useState("");
-  const [threatActors, setThreatActors] = useState<ThreatActor[]>([]);
-  const [trendingActors, setTrendingActors] = useState<any[]>([]);
-  const [selectedActor, setSelectedActor] = useState<ThreatActor | null>(null);
-  const [actorSearch, setActorSearch] = useState("");
-  const [loadingTrending, setLoadingTrending] = useState(false);
 
   // Characters from roster
   const [rosterCharacters, setRosterCharacters] = useState<Character[]>([]);
@@ -81,7 +75,6 @@ export default function NewTtxPage() {
 
   const [config, setConfig] = useState({
     theme: "",
-    threatActorId: "" as string,
     difficulty: "INTERMEDIATE" as string,
     mode: "GROUP" as string,
     questionCount: 12,
@@ -98,13 +91,6 @@ export default function NewTtxPage() {
     const interval = setInterval(() => setTipIndex(i => (i + 1) % LOADING_CONTENT.length), 8000);
     return () => clearInterval(interval);
   }, [generating]);
-
-  // Load threat actors when entering step 2
-  useEffect(() => {
-    if (step === 2 && threatActors.length === 0) {
-      fetch("/api/portal/threat-actors").then(r => r.ok ? r.json() : { actors: [] }).then((d: any) => setThreatActors(d.actors || []));
-    }
-  }, [step]);
 
   useEffect(() => {
     // Fetch MITRE technique usage for this portal
@@ -180,7 +166,6 @@ export default function NewTtxPage() {
           toolIds: orgTools,
           selectedCharacters: [...selectedRoster, ...adHocPayload],
           language: document.cookie.match(/lang=(\w+)/)?.[1] || "en",
-          threatActorId: config.threatActorId || undefined,
           customIncident: (window as any).__alertIncident || undefined,
         }),
       });
@@ -308,7 +293,7 @@ export default function NewTtxPage() {
           </div>
           <div className="flex justify-end mt-8">
             <button onClick={() => setStep(2)} disabled={!config.theme} className="cyber-btn-primary disabled:opacity-50">
-              Next: Threat Actor →
+              Next: Configuration →
             </button>
           </div>
         </div>
@@ -317,70 +302,10 @@ export default function NewTtxPage() {
       {/* =============================== */}
       {/* STEP 2: Threat Actor              */}
       {/* =============================== */}
+      {/* =============================== */}
+      {/* STEP 2: Configuration            */}
+      {/* =============================== */}
       {step === 2 && (
-        <div>
-          <h2 className="font-display text-lg font-semibold text-white mb-4">Select a Threat Actor (Optional)</h2>
-          <p className="text-gray-500 text-sm mb-4">Model the attack after a real-world threat group. The AI will use their known TTPs and attack patterns.</p>
-
-          <input className="cyber-input w-full mb-4" placeholder="Search threat actors..." value={actorSearch}
-            onChange={e => { setActorSearch(e.target.value); if (e.target.value.length > 1) { fetch(`/api/portal/threat-actors?search=${e.target.value}`).then(r => r.ok ? r.json() : { actors: [] }).then((d: any) => setThreatActors(d.actors || [])); } else if (e.target.value === "") { fetch("/api/portal/threat-actors").then(r => r.ok ? r.json() : { actors: [] }).then((d: any) => setThreatActors(d.actors || [])); } }} />
-
-          {selectedActor && (
-            <div className="cyber-card border-purple-500/30 bg-purple-600/5 mb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white text-sm font-semibold">{selectedActor.name}</p>
-                  <p className="text-purple-400 text-xs">{selectedActor.origin} · {selectedActor.motivation}</p>
-                </div>
-                <button onClick={() => { setSelectedActor(null); setConfig({ ...config, threatActorId: "" }); }} className="text-red-400 text-xs hover:text-red-300">Remove ×</button>
-              </div>
-              <p className="text-gray-400 text-xs mt-2">{selectedActor.description}</p>
-              {selectedActor.notableAttacks?.length > 0 && <p className="text-gray-500 text-xs mt-1">Known for: {selectedActor.notableAttacks.slice(0, 3).join(", ")}</p>}
-            </div>
-          )}
-
-          {!selectedActor && (
-            <>
-              {/* Top actors grid — always shown */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                {(threatActors.length > 0 ? threatActors : []).slice(0, 12).map(actor => (
-                  <button key={actor.id} onClick={() => { setSelectedActor(actor); setConfig({ ...config, threatActorId: actor.id }); }}
-                    className="cyber-card text-left cursor-pointer transition-all hover:border-surface-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-white text-sm font-medium">{actor.name}</p>
-                        <p className="text-gray-500 text-xs">{actor.origin} · {actor.motivation}</p>
-                      </div>
-                      <span className={`cyber-badge text-xs ${actor.type === "nation-state" ? "bg-red-500/20 text-red-400" : actor.type === "cybercrime" ? "bg-orange-500/20 text-orange-400" : "bg-yellow-500/20 text-yellow-400"}`}>{actor.type}</span>
-                    </div>
-                    <p className="text-gray-600 text-xs mt-1 line-clamp-1">{actor.description}</p>
-                    {actor.notableAttacks?.length > 0 && <p className="text-[#00ffd5] text-xs mt-1 line-clamp-1">{actor.notableAttacks.slice(0, 2).join(" · ")}</p>}
-                  </button>
-                ))}
-              </div>
-
-              {threatActors.length === 0 && (
-                <div className="cyber-card text-center py-6 mb-4">
-                  <p className="text-gray-500 text-sm">Loading threat actors...</p>
-                </div>
-              )}
-            </>
-          )}
-
-          <div className="flex justify-between mt-8">
-            <button onClick={() => setStep(1)} className="cyber-btn-secondary">← Back</button>
-            <div className="flex gap-2">
-              {!selectedActor && <button onClick={() => setStep(3)} className="cyber-btn-secondary">Skip →</button>}
-              <button onClick={() => setStep(3)} className="cyber-btn-primary">{selectedActor ? "Next: Configuration →" : "Next →"}</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =============================== */}
-      {/* STEP 3: Configuration            */}
-      {/* =============================== */}
-      {step === 3 && (
         <div className="space-y-6">
           <h2 className="font-display text-lg font-semibold text-white mb-4">Exercise Configuration</h2>
 
@@ -454,15 +379,15 @@ export default function NewTtxPage() {
 
           <div className="flex justify-between mt-8">
             <button onClick={() => setStep(2)} className="cyber-btn-secondary">← Back</button>
-            <button onClick={() => setStep(4)} className="cyber-btn-primary">Next: Characters →</button>
+            <button onClick={() => setStep(3)} className="cyber-btn-primary">Next: Characters →</button>
           </div>
         </div>
       )}
 
       {/* =============================== */}
-      {/* STEP 4: Characters               */}
+      {/* STEP 3: Characters               */}
       {/* =============================== */}
-      {step === 4 && (
+      {step === 3 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-1">Cast Your Scenario</h2>
           <p className="text-gray-500 text-sm mb-6">
@@ -618,16 +543,16 @@ export default function NewTtxPage() {
           </div>
 
           <div className="flex justify-between mt-8">
-            <button onClick={() => setStep(3)} className="cyber-btn-secondary">← Back</button>
-            <button onClick={() => setStep(5)} className="cyber-btn-primary">Next: MITRE ATT&CK →</button>
+            <button onClick={() => setStep(2)} className="cyber-btn-secondary">← Back</button>
+            <button onClick={() => setStep(4)} className="cyber-btn-primary">Next: MITRE ATT&CK →</button>
           </div>
         </div>
       )}
 
       {/* =============================== */}
-      {/* STEP 5: MITRE ATT&CK             */}
+      {/* STEP 4: MITRE ATT&CK             */}
       {/* =============================== */}
-      {step === 5 && (
+      {step === 4 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-1">MITRE ATT&CK Techniques</h2>
           <p className="text-gray-500 text-sm mb-3">
@@ -681,8 +606,8 @@ export default function NewTtxPage() {
           )}
 
           <div className="flex justify-between mt-8">
-            <button onClick={() => setStep(4)} className="cyber-btn-secondary">← Back</button>
-            <button onClick={() => setStep(6)} className="cyber-btn-primary">Next: Review & Launch →</button>
+            <button onClick={() => setStep(3)} className="cyber-btn-secondary">← Back</button>
+            <button onClick={() => setStep(5)} className="cyber-btn-primary">Next: Review & Launch →</button>
           </div>
         </div>
       )}
@@ -690,7 +615,7 @@ export default function NewTtxPage() {
       {/* =============================== */}
       {/* STEP 5: Review & Launch           */}
       {/* =============================== */}
-      {step === 6 && (
+      {step === 5 && (
         <div>
           <h2 className="font-display text-lg font-semibold text-white mb-6">Review & Launch</h2>
 
@@ -769,7 +694,7 @@ export default function NewTtxPage() {
           )}
 
           <div className="flex justify-between">
-            <button onClick={() => setStep(5)} className="cyber-btn-secondary">← Back</button>
+            <button onClick={() => setStep(4)} className="cyber-btn-secondary">← Back</button>
             <button onClick={handleGenerate} disabled={generating} className="cyber-btn-primary px-8">
               {generating ? (
                 <span className="flex items-center gap-2">
