@@ -1,5 +1,4 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { aiComplete, type AIProviderConfig } from "@/lib/ai/providers";
 import type { TtxScenario, TtxStage } from "@/types";
 
 const anthropic = new Anthropic({
@@ -235,14 +234,17 @@ Generate ALL content in the following language: ${language}.
 This includes: scenario title, narrative text, stage descriptions, question text, answer options, explanations, and all other written content.
 Technical terms (MITRE ATT&CK, CVE numbers, tool names) should remain in English.
 ` : ""}
-RULES:
+CRITICAL RULES:
 1. Exactly 4 options per question (A-D), exactly ONE correct
-2. Wrong options must be plausible
-3. Reference the org's security tools by name
-4. Explanations: 1-2 sentences MAX. Be concise.
-5. Narrative escalates progressively
-6. Output ONLY valid JSON. No markdown fences. No trailing commas.
-7. Keep total output under 3500 tokens.
+2. Wrong options must be plausible — never obviously absurd
+3. Reference the organization's SPECIFIC security tools by name
+4. Include realistic timestamps, IPs, hashes, log excerpts
+5. Narrative must unfold progressively with escalating severity
+6. Reference the org's infrastructure, industry, and regulatory context
+7. Characters (if defined) MUST appear by name — this is non-negotiable
+8. Show tool alerts formatted as they'd actually appear in the real product
+9. Include inter-team communications (Slack, email, phone) with named characters
+10. Show business impact through the lens of their specific critical assets
 
 SCORING: Easy=${diffConfig.pointsEasy}, Medium=${diffConfig.pointsMedium}, Hard=${diffConfig.pointsHard} pts. Wrong=0.
 AUDIENCE: ${diffConfig.description}
@@ -299,27 +301,20 @@ JSON structure:
   "totalPoints": 0
 }`;
 
-  // Use BYOK provider if configured, otherwise platform default
   let jsonText: string;
   if (providerConfig) {
-    console.log(`[generate] Using ${providerConfig.provider} (${providerConfig.model || "default"}) via BYOK`);
+    const { aiComplete } = await import("@/lib/ai/providers");
     const result = await aiComplete(providerConfig, { systemPrompt, userPrompt, maxTokens: 8000 });
     jsonText = result.text.trim();
-    if (result.truncated) {
-      console.warn(`[generate] Output truncated by ${result.provider} — may need JSON repair`);
-    }
   } else {
-    // Default: use platform Anthropic key
     const response = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 8000,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     });
     const textContent = response.content.find((c) => c.type === "text");
-    if (!textContent || textContent.type !== "text") {
-      throw new Error("No text response from AI");
-    }
+    if (!textContent || textContent.type !== "text") throw new Error("No text response from AI");
     jsonText = textContent.text.trim();
   }
   // Strip markdown fences
@@ -327,16 +322,6 @@ JSON structure:
   // Try to extract JSON object if there's extra text around it
   const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
   if (jsonMatch) jsonText = jsonMatch[0];
-
-  // Repair common JSON issues from AI output
-  jsonText = jsonText.replace(/,\s*([\]\}])/g, "$1"); // trailing commas
-  // Close unclosed brackets if truncated
-  let ob = (jsonText.match(/\{/g) || []).length;
-  let cb = (jsonText.match(/\}/g) || []).length;
-  let oq = (jsonText.match(/\[/g) || []).length;
-  let cq = (jsonText.match(/\]/g) || []).length;
-  while (oq > cq) { jsonText += "]"; cq++; }
-  while (ob > cb) { jsonText += "}"; cb++; }
 
   try {
     const scenario: TtxScenario = JSON.parse(jsonText);
