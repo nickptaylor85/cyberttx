@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { getDefaultProvider, type AIProviderConfig } from "@/lib/ai/providers";
 import { decrypt } from "@/lib/crypto";
+import { getDefaultProvider, type AIProviderConfig } from "@/lib/ai/providers";
 
 /**
  * Get the AI provider config for an organization.

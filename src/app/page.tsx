@@ -4,8 +4,9 @@ import { LogoMark, LogoWordmark } from "@/components/Logo";
 export default function Home() {
   return (
     <div className="min-h-screen">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#00ffd5] focus:text-black focus:rounded">Skip to content</a>
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
+      <nav aria-label="Main navigation" className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
         <Link href="/" className="flex items-center gap-2.5">
           <LogoMark size={36} />
           <LogoWordmark size="lg" />
@@ -17,6 +18,7 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
+      <main id="main-content">
       <main id="main-content">
       <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
         <div className="flex gap-2 justify-center mb-6">
@@ -174,7 +176,8 @@ export default function Home() {
 
       {/* Footer */}
       </main>
-      <footer className="border-t border-surface-3 py-8 px-6">
+      </main>
+      <footer role="contentinfo" className="border-t border-surface-3 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2"><LogoMark size={24} /><LogoWordmark size="sm" /></div>
           <div className="flex gap-4 text-gray-600 text-xs"><Link href="/terms" className="hover:text-gray-400">Terms</Link><Link href="/privacy" className="hover:text-gray-400">Privacy</Link><a href="mailto:hello@threatcast.io" className="hover:text-gray-400">Contact</a></div>

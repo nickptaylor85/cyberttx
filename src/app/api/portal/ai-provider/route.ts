@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { validateApiKey, type AIProvider } from "@/lib/ai/providers";
-import { rateLimit } from "@/lib/rate-limit";
 import { encrypt, decrypt } from "@/lib/crypto";
+import { rateLimit } from "@/lib/rate-limit";
 
 async function ensureTable() {
   await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS org_ai_provider (
