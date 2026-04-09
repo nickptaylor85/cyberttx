@@ -10,7 +10,7 @@ export default function ApiDocsPage() {
     { method: "GET", path: "/api/threat-intel", desc: "Get threat intelligence events", auth: "None", body: null },
     { method: "POST", path: "/api/threat-intel", desc: "Trigger threat intel scan", auth: "Bearer token", body: null },
     { method: "POST", path: "/api/portal/invite", desc: "Send team invitations", auth: "Bearer token", body: '{ "emails": ["user@company.com"] }' },
-    { method: "POST", path: "/api/auth/register", desc: "Register new user", auth: "None", body: '{ "email": "...", "password": "...", "firstName": "...", "lastName": "..." }' },' },
+    { method: "POST", path: "/api/auth/register", desc: "Register new user", auth: "None", body: '{ "email": "...", "password": "...", "firstName": "...", "lastName": "..." }' },
     { method: "GET", path: "/api/portal/ai-provider", desc: "Get BYOK AI provider config", auth: "Bearer token (Admin)", body: null },
     { method: "POST", path: "/api/portal/ai-provider", desc: "Save BYOK provider settings (Pro/Enterprise)", auth: "Bearer token (Admin)", body: '{ "provider": "openai", "apiKey": "sk-...", "model": "gpt-4o", "enabled": true }' },
     { method: "GET", path: "/api/portal/gdpr-export", desc: "Download all personal data (GDPR Article 15)", auth: "Bearer token", body: null },
