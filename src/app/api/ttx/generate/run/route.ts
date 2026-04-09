@@ -8,8 +8,10 @@ import { generateChannelName } from "@/lib/utils";
 import { getOrgAIProvider } from "@/lib/ai/get-org-provider";
 
 export async function POST(req: NextRequest) {
+  console.log("[generate/run] Received request");
   const secret = req.headers.get("x-cron-secret");
   if (secret !== process.env.CRON_SECRET) {
+    console.error("[generate/run] Auth failed — secret mismatch");
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -101,6 +103,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, elapsed });
   } catch (error: any) {
     console.error("[generate/run] FAILED:", error?.message || error);
+    console.error("[generate/run] Stack:", error?.stack?.slice(0, 500));
     await db.ttxSession.update({ where: { id: sessionId }, data: { status: "CANCELLED" } });
     return NextResponse.json({ error: error?.message || "Failed" }, { status: 500 });
   }
