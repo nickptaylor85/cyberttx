@@ -133,35 +133,26 @@ export default function NewTtxPage() {
     }));
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 110_000);
-      let res: Response;
-      try {
-        res = await fetch("/api/ttx/generate", {
-          signal: controller.signal,
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...config,
-            toolIds: orgTools,
-            selectedCharacters: [...selectedRoster, ...adHocPayload],
-            language: document.cookie.match(/lang=(\w+)/)?.[1] || "en",
-            customIncident: (window as any).__alertIncident || undefined,
-          }),
-        });
-      } finally {
-        clearTimeout(timeoutId);
-      }
+      const res = await fetch("/api/ttx/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...config,
+          toolIds: orgTools,
+          selectedCharacters: [...selectedRoster, ...adHocPayload],
+          language: document.cookie.match(/lang=(\w+)/)?.[1] || "en",
+          customIncident: (window as any).__alertIncident || undefined,
+        }),
+      });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Generation failed");
       }
       const session = await res.json();
-      // Redirect to session page — it handles GENERATING polling
+      // Redirect immediately — session page polls until ready
       router.push("/portal/ttx/" + session.id);
     } catch (e: any) {
-      const msg = e?.name === "AbortError" ? "Generation timed out — please try again" : (e instanceof Error ? e.message : "Failed to generate");
-      setError(msg);
+      setError(e instanceof Error ? e.message : "Failed to generate");
       setGenerating(false);
     }
   }

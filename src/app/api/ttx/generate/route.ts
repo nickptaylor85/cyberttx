@@ -1,16 +1,14 @@
-export const maxDuration = 300;
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions/wait-until";
 import { rateLimit } from "@/lib/rate-limit";
 import { getAuthUser } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { checkExerciseLimit } from "@/lib/plan-limits";
-import { generateTtxScenario } from "@/lib/ai/generate-ttx";
-import { generateChannelName } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
-  try {
   const user = await getAuthUser();
   if (!user?.orgId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -25,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   const planCheck = await checkExerciseLimit(org.id);
   if (!planCheck.allowed) {
-    return NextResponse.json({ error: "Monthly limit reached (" + planCheck.used + "/" + planCheck.limit + ")." }, { status: 429 });
+    return NextResponse.json({ error: `Monthly limit reached (${planCheck.used}/${planCheck.limit}).` }, { status: 429 });
   }
 
   await db.ttxSession.updateMany({
@@ -45,59 +43,107 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  try {
-    const recentSessions = await db.ttxSession.findMany({
-      where: { orgId: org.id, status: "COMPLETED" },
-      select: { title: true },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-    });
+  // Capture everything needed before the response is sent
+  const sessionId = session.id;
+  const userId = user.id;
+  const userEmail = user.email;
+  const orgId = org.id;
+  const orgName = org.name;
+  const securityTools = org.securityTools.map((ost: any) => ({
+    name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
+  }));
+  const orgProfile = org.profile || null;
+  const characters = (selectedCharacters || []).map((c: any) => ({
+    name: c.name, role: c.role, department: c.department || undefined,
+    description: c.description || undefined, expertise: c.expertise || [],
+  }));
 
-    let pastPerformance = null;
+  async function setStatus(msg: string) {
+    try { await db.ttxSession.update({ where: { id: sessionId }, data: { title: msg } }); } catch {}
+  }
+
+  // waitUntil keeps the Vercel function alive until the promise resolves,
+  // even after the HTTP response has been returned to the client.
+  waitUntil((async () => {
     try {
-      const { analyzePastPerformance } = await import("@/lib/ai/generate-ttx");
-      pastPerformance = await analyzePastPerformance(org.id, db);
-    } catch {}
+      console.log("[generate] Starting for", sessionId);
+      const startTime = Date.now();
 
-    const scenario = await generateTtxScenario({
-      theme, difficulty,
-      mitreAttackIds: mitreAttackIds || [],
-      securityTools: org.securityTools.map(ost => ({
-        name: ost.tool.name, vendor: ost.tool.vendor, category: ost.tool.category,
-      })),
-      questionCount: questionCount || 12,
-      orgProfile: (org.profile || null) as any,
-      characters: (selectedCharacters || []).map((c: any) => ({
-        name: c.name, role: c.role, department: c.department || undefined,
-        description: c.description || undefined, expertise: c.expertise || [],
-      })),
-      pastPerformance,
-      customIncident,
-      recentTitles: recentSessions.map(s => s.title).filter(Boolean),
-      language: language || "en",
-    });
+      await setStatus("Connecting to AI engine...");
 
-    await db.ttxSession.update({
-      where: { id: session.id },
-      data: {
-        title: scenario.title,
-        scenario: scenario as any,
-        status: mode === "INDIVIDUAL" ? "IN_PROGRESS" : "LOBBY",
-        channelName: generateChannelName(session.id),
-      },
-    });
+      const { generateTtxScenario, analyzePastPerformance } = await import("@/lib/ai/generate-ttx");
+      const { generateChannelName } = await import("@/lib/utils");
+      const { getOrgAIProvider } = await import("@/lib/ai/get-org-provider");
 
-    await db.ttxParticipant.create({ data: { sessionId: session.id, userId: user.id } });
-    await db.organization.update({ where: { id: org.id }, data: { ttxUsedThisMonth: { increment: 1 } } });
+      const recentSessions = await db.ttxSession.findMany({
+        where: { orgId, status: "COMPLETED" },
+        select: { title: true },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      });
+      const recentTitles = recentSessions.map((s: any) => s.title).filter(Boolean);
 
-    return NextResponse.json({ id: session.id, status: "READY" });
-  } catch (error: any) {
-    console.error("[generate] FAILED:", error?.message);
-    await db.ttxSession.update({ where: { id: session.id }, data: { status: "CANCELLED" } });
-    return NextResponse.json({ error: error?.message || "Generation failed" }, { status: 500 });
-  }
-  } catch (outerError: any) {
-    console.error("[generate] OUTER CRASH:", outerError?.message, outerError?.stack?.slice(0, 300));
-    return NextResponse.json({ error: "Server error: " + (outerError?.message || "unknown") }, { status: 500 });
-  }
+      let pastPerformance = null;
+      try { pastPerformance = await analyzePastPerformance(orgId, db); } catch {}
+
+      await setStatus("Analysing your security profile...");
+
+      const providerConfig = await getOrgAIProvider(orgId);
+      const isDefault = providerConfig.provider === "anthropic" && providerConfig.apiKey === process.env.ANTHROPIC_API_KEY;
+
+      await setStatus("Generating incident scenario with AI...");
+
+      const scenario = await generateTtxScenario({
+        theme, difficulty,
+        mitreAttackIds: mitreAttackIds || [],
+        securityTools,
+        questionCount: questionCount || 12,
+        orgProfile,
+        orgName,
+        characters,
+        pastPerformance,
+        customIncident,
+        recentTitles,
+        language: language || "en",
+        providerConfig: isDefault ? undefined : providerConfig,
+      });
+
+      await setStatus("Finalising exercise...");
+
+      await db.ttxSession.update({
+        where: { id: sessionId },
+        data: {
+          title: scenario.title,
+          scenario: scenario as any,
+          status: mode === "INDIVIDUAL" ? "IN_PROGRESS" : "LOBBY",
+          channelName: generateChannelName(sessionId),
+        },
+      });
+
+      await db.ttxParticipant.create({ data: { sessionId, userId } });
+      await db.organization.update({ where: { id: orgId }, data: { ttxUsedThisMonth: { increment: 1 } } });
+
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`[generate] Done in ${elapsed}s: ${scenario.title}`);
+
+      if (process.env.RESEND_API_KEY && userEmail) {
+        fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "ThreatCast <noreply@threatcast.io>",
+            to: [userEmail],
+            subject: `Your "${scenario.title}" exercise is ready`,
+            html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:24px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div><h2>Your exercise is ready!</h2><p>Your <strong>${scenario.title}</strong> tabletop exercise has been generated.</p><a href="https://threatcast.io/portal/ttx/${sessionId}" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Launch Exercise →</a></div>`,
+          }),
+        }).catch(() => {});
+      }
+    } catch (error: any) {
+      console.error(`[generate] FAILED for ${sessionId}:`, error?.message);
+      try { await db.ttxSession.update({ where: { id: sessionId }, data: { status: "CANCELLED" } }); } catch {}
+    }
+  })());
+
+  // Return immediately — client polls the session page
+  return NextResponse.json({ id: session.id, status: "GENERATING" });
 }
