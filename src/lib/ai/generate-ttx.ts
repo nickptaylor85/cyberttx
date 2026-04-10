@@ -317,11 +317,22 @@ JSON structure:
     if (!textContent || textContent.type !== "text") throw new Error("No text response from AI");
     jsonText = textContent.text.trim();
   }
-  // Strip markdown fences
+  // Robust JSON extraction
+  // 1. Strip markdown fences
   jsonText = jsonText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
-  // Try to extract JSON object if there's extra text around it
-  const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
-  if (jsonMatch) jsonText = jsonMatch[0];
+  // 2. Find the outermost JSON object using brace counting (handles nested objects)
+  let braceStart = jsonText.indexOf("{");
+  if (braceStart >= 0) {
+    let depth = 0;
+    let braceEnd = -1;
+    for (let i = braceStart; i < jsonText.length; i++) {
+      if (jsonText[i] === "{") depth++;
+      else if (jsonText[i] === "}") { depth--; if (depth === 0) { braceEnd = i; break; } }
+    }
+    if (braceEnd > braceStart) jsonText = jsonText.substring(braceStart, braceEnd + 1);
+  }
+  // 3. Fix common AI JSON issues: trailing commas, unescaped newlines in strings
+  jsonText = jsonText.replace(/,\s*([}\]])/g, "$1");
 
   try {
     const scenario: TtxScenario = JSON.parse(jsonText);

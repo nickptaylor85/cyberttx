@@ -1,4 +1,4 @@
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse, after } from "next/server";
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   const planCheck = await checkExerciseLimit(org.id);
   if (!planCheck.allowed) {
-    return NextResponse.json({ error: `Monthly limit reached (${planCheck.used}/${planCheck.limit}).` }, { status: 429 });
+    return NextResponse.json({ error: "Monthly limit reached (" + planCheck.used + "/" + planCheck.limit + ")." }, { status: 429 });
   }
 
   await db.ttxSession.updateMany({
@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Capture values for after() closure
   const sessionId = session.id;
   const userId = user.id;
   const userEmail = user.email;
@@ -55,19 +56,19 @@ export async function POST(req: NextRequest) {
     name: c.name, role: c.role, department: c.department || undefined,
     description: c.description || undefined, expertise: c.expertise || [],
   }));
+  const qCount = questionCount || 12;
+  const mIds = mitreAttackIds || [];
+  const lang = language || "en";
+  const sessionMode = mode || "GROUP";
 
-  async function setStatus(msg: string) {
-    try { await db.ttxSession.update({ where: { id: sessionId }, data: { title: msg } }); } catch {}
-  }
-
-  // after() runs after the response is sent, keeping the Vercel function alive.
-  // Stable in Next.js 15, no experimental flags needed.
+  // after() runs AFTER the response is sent, within maxDuration (300s Pro plan).
+  // AI call takes 60-90s — well within budget.
   after(async () => {
+    const startTime = Date.now();
     try {
-      console.log("[generate] Starting for", sessionId);
-      const startTime = Date.now();
+      console.log("[generate] after() started for " + sessionId);
 
-      await setStatus("Connecting to AI engine...");
+      await db.ttxSession.update({ where: { id: sessionId }, data: { title: "Connecting to AI engine..." } }).catch(() => {});
 
       const { generateTtxScenario, analyzePastPerformance } = await import("@/lib/ai/generate-ttx");
       const { generateChannelName } = await import("@/lib/utils");
@@ -84,36 +85,36 @@ export async function POST(req: NextRequest) {
       let pastPerformance = null;
       try { pastPerformance = await analyzePastPerformance(orgId, db); } catch {}
 
-      await setStatus("Analysing your security profile...");
+      await db.ttxSession.update({ where: { id: sessionId }, data: { title: "Analysing your security profile..." } }).catch(() => {});
 
       const providerConfig = await getOrgAIProvider(orgId);
       const isDefault = providerConfig.provider === "anthropic" && providerConfig.apiKey === process.env.ANTHROPIC_API_KEY;
 
-      await setStatus("Generating incident scenario with AI...");
+      await db.ttxSession.update({ where: { id: sessionId }, data: { title: "Generating incident scenario..." } }).catch(() => {});
 
       const scenario = await generateTtxScenario({
         theme, difficulty,
-        mitreAttackIds: mitreAttackIds || [],
+        mitreAttackIds: mIds,
         securityTools,
-        questionCount: questionCount || 12,
-        orgProfile,
+        questionCount: qCount,
+        orgProfile: orgProfile as any,
         orgName,
         characters,
         pastPerformance,
         customIncident,
         recentTitles,
-        language: language || "en",
+        language: lang,
         providerConfig: isDefault ? undefined : providerConfig,
       });
 
-      await setStatus("Finalising exercise...");
+      await db.ttxSession.update({ where: { id: sessionId }, data: { title: "Finalising exercise..." } }).catch(() => {});
 
       await db.ttxSession.update({
         where: { id: sessionId },
         data: {
           title: scenario.title,
           scenario: scenario as any,
-          status: mode === "INDIVIDUAL" ? "IN_PROGRESS" : "LOBBY",
+          status: sessionMode === "INDIVIDUAL" ? "IN_PROGRESS" : "LOBBY",
           channelName: generateChannelName(sessionId),
         },
       });
@@ -121,23 +122,26 @@ export async function POST(req: NextRequest) {
       await db.ttxParticipant.create({ data: { sessionId, userId } });
       await db.organization.update({ where: { id: orgId }, data: { ttxUsedThisMonth: { increment: 1 } } });
 
-      console.log(`[generate] Done in ${((Date.now() - startTime) / 1000).toFixed(1)}s: ${scenario.title}`);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log("[generate] SUCCESS in " + elapsed + "s: " + scenario.title);
 
       if (process.env.RESEND_API_KEY && userEmail) {
         fetch("https://api.resend.com/emails", {
           method: "POST",
-          headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+          headers: { Authorization: "Bearer " + process.env.RESEND_API_KEY, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "ThreatCast <noreply@threatcast.io>",
             to: [userEmail],
-            subject: `Your "${scenario.title}" exercise is ready`,
-            html: `<div style="font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;"><div style="font-family:monospace;font-size:18px;font-weight:800;letter-spacing:2px;margin-bottom:24px;"><span style="color:#f0f0f0;">THREAT</span><span style="color:#00ffd5;">CAST</span></div><h2>Your exercise is ready!</h2><p>Your <strong>${scenario.title}</strong> tabletop exercise has been generated.</p><a href="https://threatcast.io/portal/ttx/${sessionId}" style="display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;">Launch Exercise →</a></div>`,
+            subject: "Your exercise is ready: " + scenario.title,
+            html: "<div style=\"font-family:-apple-system,sans-serif;max-width:500px;margin:0 auto;padding:40px 20px;\"><h2>Your exercise is ready!</h2><p><strong>" + scenario.title + "</strong></p><a href=\"https://threatcast.io/portal/ttx/" + sessionId + "\" style=\"display:inline-block;background:#14b89a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px;\">Launch Exercise</a></div>",
           }),
         }).catch(() => {});
       }
     } catch (error: any) {
-      console.error(`[generate] FAILED for ${sessionId}:`, error?.message);
-      try { await db.ttxSession.update({ where: { id: sessionId }, data: { status: "CANCELLED" } }); } catch {}
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.error("[generate] FAILED in " + elapsed + "s for " + sessionId + ": " + (error?.message || "unknown"));
+      console.error("[generate] Stack:", error?.stack?.substring(0, 500));
+      await db.ttxSession.update({ where: { id: sessionId }, data: { status: "CANCELLED" } }).catch(() => {});
     }
   });
 
