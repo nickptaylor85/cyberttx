@@ -1,6 +1,4 @@
 "use client";
-import CyberTrivia from "@/components/CyberTrivia";
-import { fireCelebration } from "@/lib/confetti";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -149,9 +147,9 @@ export default function NewTtxPage() {
         throw new Error(data.error || "Generation failed");
       }
       const session = await res.json();
-      // Redirect immediately — session page polls until ready
+      // Redirect to session page — it handles GENERATING polling
       router.push("/portal/ttx/" + session.id);
-    } catch (e: any) {
+    } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to generate");
       setGenerating(false);
     }
@@ -170,23 +168,6 @@ export default function NewTtxPage() {
   }
 
   return (
-    <>
-      {/* Full-screen generating overlay */}
-      {generating && (
-        <div className="fixed inset-0 z-50 bg-[#030712]/95 flex flex-col items-center justify-center px-6">
-          <div className="relative mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-[#00ffd5]/5 border border-[#00ffd5]/20 flex items-center justify-center animate-pulse">
-              <svg className="w-8 h-8" viewBox="0 0 120 120" fill="none"><path d="M60 14 L30 29 L26 74 L60 104 L94 74 L90 29 Z" fill="rgba(0,255,213,0.06)" stroke="#00ffd5" strokeWidth="2"/><path d="M51 56 L57 63 L70 48" fill="none" stroke="#00ffd5" strokeWidth="3" strokeLinecap="square"/></svg>
-            </div>
-            <div className="absolute -inset-3 rounded-2xl bg-[#00ffd5]/5 animate-ping" style={{ animationDuration: "2s" }} />
-          </div>
-          <p className="font-mono text-sm font-bold tracking-wider mb-1"><span className="text-gray-100">THREAT</span><span className="text-[#00ffd5]">CAST</span></p>
-          <p className="text-gray-500 text-xs mb-2">Generating your {config.theme} exercise...</p>
-          <p className="text-gray-600 text-[10px] mb-8">This takes 60-90 seconds</p>
-          <CyberTrivia onScore={(correct) => correct && fireCelebration("correct")} />
-        </div>
-      )}
-
     <div className="max-w-4xl mx-auto">
 
       <h1 className="font-display text-2xl font-bold text-white mb-2">Create New Exercise</h1>
@@ -656,6 +637,5 @@ export default function NewTtxPage() {
         </div>
       )}
     </div>
-    </>
   );
 }
