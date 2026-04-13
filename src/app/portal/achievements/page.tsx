@@ -19,9 +19,7 @@ export default async function AchievementsPage() {
   const perfects = participations.filter(p => p.answers.length > 0 && p.answers.every(a => a.isCorrect)).length;
   const themes = new Set(participations.map(p => p.session.theme).filter(Boolean));
   const didGroup = participations.some(p => p.session.mode === "GROUP");
-  const didAlertExercise = participations.some(p =>
-    p.session.customIncident && (p.session.customIncident as string).toLowerCase().includes("alert")
-  );
+  const didAlertExercise = false; // customIncident not stored in DB yet — coming in next schema update
   const othersOnMyExercises = await db.ttxParticipant.count({
     where: { session: { createdById: user.id, status: "COMPLETED" }, userId: { not: user.id } },
   });

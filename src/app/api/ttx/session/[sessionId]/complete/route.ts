@@ -117,7 +117,7 @@ export async function POST(
       where: { userId: user.id, session: { status: "COMPLETED" } },
       include: {
         answers: { select: { isCorrect: true } },
-        session: { select: { theme: true, mode: true, createdById: true, customIncident: true } },
+        session: { select: { theme: true, mode: true, createdById: true } },
       },
     });
 
@@ -125,7 +125,7 @@ export async function POST(
     const perfects = allParticipations.filter(p => p.answers.length > 0 && p.answers.every(a => a.isCorrect)).length;
     const themes = new Set(allParticipations.map(p => p.session.theme).filter(Boolean));
     const isGroupSession = session.mode === "GROUP";
-    const isFromAlert = !!(session as any).customIncident && ((session as any).customIncident as string).toLowerCase().includes("alert");
+    const isFromAlert = false; // customIncident not stored in DB; real-world badge awarded via achievements page
     const sessionsCreatedByMeWithOthers = await db.ttxParticipant.count({
       where: { session: { createdById: user.id, status: "COMPLETED" }, userId: { not: user.id } },
     });
