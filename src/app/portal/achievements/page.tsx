@@ -11,7 +11,7 @@ export default async function AchievementsPage() {
     where: { userId: user.id, session: { status: "COMPLETED" } },
     include: {
       answers: { select: { isCorrect: true } },
-      session: { select: { theme: true, mode: true, createdById: true, customIncident: true } },
+      session: { select: { theme: true, mode: true, createdById: true } },
     },
   });
 
