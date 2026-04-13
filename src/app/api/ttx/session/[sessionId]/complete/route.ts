@@ -144,7 +144,7 @@ export async function POST(
     if (isPerfect && perfects === 5) newAchievements.push("five-perfects");
     if (themes.size === 3) newAchievements.push("three-themes");
     if (themes.size === 8) newAchievements.push("all-themes");
-    if (isFromAlert && !allParticipations.slice(0, -1).some(p => p.session.customIncident?.toLowerCase().includes("alert"))) newAchievements.push("real-world");
+    // real-world achievement: customIncident not in schema yet — skipped
     if (isGroupSession && allParticipations.filter(p => p.session.mode === "GROUP").length === 1) newAchievements.push("team-player");
     if (sessionsCreatedByMeWithOthers >= 5) {
       const prev = await db.ttxParticipant.count({
