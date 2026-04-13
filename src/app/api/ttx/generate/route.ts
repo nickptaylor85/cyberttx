@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
     try {
       const { after } = await import("next/server");
       if (typeof after === "function") {
-        after(() => runGeneration(genParams));
+        after(runGeneration(genParams));
       } else {
         throw new Error("after not available");
       }
