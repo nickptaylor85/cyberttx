@@ -21,13 +21,11 @@ const allNavSections: (NavItem | NavSection)[] = [
 
   // ─── ALL USERS ─────────────────────────────
   { label: "Train", icon: "🎯", defaultOpen: true, items: [
-    { href: "/portal/ttx/new", label: "Create Exercise", icon: "🎯" },
+    { href: "/portal/ttx/new", label: "New Exercise", icon: "🎯" },
     { href: "/portal/daily-drill", label: "Daily Drill", icon: "⚡" },
     { href: "/portal/duels", label: "Duels", icon: "⚔️" },
     { href: "/portal/challenge", label: "Weekly Challenge", icon: "🏅" },
     { href: "/portal/ttx", label: "Exercise History", icon: "📋" },
-    { href: "/portal/ttx/custom", label: "Custom Exercise", icon: "✏️" },
-    { href: "/portal/campaigns", label: "Campaigns", icon: "📆" },
   ]},
 
   { label: "My Progress", icon: "📊", defaultOpen: true, items: [
@@ -50,7 +48,6 @@ const allNavSections: (NavItem | NavSection)[] = [
     { href: "/portal/performance", label: "Team Performance", icon: "📈" },
     { href: "/portal/users", label: "Members", icon: "👥" },
     { href: "/portal/schedule", label: "Schedule", icon: "📅" },
-    { href: "/portal/templates", label: "Templates", icon: "📝" },
   ]},
 
   { label: "Organisation", icon: "🏢", adminOnly: true, items: [

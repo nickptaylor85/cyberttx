@@ -33,6 +33,25 @@ export default async function LeaderboardPage() {
     .map(u => ({ ...u, accuracy: u.total > 0 ? Math.round((u.correct / u.total) * 100) : 0, themeCount: u.themes.size }))
     .sort((a, b) => b.accuracy - a.accuracy || b.exercises - a.exercises);
 
+  // Last week leaderboard for rank delta
+  const weekAgo = new Date(Date.now() - 7 * 86400000);
+  const lastWeekMap: Record<string, { correct: number; total: number; exercises: number }> = {};
+  participants.forEach(p => {
+    const d = new Date(p.session.completedAt || p.session.createdAt);
+    if (d < weekAgo) {
+      const uid = p.user.id;
+      if (!lastWeekMap[uid]) lastWeekMap[uid] = { correct: 0, total: 0, exercises: 0 };
+      lastWeekMap[uid].exercises++;
+      lastWeekMap[uid].correct += p.answers.filter(a => a.isCorrect).length;
+      lastWeekMap[uid].total += p.answers.length;
+    }
+  });
+  const lastWeekBoard = Object.entries(lastWeekMap)
+    .map(([id, u]) => ({ id, accuracy: u.total > 0 ? Math.round((u.correct / u.total) * 100) : 0 }))
+    .sort((a, b) => b.accuracy - a.accuracy);
+  const lastWeekRank: Record<string, number> = {};
+  lastWeekBoard.forEach((u, i) => { lastWeekRank[u.id] = i + 1; });
+
   // This month's leaderboard
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -71,7 +90,15 @@ export default async function LeaderboardPage() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className={`font-mono text-base font-bold ${u.accuracy >= 70 ? "text-green-400" : u.accuracy >= 40 ? "text-yellow-400" : "text-red-400"}`}>{u.accuracy}%</p>
-                  <p className="text-gray-600 text-xs">{u.correct}/{u.total}</p>
+                  <div className="flex items-center justify-end gap-1">
+                    <p className="text-gray-600 text-xs">{u.correct}/{u.total}</p>
+                    {lastWeekRank[u.id] && (() => {
+                      const delta = lastWeekRank[u.id] - (i + 1);
+                      if (delta > 0) return <span className="text-green-400 text-xs">▲{delta}</span>;
+                      if (delta < 0) return <span className="text-red-400 text-xs">▼{Math.abs(delta)}</span>;
+                      return <span className="text-gray-600 text-xs">—</span>;
+                    })()}
+                  </div>
                 </div>
               </div>
             ))}</div>

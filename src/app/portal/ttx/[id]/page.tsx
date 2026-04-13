@@ -57,6 +57,8 @@ export default function ExercisePage() {
   const [cloning, setCloning] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [feedbackRating, setFeedbackRating] = useState(0);
+  const [reward, setReward] = useState<any>(null);
+  const [showReward, setShowReward] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [joining, setJoining] = useState(false);
 
@@ -243,7 +245,14 @@ export default function ExercisePage() {
   }
 
   async function completeExercise() {
-    await fetch(`/api/ttx/session/${sessionId}/complete`, { method: "POST" });
+    const res = await fetch(`/api/ttx/session/${sessionId}/complete`, { method: "POST" });
+    const data = await res.json();
+    if (data.reward) {
+      setReward(data.reward);
+      setShowReward(true);
+      if (data.reward.leveledUp) fireCelebration("complete");
+      else if (data.reward.accuracy === 100) fireCelebration("correct");
+    }
     fetchSession();
   }
 
@@ -255,6 +264,84 @@ export default function ExercisePage() {
   const isCreator = myUserId === session.createdById;
   const isParticipant = session.participants.some(p => p.userId === myUserId);
   const isGroup = session.mode === "GROUP";
+
+  // ═══ REWARD SCREEN ═══
+  if (showReward && reward) {
+    const ACHIEVEMENT_META: Record<string, { icon: string; name: string }> = {
+      "first-exercise":   { icon: "🎯", name: "First Step" },
+      "five-exercises":   { icon: "⭐", name: "Getting Started" },
+      "twenty-exercises": { icon: "💪", name: "Committed" },
+      "fifty-exercises":  { icon: "🏅", name: "Veteran" },
+      "hundred-exercises":{ icon: "🎖️", name: "Centurion" },
+      "perfect-score":    { icon: "💎", name: "Flawless" },
+      "five-perfects":    { icon: "👑", name: "Perfectionist" },
+      "three-themes":     { icon: "🌐", name: "Well-Rounded" },
+      "all-themes":       { icon: "🧠", name: "Threat Expert" },
+      "real-world":       { icon: "🚨", name: "Real-World Ready" },
+      "team-player":      { icon: "👥", name: "Team Player" },
+      "mentor":           { icon: "🎓", name: "Mentor" },
+    };
+    return (
+      <div className="fixed inset-0 z-50 bg-[#030712]/98 flex flex-col items-center justify-center px-6 text-center">
+        <div className="max-w-sm w-full">
+          {reward.leveledUp ? (
+            <div className="mb-4">
+              <div className="text-5xl mb-2">🆙</div>
+              <h2 className="font-display text-2xl font-bold text-white">Level Up!</h2>
+              <p className="text-cyber-400 font-semibold">{reward.prevLevel.name} → {reward.level.name}</p>
+            </div>
+          ) : (
+            <div className="mb-4">
+              <div className={`text-5xl mb-2`}>{reward.accuracy === 100 ? "💎" : reward.accuracy >= 70 ? "🏆" : reward.accuracy >= 40 ? "👍" : "📚"}</div>
+              <h2 className="font-display text-xl font-bold text-white">{reward.accuracy === 100 ? "Perfect Score!" : reward.accuracy >= 70 ? "Great Work!" : reward.accuracy >= 40 ? "Good Effort!" : "Keep Practising"}</h2>
+            </div>
+          )}
+
+          <div className="cyber-card mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-gray-400 text-sm">XP Earned</span>
+              <span className="text-cyber-400 font-mono font-bold text-lg">+{reward.xpEarned} XP</span>
+            </div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-gray-400 text-sm">Score</span>
+              <span className={`font-mono font-bold ${reward.accuracy >= 70 ? "text-green-400" : reward.accuracy >= 40 ? "text-yellow-400" : "text-red-400"}`}>{reward.accuracy}%</span>
+            </div>
+            {reward.streak > 1 && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-sm">Streak</span>
+                <span className="text-orange-400 font-mono font-bold">🔥 {reward.streak} days</span>
+              </div>
+            )}
+            <div className="mt-3 pt-3 border-t border-surface-3">
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Level {reward.level.level}: {reward.level.name}</span>
+                <span>{reward.totalXp.toLocaleString()} XP</span>
+              </div>
+              <div className="h-1.5 bg-surface-3 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-cyber-600 to-green-500 rounded-full" style={{ width: `${Math.min(100, Math.round(((reward.totalXp - reward.level.xp) / (Math.max(1, (reward.level.xp + 500) - reward.level.xp))) * 100))}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {reward.newAchievements?.length > 0 && (
+            <div className="cyber-card mb-4 border-yellow-500/30">
+              <p className="text-yellow-400 text-xs font-semibold mb-2">🏅 Achievement Unlocked!</p>
+              {reward.newAchievements.map((id: string) => (
+                <div key={id} className="flex items-center gap-2">
+                  <span className="text-xl">{ACHIEVEMENT_META[id]?.icon || "🏅"}</span>
+                  <span className="text-white text-sm font-semibold">{ACHIEVEMENT_META[id]?.name || id}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button onClick={() => setShowReward(false)} className="cyber-btn-primary w-full py-3 text-base">
+            View Results →
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ═══ COMPLETED STATE ═══
   if (session.status === "COMPLETED") {
@@ -314,17 +401,17 @@ export default function ExercisePage() {
         )}
 
         {/* Allow other team members to attempt this exercise */}
-        <button onClick={attemptExercise} disabled={cloning} className="cyber-btn-primary w-full mb-4 py-2.5 disabled:opacity-50">
-          {cloning ? "Creating your attempt..." : "🎯 Attempt This Exercise"}
+        {/* Retry for a better score */}
+        <button onClick={attemptExercise} disabled={cloning} className="cyber-btn-primary w-full mb-3 py-2.5 disabled:opacity-50">
+          {cloning ? "Generating..." : `🔁 Retry${accuracy < 100 ? ` — Beat ${accuracy}%` : " for a Perfect Score"}`}
         </button>
 
-        <div className="flex flex-wrap gap-2">
-          <Link href={`/portal/ttx/${sessionId}/replay`} className="cyber-btn-secondary text-sm">🔄 Replay</Link>
-          <a href={`/api/portal/certificate/pdf?sessionId=${sessionId}`} className="cyber-btn-secondary text-sm">🏆 Certificate PDF</a>
+        <div className="flex flex-wrap gap-2 mb-3">
+          <a href={`/api/portal/certificate/pdf?sessionId=${sessionId}`} className="cyber-btn-secondary text-sm">🏆 Certificate</a>
           <a href={`/api/portal/report?sessionId=${sessionId}`} target="_blank" className="cyber-btn-secondary text-sm">📄 Report</a>
           <Link href={`/portal/ttx/${sessionId}/playbook`} className="cyber-btn-secondary text-sm">📋 Playbook</Link>
-          <button onClick={shareExercise} className="cyber-btn-secondary text-sm">{shareUrl ? "✓ Link Copied!" : "🔗 Share"}</button>
-          <Link href="/portal/ttx/new" className="cyber-btn-primary text-sm">🎯 New Exercise</Link>
+          <button onClick={shareExercise} className="cyber-btn-secondary text-sm">{shareUrl ? "✓ Copied!" : "🔗 Share"}</button>
+          <Link href="/portal/ttx/new" className="cyber-btn-secondary text-sm">🎯 New Exercise</Link>
         </div>
       </div>
     );

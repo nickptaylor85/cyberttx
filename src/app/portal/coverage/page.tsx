@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { getPortalOrg } from "@/lib/auth-helpers";
 import { MITRE_TACTICS, COMMON_MITRE_TECHNIQUES } from "@/types";
+import GenerateGapButton from "./GenerateGapButton";
 export const dynamic = "force-dynamic";
 
 export default async function MitreCoveragePage() {
@@ -67,6 +68,27 @@ export default async function MitreCoveragePage() {
           ))}</div>
         </div>
       ))}</div>
+
+      {/* Top gaps — actionable training targets */}
+      {(() => {
+        const gaps = COMMON_MITRE_TECHNIQUES.filter(t => !techCounts[t.id]).slice(0, 6);
+        if (gaps.length === 0) return null;
+        return (
+          <div className="cyber-card mb-4 border-red-500/20">
+            <h2 className="text-white text-sm font-semibold mb-3">🎯 Top Training Gaps</h2>
+            <p className="text-gray-500 text-xs mb-3">You haven't covered these techniques yet — generate a targeted exercise for each.</p>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {gaps.map(t => (
+                <div key={t.id} className="bg-surface-0 rounded-lg p-2.5 border border-surface-3">
+                  <p className="text-white text-xs font-semibold">{t.id}: {t.name}</p>
+                  <p className="text-gray-500 text-xs">{t.tactic}</p>
+                  <GenerateGapButton techniqueId={t.id} techniqueName={t.name} tactic={t.tactic} />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Legend */}
       <div className="flex items-center gap-4 mt-4 text-xs text-gray-500">

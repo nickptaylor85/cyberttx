@@ -166,6 +166,12 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  // Gamification — stored so streak persists across cold starts
+  xpTotal        Int      @default(0)
+  streakDays     Int      @default(0)
+  bestStreak     Int      @default(0)
+  streakLastDate DateTime?
+
   participations TtxParticipant[]
   createdSessions TtxSession[]     @relation("SessionCreator")
 
