@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import CyberTrivia from "@/components/CyberTrivia";
+import CountdownTimer from "@/components/CountdownTimer";
 import { fireCelebration } from "@/lib/confetti";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -605,8 +606,55 @@ export default function ExercisePage() {
       {/* Question */}
       {question && (!alreadyAnswered || answered) ? (
         <div className="cyber-card">
+          {/* Timer + difficulty badge */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                question.difficulty === "hard" ? "bg-red-500/15 text-red-400" :
+                question.difficulty === "medium" ? "bg-amber-500/15 text-amber-400" :
+                "bg-green-500/15 text-green-400"
+              }`}>{question.difficulty}</span>
+              <span className="text-gray-600 text-[10px]">Q{currentQuestion + 1}</span>
+            </div>
+            {!answered && question.timeLimitSeconds && (
+              <CountdownTimer
+                key={`${currentStage}-${currentQuestion}`}
+                seconds={question.timeLimitSeconds}
+                onExpired={() => {
+                  if (selectedOption !== null) submitAnswer();
+                  else { setSelectedOption(0); setTimeout(submitAnswer, 100); }
+                }}
+                paused={answered}
+                size="sm"
+              />
+            )}
+          </div>
+
           <p className="text-white text-sm font-medium mb-4">{question.question}</p>
           {question.context && <div className="bg-surface-0 border border-surface-3 rounded-lg p-3 mb-4 font-mono text-xs text-gray-400 whitespace-pre-wrap">{question.context}</div>}
+
+          {/* Alerts triggered */}
+          {stage.alertsTriggered && stage.alertsTriggered.length > 0 && currentQuestion === 0 && !answered && (
+            <div className="mb-4 space-y-2">
+              {stage.alertsTriggered.map((alert: any, ai: number) => (
+                <div key={ai} className={`border rounded-lg p-2.5 text-xs ${
+                  alert.severity === "critical" ? "border-red-500/30 bg-red-500/5" :
+                  alert.severity === "high" ? "border-amber-500/30 bg-amber-500/5" :
+                  "border-blue-500/30 bg-blue-500/5"
+                }`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`font-mono text-[10px] font-bold uppercase ${
+                      alert.severity === "critical" ? "text-red-400" :
+                      alert.severity === "high" ? "text-amber-400" : "text-blue-400"
+                    }`}>{alert.severity}</span>
+                    <span className="text-gray-500 text-[10px]">{alert.tool}</span>
+                  </div>
+                  <p className="text-white font-medium text-xs">{alert.title}</p>
+                  {alert.description && <p className="text-gray-500 text-[10px] mt-1">{alert.description}</p>}
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="space-y-2 mb-4">{question.options.map((opt: any, i: number) => (
             <button key={i} onClick={() => { if (!answered) setSelectedOption(i); }}
@@ -634,6 +682,24 @@ export default function ExercisePage() {
                   {result.explanation && <p className="text-gray-400 text-xs mt-1">{result.explanation}</p>}
                 </div>
               )}
+
+              {/* Consequence — what happens next in the story */}
+              {result && (result.isCorrect ? question.consequenceCorrect : question.consequenceWrong) && (
+                <div className={`p-3 rounded-lg mb-3 border ${result.isCorrect ? "border-cyan-500/20 bg-cyan-500/5" : "border-orange-500/20 bg-orange-500/5"}`}>
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-gray-500 mb-1">{result.isCorrect ? "What happens next" : "Meanwhile..."}</p>
+                  <p className={`text-xs ${result.isCorrect ? "text-cyan-300" : "text-orange-300"}`}>
+                    {result.isCorrect ? question.consequenceCorrect : question.consequenceWrong}
+                  </p>
+                </div>
+              )}
+
+              {/* Real incident reference */}
+              {question.realIncidentRef && (
+                <div className="p-2.5 rounded-lg mb-3 bg-purple-500/5 border border-purple-500/15">
+                  <p className="text-purple-300 text-xs leading-relaxed">{question.realIncidentRef}</p>
+                </div>
+              )}
+
               <button onClick={nextQuestion} disabled={!canAdvance} className="cyber-btn-primary w-full disabled:opacity-30">{!canAdvance ? "Read the explanation..." : isLastQuestion ? "Complete Exercise" : "Next Question →"}</button>
             </div>
           )}

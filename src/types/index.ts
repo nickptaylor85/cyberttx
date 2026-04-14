@@ -45,6 +45,10 @@ export interface TtxQuestion {
   options: TtxOption[];
   explanation: string; // Shown after answering
   difficulty: "easy" | "medium" | "hard";
+  timeLimitSeconds?: number; // Time pressure per question (null = no limit)
+  realIncidentRef?: string; // "📰 This Really Happened: ..." one-liner
+  consequenceCorrect?: string; // What happens in the story if you get it right
+  consequenceWrong?: string; // What happens if you get it wrong — the attack escalates
 }
 
 export interface TtxOption {

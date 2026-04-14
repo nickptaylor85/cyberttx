@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { TtxScenario, TtxStage } from "@/types";
+import { buildIncidentContext } from "@/lib/real-incidents";
+import { buildToolAlertContext } from "@/lib/alert-templates";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -199,6 +201,19 @@ export async function generateTtxScenario(params: GenerateTtxParams): Promise<Tt
   const characterContext = buildCharacterContext(characters);
   const learningContext = buildLearningContext(pastPerformance);
 
+  // Rich context from real breach database
+  const incidentContext = buildIncidentContext(theme, orgProfile?.industry || undefined);
+  const alertContext = buildToolAlertContext(securityTools);
+
+  // Time limits per difficulty
+  const timeLimits = {
+    BEGINNER: 90,
+    INTERMEDIATE: 60,
+    ADVANCED: 45,
+    EXPERT: 30,
+  };
+  const timeLimit = timeLimits[difficulty] || 60;
+
   const systemPrompt = `You are an elite cybersecurity tabletop exercise designer with 20+ years of experience. You create immersive, realistic TTX scenarios that feel like ACTUAL incidents happening to a SPECIFIC organization — never generic textbook exercises.
 
 CRITICAL REALISM RULES:
@@ -225,6 +240,23 @@ TARGET ORGANIZATION:
   ${companyContext}
 ${characterContext}
 ${learningContext}
+
+REAL BREACH INTELLIGENCE — ground your scenario in these ACTUAL incidents:
+${incidentContext}
+
+Use specific details from these breaches: actual timelines, TTPs, impact figures, and lessons learned.
+Every "realIncidentRef" field MUST reference a REAL breach with the year it happened.
+${alertContext}
+
+CONSEQUENCES & BRANCHING:
+For EVERY question, provide two consequence fields:
+- "consequenceCorrect": What happens in the story if the team makes the right call (1-2 sentences). The attack is contained or slowed.
+- "consequenceWrong": What happens if they get it wrong (1-2 sentences). The attacker escalates, data is lost, business is disrupted. Make it feel real and painful.
+These create a branching narrative feel — even though the exercise is linear, the player feels the weight of their decisions.
+
+TIME PRESSURE:
+Set "timeLimitSeconds" on every question: ${timeLimit} seconds for this difficulty level.
+This creates real-world urgency — incident responders don't have unlimited time to decide.
 
 ${customIncident ? `\nCUSTOM INCIDENT TO BASE SCENARIO ON:\n${customIncident}\n\nUse this real incident as the foundation. Adapt it to the target organization, add realistic details, and create decision-point questions based on the actual events described.` : ""}
 
@@ -295,7 +327,11 @@ JSON structure:
         { "index": 3, "text": "string", "isCorrect": false, "points": 0 }
       ],
       "explanation": "string - why correct answer is right AND why others are wrong",
-      "difficulty": "easy|medium|hard"
+      "difficulty": "easy|medium|hard",
+      "timeLimitSeconds": ${timeLimit},
+      "realIncidentRef": "string - 📰 This Really Happened: [Real breach name (year)]: [1-sentence detail]",
+      "consequenceCorrect": "string - what happens next if they choose correctly (1-2 sentences)",
+      "consequenceWrong": "string - what happens if they choose wrong — attacker escalates (1-2 sentences)"
     }]
   }],
   "totalPoints": 0
