@@ -151,41 +151,8 @@ export default function NewTtxPage() {
         throw new Error(msg);
       }
 
-      // Read SSE stream — keepalive pings prevent mobile browser timeout
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response stream");
-
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.ping) continue; // keepalive — ignore
-            if (data.done && data.id) {
-              router.push("/portal/ttx/" + data.id);
-              return;
-            }
-            if (data.done && data.error) {
-              throw new Error(data.error);
-            }
-          } catch (parseErr: any) {
-            if (parseErr?.message && !parseErr.message.includes("JSON")) throw parseErr;
-          }
-        }
-      }
-
-      // If stream ended without a done message, something went wrong
-      throw new Error("Stream ended unexpectedly");
+      const session = await res.json();
+      router.push("/portal/ttx/" + session.id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to generate");
       setGenerating(false);

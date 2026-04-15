@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import CyberTrivia from "@/components/CyberTrivia";
 import CountdownTimer from "@/components/CountdownTimer";
 import { fireCelebration } from "@/lib/confetti";
@@ -122,6 +122,20 @@ export default function ExercisePage() {
   useEffect(() => {
     if (session?.status === "COMPLETED") fireCelebration("complete");
   }, [session?.status]);
+
+  // Trigger generation from the session page — this page stays open (trivia game)
+  // so the browser keeps the /run request alive for the full 60-90 seconds.
+  const runTriggered = useRef(false);
+  useEffect(() => {
+    if (!session || session.status !== "GENERATING" || runTriggered.current) return;
+    runTriggered.current = true;
+
+    fetch("/api/ttx/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-cron-secret": "client-trigger" },
+      body: JSON.stringify({ sessionId: session.id }),
+    }).catch(() => {}); // Fire and don't care about response — polling handles it
+  }, [session?.id, session?.status]);
 
   // Auto-poll while GENERATING
   useEffect(() => {
