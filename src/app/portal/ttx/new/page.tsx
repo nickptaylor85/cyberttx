@@ -144,13 +144,48 @@ export default function NewTtxPage() {
           customIncident: (window as any).__alertIncident || undefined,
         }),
       });
+
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Generation failed");
+        let msg = "Generation failed";
+        try { const d = await res.json(); msg = d.error || msg; } catch {}
+        throw new Error(msg);
       }
-      const session = await res.json();
-      // Redirect to session page — it handles GENERATING polling
-      router.push("/portal/ttx/" + session.id);
+
+      // Read SSE stream — keepalive pings prevent mobile browser timeout
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No response stream");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.ping) continue; // keepalive — ignore
+            if (data.done && data.id) {
+              router.push("/portal/ttx/" + data.id);
+              return;
+            }
+            if (data.done && data.error) {
+              throw new Error(data.error);
+            }
+          } catch (parseErr: any) {
+            if (parseErr?.message && !parseErr.message.includes("JSON")) throw parseErr;
+          }
+        }
+      }
+
+      // If stream ended without a done message, something went wrong
+      throw new Error("Stream ended unexpectedly");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to generate");
       setGenerating(false);
