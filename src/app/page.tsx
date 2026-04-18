@@ -21,17 +21,63 @@ export default function Home() {
       <main id="main-content">
       <main id="main-content">
       <section className="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
-        <div className="flex gap-2 justify-center mb-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyber-600/10 border border-cyber-600/20 text-cyber-400 text-xs"><span className="w-1.5 h-1.5 rounded-full bg-cyber-400 animate-pulse" /> Live SIEM/XDR Integration</span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-600/10 border border-purple-600/20 text-purple-400 text-xs">Daily Drills + Weekly Challenges</span>
+        <div className="flex gap-2 justify-center mb-6 flex-wrap">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyber-600/10 border border-cyber-600/20 text-cyber-400 text-xs"><span className="w-1.5 h-1.5 rounded-full bg-cyber-400 animate-pulse" /> Grounded in 60+ real breaches</span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-600/10 border border-purple-600/20 text-purple-400 text-xs">Your actual SIEM alerts, not generic textbook</span>
         </div>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">AI-Powered Cybersecurity<br /><span className="text-cyber-400">Tabletop Exercises</span></h1>
-        <p className="text-gray-400 text-lg sm:text-xl mt-6 max-w-2xl mx-auto leading-relaxed">Replace £30k consultancy exercises with unlimited, AI-generated incident simulations. Pull real alerts from your SIEM. Train your team on actual threats. Track improvement with XP, streaks, and compliance evidence.</p>
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">Stop paying £30k<br />for <span className="text-cyber-400">one exercise</span></h1>
+        <p className="text-gray-400 text-lg sm:text-xl mt-6 max-w-2xl mx-auto leading-relaxed">ThreatCast generates unlimited, AI-powered tabletop exercises tailored to your organisation, your security tools, and your threat landscape. Every scenario references real breaches. Every alert looks like your actual console.</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-          <Link href="/sign-up" className="cyber-btn-primary px-8 py-3 text-base">Start Free Trial →</Link>
-          <Link href="/sign-in" className="cyber-btn-secondary px-8 py-3 text-base">Sign In</Link>
+          <Link href="/sign-up" className="cyber-btn-primary px-8 py-3 text-base">Start Free — 5 Exercises →</Link>
+          <Link href="/pitch" className="cyber-btn-secondary px-8 py-3 text-base">See the Pitch Deck</Link>
         </div>
-        <p className="text-gray-600 text-xs mt-4">No credit card required · 5 free exercises · Cancel anytime</p>
+        <p className="text-gray-600 text-xs mt-4">No credit card · No consultancy · No recycled scenarios</p>
+      </section>
+
+      {/* Killer stats */}
+      <section className="max-w-4xl mx-auto px-6 pb-12">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { stat: "90%", label: "cheaper than consultancy" },
+            { stat: "60+", label: "real breaches in the database" },
+            { stat: "8", label: "SIEM/XDR platforms supported" },
+            { stat: "6", label: "compliance frameworks mapped" },
+          ].map((s, i) => (
+            <div key={i} className="text-center py-4">
+              <p className="font-display text-2xl sm:text-3xl font-bold text-cyber-400">{s.stat}</p>
+              <p className="text-gray-500 text-xs mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Why not consultancy */}
+      <section className="max-w-4xl mx-auto px-6 pb-16">
+        <div className="cyber-card bg-gradient-to-br from-red-500/5 to-transparent border-red-500/10">
+          <h2 className="font-display text-lg font-bold text-white mb-4">Why consultancy TTX fails</h2>
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <p className="text-red-400 text-xs font-semibold mb-2">❌ Traditional consultancy</p>
+              <div className="space-y-2 text-gray-500 text-xs">
+                <p>£30k per exercise, once a year</p>
+                <p>Generic scenario recycled across clients</p>
+                <p>No reference to your actual tools</p>
+                <p>2-hour boardroom theatre</p>
+                <p>PDF report nobody reads</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-cyber-400 text-xs font-semibold mb-2">✓ ThreatCast</p>
+              <div className="space-y-2 text-gray-400 text-xs">
+                <p>£99-499/mo, unlimited exercises</p>
+                <p>AI generates unique scenarios every time</p>
+                <p>Your Sentinel, Defender, CrowdStrike alerts</p>
+                <p>Daily drills, duels, weekly challenges</p>
+                <p>MITRE heatmap + compliance evidence + certificates</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Daily engagement */}
