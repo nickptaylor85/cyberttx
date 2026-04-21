@@ -7,6 +7,7 @@ RUN npm ci
 RUN npx prisma generate
 COPY . .
 RUN npm run build
+RUN mkdir -p public
 
 FROM node:20-alpine AS runner
 WORKDIR /app
