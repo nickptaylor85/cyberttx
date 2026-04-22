@@ -340,12 +340,12 @@ JSON structure:
   let jsonText: string;
   if (providerConfig) {
     const { aiComplete } = await import("@/lib/ai/providers");
-    const result = await aiComplete(providerConfig, { systemPrompt, userPrompt, maxTokens: 8000 });
+    const result = await aiComplete(providerConfig, { systemPrompt, userPrompt, maxTokens: 16000 });
     jsonText = result.text.trim();
   } else {
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 8000,
+      max_tokens: 16000,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     });
@@ -369,6 +369,34 @@ JSON structure:
   }
   // 3. Fix common AI JSON issues: trailing commas, unescaped newlines in strings
   jsonText = jsonText.replace(/,\s*([}\]])/g, "$1");
+
+  // 4. Repair truncated JSON (AI hit token limit mid-output)
+  function repairTruncatedJSON(text: string): string {
+    let repaired = text;
+    // Close unterminated strings
+    const quoteCount = (repaired.match(/(?<!\\)"/g) || []).length;
+    if (quoteCount % 2 !== 0) repaired += '"';
+    // Count open brackets and braces
+    let openBraces = 0, openBrackets = 0;
+    let inString = false;
+    for (let i = 0; i < repaired.length; i++) {
+      const ch = repaired[i];
+      if (ch === '"' && (i === 0 || repaired[i - 1] !== '\\')) { inString = !inString; continue; }
+      if (inString) continue;
+      if (ch === '{') openBraces++;
+      else if (ch === '}') openBraces--;
+      else if (ch === '[') openBrackets++;
+      else if (ch === ']') openBrackets--;
+    }
+    // Remove trailing comma before closing
+    repaired = repaired.replace(/,\s*$/, '');
+    // Close open brackets and braces
+    for (let i = 0; i < openBrackets; i++) repaired += ']';
+    for (let i = 0; i < openBraces; i++) repaired += '}';
+    // Fix trailing commas again after repair
+    repaired = repaired.replace(/,\s*([}\]])/g, "$1");
+    return repaired;
+  }
 
   try {
     const scenario: TtxScenario = JSON.parse(jsonText);
@@ -398,8 +426,35 @@ JSON structure:
 
     return scenario;
   } catch (e) {
-    console.error("Failed to parse AI response:", jsonText.substring(0, 500));
-    throw new Error(`Failed to parse TTX scenario: ${e}`);
+    // Try repairing truncated JSON before giving up
+    try {
+      const repaired = repairTruncatedJSON(jsonText);
+      const scenario: TtxScenario = JSON.parse(repaired);
+      let calculatedTotal = 0;
+      scenario.stages.forEach((stage: TtxStage) => {
+        stage.questions.forEach((q) => {
+          const correctOption = q.options.find((o) => o.isCorrect);
+          if (correctOption) calculatedTotal += correctOption.points;
+        });
+      });
+      scenario.totalPoints = calculatedTotal;
+      scenario.stages.forEach((stage: TtxStage) => {
+        stage.questions.forEach((q) => {
+          const opts = [...q.options];
+          for (let i = opts.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [opts[i], opts[j]] = [opts[j], opts[i]];
+          }
+          opts.forEach((o, idx) => { o.index = idx; });
+          q.options = opts;
+        });
+      });
+      console.log("[generate] JSON repaired successfully — truncated output recovered");
+      return scenario;
+    } catch (e2) {
+      console.error("Failed to parse AI response (even after repair):", jsonText.substring(0, 500));
+      throw new Error(`Failed to parse TTX scenario: ${e}`);
+    }
   }
 }
 
